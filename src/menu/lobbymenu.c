@@ -1,0 +1,63 @@
+#include "menu.h"
+static const char* LOBBYBG = "/home/david/Programmieren/C/ChonkerDefenceAssets/vorlagen/LobbyMenu.png";
+static const unsigned int MENU_LOBBY_ENTRY_WIDTH = 128;
+static const unsigned int MENU_LOBBY_WIDTH = MENU_LOBBY_ENTRY_WIDTH*GAME_PLAYERS_MAX;
+static const unsigned int TEXT_SIZE = 20;
+static const SDL_Colour NAME_COLOUR = {
+    .r = 255,
+    .g = 255,
+    .b = 255
+};
+
+static void clearNames(LobbyMenu *menu){
+    for(int a = 0; a < GAME_PLAYERS_MAX; a++){
+        fontRender(menu->names + a, " ");
+    }
+}
+
+//Lobby
+void lobbyMenuCreate(LobbyMenu *menu, MenuCore *mc){
+    menu->enable = false;
+    menu->core = mc;
+    textureLoad(&menu->background, menu->core->ui.renderer, LOBBYBG);
+    
+    for(int a = 0; a < GAME_PLAYERS_MAX; a++){
+        fontCreate(menu->names + a, FONT_DEFAULT, TEXT_SIZE, NAME_COLOUR, mc->ui.renderer);
+        char buffer[11];
+        sprintf(buffer, "netPlayer%d", a);
+        fontRender(menu->names + a, buffer);
+    }
+}
+
+void lobbyMenuEnable(LobbyMenu *menu, ClientSock *csock){
+    menu->enable = true;
+    for(int a = 0; a < GAME_PLAYERS_MAX; a++){
+        fontRender(menu->names + a, strlen(csock->pinfo[a].name) ? csock->pinfo[a].name : " ");
+    }
+}
+
+void lobbyMenuDisable(LobbyMenu *menu){
+    menu->enable = false;
+    clearNames(menu);
+}
+
+int lobbyMenuHandle(LobbyMenu *menu){
+    if(!menu->enable)
+        return 0;
+    
+    size_t menux = (APP_WIDTH / 2) - (MENU_LOBBY_WIDTH/2);
+    textureDraw(&menu->background, menux, 0, SDL_FLIP_NONE, NULL);
+    
+    for(int a = 0; a < GAME_PLAYERS_MAX; a++){
+        fontDraw(menu->names + a, menux + 12 + MENU_LOBBY_ENTRY_WIDTH * a, 70);
+    }
+    
+    return 0;
+}
+
+void lobbyMenuDestroy(LobbyMenu *menu){
+    textureDestroy(&menu->background);
+    for(int a = 0; a < GAME_PLAYERS_MAX; a++){
+        fontDestroy(menu->names + a);
+    }
+}
