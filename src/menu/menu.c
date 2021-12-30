@@ -323,7 +323,7 @@ void startMenuDestroy(StartMenu *menu){
     menuButtonDestroy(&menu->back);
 }
 
-int menuHandleAll(ClientSock *client, MainMenu* main, StartMenu* start, LobbyMenu *lobby, float winscale){
+int menuHandleAll(ClientSock *client, MainMenu* main, StartMenu* start, LobbyMenu *lobby, PauseMenu *pause, float winscale){
         unsigned int ret = 0;
         /*----------------------------------------------------------*/
         /*                Main Menu                                 */
@@ -340,7 +340,9 @@ int menuHandleAll(ClientSock *client, MainMenu* main, StartMenu* start, LobbyMen
             
             if(client->serverstatus == CLIENT_SOCK_SERVER_NO_UP){
                 serverStart(lobby->enable ? 0 : 1);
-                lobby->enable ? CLIENT_SOCK_SERVER_UP_MULTIPLAYER : CLIENT_SOCK_SERVER_UP_SINGLEPLAYER;
+                client->serverstatus = lobby->enable ? CLIENT_SOCK_SERVER_UP_MULTIPLAYER : CLIENT_SOCK_SERVER_UP_SINGLEPLAYER;
+                SDL_Delay(100);
+                netSockSetup(client);
             }
         }else if(mmres & (1 << MENU_MAIN_BUTTON_LOBBY)){
             menuCoreMouseCD(main->core);
@@ -351,16 +353,16 @@ int menuHandleAll(ClientSock *client, MainMenu* main, StartMenu* start, LobbyMen
                 lobbyMenuEnable(lobby, client);
             }
             
-            if(client->serverstatus != (lobby->enable ? CLIENT_SOCK_SERVER_UP_MULTIPLAYER : CLIENT_SOCK_SERVER_UP_SINGLEPLAYER)){
+            //if(client->serverstatus != (lobby->enable ? CLIENT_SOCK_SERVER_UP_MULTIPLAYER : CLIENT_SOCK_SERVER_UP_SINGLEPLAYER)){
                 netKillServer(client);
                 serverStart(lobby->enable ? 0 : 1);
                 client->serverstatus = lobby->enable ? CLIENT_SOCK_SERVER_UP_MULTIPLAYER : CLIENT_SOCK_SERVER_UP_SINGLEPLAYER;
-            }
+            //}
             //Give the Server some time to start...
             SDL_Delay(100);
             netSockSetup(client);
             SDL_Delay(10);
-            netLobbyDiscovery(client);
+            netLobbyDiscovery(client);   
             if(lobby->enable)
                 lobbyMenuEnable(lobby, client);
         }else if(mmres & (1 << MENU_MAIN_BUTTON_JOIN)){
@@ -390,14 +392,31 @@ int menuHandleAll(ClientSock *client, MainMenu* main, StartMenu* start, LobbyMen
                 SDL_Log("%s\tMy Level is: %s\n", TAG, start->levelList[client->level - 1]);
                 netLoadLevel(client, start->levelList[client->level - 1]);
                 menuCoreMouseCD(start->core);
+                startMenuDisable(start);
                 return MENU_ACTION_START_GAME;
             }else{
                 SDL_LogError(0,"%s\tInvalid Level\n", TAG);
             }
             menuCoreMouseCD(start->core);
         }
+        /*----------------------------------------------------------*/
+        /*                   Pause Menu                             */
+        /*----------------------------------------------------------*/
+        mmres = pauseMenuHandle(pause, winscale);
+        mmres = start->core->mouse_cooldown ? 0 : mmres;
+        if(mmres & (1 << MENU_PAUSE_BUTTON_RESUME)){
+            menuCoreMouseCD(pause->core);
+            pause->enable = false;
+        }else if(mmres & (1 << MENU_PAUSE_BUTTON_STOP)){
+            //If the player clicks on stop Return to main menu
+            menuCoreMouseCD(pause->core);
+            pause->enable = false;
+            main->enable = true;
+        }
         
         lobbyMenuHandle(lobby);
+        
+        //pauseMenuHandle(pause, winscale);
         
         return 0;       
 }

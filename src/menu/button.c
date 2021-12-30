@@ -1,5 +1,7 @@
 #include "button.h"
 
+static const char* TAG = "[BUTTON]";
+
 void uiElementsCreate(UIElements *ui, SDL_Renderer *renderer){
     char buffer[128];
     strcpy(buffer, "");
@@ -13,18 +15,37 @@ void uiElementsCreate(UIElements *ui, SDL_Renderer *renderer){
     strcpy(buffer, "");
     sprintf(buffer, "%stextures/ui/button_short.png", ASSET_PATH);
     textureLoad(&ui->buttonsShort, renderer, buffer);
+    
+    strcpy(buffer, "");
+    sprintf(buffer, "%stextures/ui/button_very_short.png", ASSET_PATH);
+    textureLoad(&ui->buttonsVeryShort, renderer, buffer);
 }
 
 void uiElementsDestroy(UIElements *ui){
     textureDestroy(&ui->background);
+    textureDestroy(&ui->buttonsVeryShort);
     textureDestroy(&ui->buttonsShort);
     textureDestroy(&ui->buttonsLong);
 }
 
-void menuButtonCreate(Button *button, const char* title, Image *icon, UIElements *ui, uint8_t colour, bool isShort){
+void menuButtonCreate(Button *button, const char* title, Image *icon, UIElements *ui, uint8_t colour, ButtonType btype){
     button->ui = ui;
-    button->isShort = isShort;
-    button->hitbox.w = isShort ? BUTTON_WIDTH_SHORT : BUTTON_WIDTH_LONG;
+    button->btype = btype;
+    switch(btype){
+        case BT_LONG: {
+            button->hitbox.w = BUTTON_WIDTH_LONG;
+        }break;
+        case BT_SHORT: {
+            button->hitbox.w = BUTTON_WIDTH_SHORT;
+        } break;
+        case BT_VERY_SHORT:{
+            button->hitbox.w = BUTTON_WIDTH_VERY_SHORT;
+        } break;
+        default: {
+            SDL_LogWarn(0,"%s\tInvalid button type! Assuming long button\n", TAG);
+            button->hitbox.w = BUTTON_WIDTH_LONG;
+        }break;
+    }
     button->hitbox.h = BUTTON_HEIGHT;
     SDL_Colour white = {
         .r = 255,
@@ -43,10 +64,20 @@ void menuButtonCreate(Button *button, const char* title, Image *icon, UIElements
     
     fontCreate(&button->textActive, FONT_DEFAULT, BUTTON_TEXT_SIZE, yellow, ui->renderer);
     fontRender(&button->textActive, title);
-    button->textOffset.x = ((isShort ? BUTTON_WIDTH_SHORT : BUTTON_WIDTH_LONG) - button->text.rect.w) / 2;
-    button->textOffset.y = (BUTTON_HEIGHT - button->text.rect.h) / 2;
     
-    //printf("Text Offset is: %d | %d\n", button->textOffset.x, button->textOffset.y);
+    switch(btype){
+        case BT_LONG: {
+            button->textOffset.x = (BUTTON_WIDTH_LONG - button->text.rect.w) / 2;
+        }break;
+        case BT_SHORT: {
+            button->textOffset.x = (BUTTON_WIDTH_SHORT - button->text.rect.w) / 2;
+        } break;
+        case BT_VERY_SHORT:{
+            //The -4 is just raw guesswork. Hence: no macro :3
+            button->textOffset.x = (BUTTON_WIDTH_VERY_SHORT - button->text.rect.w) / 2 - 4;
+        } break;
+    }
+    button->textOffset.y = (BUTTON_HEIGHT - button->text.rect.h) / 2;
     
     button->bai.period = 0;
     button->bai.frameCount = 4;
@@ -54,8 +85,20 @@ void menuButtonCreate(Button *button, const char* title, Image *icon, UIElements
 }
 
 int menuButtonHandle(Button *button, int x, int y, float winscale){
+    Image* btex = NULL;
+    switch(button->btype){
+        case BT_LONG: {
+            btex = &button->ui->buttonsLong;
+        }break;
+        case BT_SHORT: {
+            btex = &button->ui->buttonsShort;
+        } break;
+        case BT_VERY_SHORT:{
+            btex = &button->ui->buttonsVeryShort;
+        } break;
+    }
     textureDraw(
-        button->isShort ? &button->ui->buttonsShort : &button->ui->buttonsLong,
+        btex,
         x,
         y,
         SDL_FLIP_NONE,

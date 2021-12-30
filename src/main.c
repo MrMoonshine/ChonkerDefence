@@ -129,11 +129,15 @@ int main(int argc, char *argv[]){
     mainMenuCreate(&mainMenu, &menuCore);
     StartMenu startMenu;
     startMenuCreate(&startMenu, &menuCore);
+    PauseMenu pauseMenu;
+    pauseMenuCreate(&pauseMenu, &menuCore);
     LobbyMenu lobbyMenu;
     lobbyMenuCreate(&lobbyMenu, &menuCore);
     float winscale = 1.0f;
     
     //levelSockSetup(&client);
+    
+    //serverStart(0);
     unsigned int lastTime = 0, currentTime = 0;
     while(windowHandleEvents(window, renderer, &winscale)){
         SDL_RenderClear(renderer);      
@@ -153,13 +157,14 @@ int main(int argc, char *argv[]){
         if(menuCore.mouse_cooldown)
             menuCore.mouse_cooldown--;
         
-        int mres = menuHandleAll(&client, &mainMenu, &startMenu, &lobbyMenu, winscale);
+        int mres = menuHandleAll(&client, &mainMenu, &startMenu, &lobbyMenu, &pauseMenu, winscale);
         if(mres < 0){
             break;
         }else if(mres == MENU_ACTION_START_GAME){
             levelCreateFromServer(&lvl1, &client, renderer);
             netLobbyDiscovery(&client);
-            lobbyMenuEnable(&lobbyMenu, &client);
+            if(client.serverstatus == CLIENT_SOCK_SERVER_UP_MULTIPLAYER)
+                lobbyMenuEnable(&lobbyMenu, &client);
         }
         
         currentTime = SDL_GetTicks();
@@ -172,6 +177,8 @@ int main(int argc, char *argv[]){
         SDL_RenderPresent(renderer);
     }
     
+    if(client.serverstatus != CLIENT_SOCK_SERVER_NO_UP)
+        netKillServer(&client);
     
     levelDestroy(&lvl1);
     fontDestroy(&font);
@@ -183,6 +190,7 @@ int main(int argc, char *argv[]){
     
     mainMenuDestroy(&mainMenu);
     startMenuDestroy(&startMenu);
+    pauseMenuDestroy(&pauseMenu);
     lobbyMenuDestroy(&lobbyMenu);
     menuCoreDestroy(&menuCore);
     

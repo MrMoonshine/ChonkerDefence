@@ -365,7 +365,7 @@ int levelCreateFromServer(Level *level, ClientSock *csock, SDL_Renderer *rendere
         uint8_t x =  level->catSpots[3*a + 1];
         uint8_t y =  level->catSpots[3*a + 2];
         level->lts.variationCatPlacePlayer.frameNumber = pid;
-        SDL_Log("%s\tDrawing node at (%d|%d) for Player %d.\n",TAG,x,y,pid);
+        //SDL_Log("%s\tDrawing node at (%d|%d) for Player %d.\n",TAG,x,y,pid);
         
         textureDraw(
             &level->lts.catPlace,

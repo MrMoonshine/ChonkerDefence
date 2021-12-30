@@ -42,11 +42,20 @@
 #define MENU_START_BUTTON_END 0
 #define MENU_START_BUTTON_RANDOM 1
 #define MENU_START_BUTTON_LEVELS_OFFSET 2
-
 #define MENU_START_BUTTON_STRLEN 24
+
+#define MENU_PAUSE_TITLE "Pause"
+#define MENU_PAUSE_TEXT_BUTTON_RESUME "Resume"
+#define MENU_PAUSE_TEXT_BUTTON_STOP "Stop"
+#define MENU_PAUSE_BUTTON_ENABLE 0
+#define MENU_PAUSE_BUTTON_RESUME 1
+#define MENU_PAUSE_BUTTON_STOP 2
+
 
 #define MENU_ACTION_START_GAME 1
 #define MENU_ACTION_START_SOCKET 2
+
+#define MENU_STANDALONE_BUTTON_TEXT_PAUSE "||"
 /*--------------------------------------*/
 /*            Core Class                */
 /*--------------------------------------*/
@@ -100,8 +109,18 @@ typedef struct{
     bool enable;
 }LobbyMenu;
 
+typedef struct{
+    MenuCore *core;
+    Font title;
+    Button resume, stop;
+    //The Standalone pause enable button
+    Button toggle;
+    uint8_t currentPage;
+    bool enable;
+}PauseMenu;
 
-int menuHandleAll(ClientSock *client, MainMenu* main, StartMenu* start, LobbyMenu *lobby, float winscale);
+
+int menuHandleAll(ClientSock *client, MainMenu* main, StartMenu* start, LobbyMenu *lobby, PauseMenu *pause, float winscale);
 //Core
 void menuCoreDrawBackground(MenuCore *mc);
 //Main Menu
@@ -121,3 +140,9 @@ void lobbyMenuEnable(LobbyMenu *menu, ClientSock *csock);
 void lobbyMenuDisable(LobbyMenu *menu);
 int lobbyMenuHandle(LobbyMenu *menu);
 void lobbyMenuDestroy(LobbyMenu *menu);
+//Pause
+void pauseMenuCreate(PauseMenu *menu, MenuCore *mc);
+void pauseMenuEnable(PauseMenu *menu, ClientSock *csock);
+void pauseMenuDisable(PauseMenu *menu);
+int pauseMenuHandle(PauseMenu *menu, float winscale);
+void pauseMenuDestroy(PauseMenu *menu);

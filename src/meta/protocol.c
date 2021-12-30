@@ -84,7 +84,8 @@ int netSockSetup(ClientSock *csock){
 
 	uint8_t buff1[1 + 10 + 1];
     memset(buff1, 0, 11);
-    strcpy((char*)buff1 + 1, "David");
+    //strcpy((char*)buff1 + 1, "David");
+    strncpy((char*)buff1 + 1, getlogin(), 11);
     buff1[0] = CD_NET_CODE_PLAYER_NAME;
     buff1[11] = 1;
 	write(csock->sock, buff1, 12);

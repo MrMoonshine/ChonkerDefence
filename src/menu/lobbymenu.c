@@ -1,4 +1,5 @@
 #include "menu.h"
+static const char* TAG = "[LOBBY]";
 static const char* LOBBYBG = "/home/david/Programmieren/C/ChonkerDefenceAssets/vorlagen/LobbyMenu.png";
 static const unsigned int MENU_LOBBY_ENTRY_WIDTH = 128;
 static const unsigned int MENU_LOBBY_WIDTH = MENU_LOBBY_ENTRY_WIDTH*GAME_PLAYERS_MAX;
@@ -30,6 +31,7 @@ void lobbyMenuCreate(LobbyMenu *menu, MenuCore *mc){
 }
 
 void lobbyMenuEnable(LobbyMenu *menu, ClientSock *csock){
+    SDL_Log("%s\tEnabling Lobby Menu...\n", TAG);
     menu->enable = true;
     for(int a = 0; a < GAME_PLAYERS_MAX; a++){
         fontRender(menu->names + a, strlen(csock->pinfo[a].name) ? csock->pinfo[a].name : " ");

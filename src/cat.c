@@ -67,7 +67,7 @@ void ctsDestroy(CTS* cts){
 void catCreate(Cat *cat, CTS *textures, Chonkyness chonkyness){
     cat->textures = textures;
     cat->chonkyness = chonkyness;
-    cat->position.x = 100;
+    cat->position.x = 320;
     cat->position.y = 80;
     cat->rotation = FRONT;
 
