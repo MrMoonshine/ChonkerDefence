@@ -47,9 +47,9 @@
 #define MENU_PAUSE_TITLE "Pause"
 #define MENU_PAUSE_TEXT_BUTTON_RESUME "Resume"
 #define MENU_PAUSE_TEXT_BUTTON_STOP "Stop"
-#define MENU_PAUSE_BUTTON_ENABLE 0
-#define MENU_PAUSE_BUTTON_RESUME 1
-#define MENU_PAUSE_BUTTON_STOP 2
+#define MENU_PAUSE_BUTTON_ENABLE 1
+#define MENU_PAUSE_BUTTON_RESUME 2
+#define MENU_PAUSE_BUTTON_STOP 3
 
 
 #define MENU_ACTION_START_GAME 1
@@ -142,7 +142,7 @@ int lobbyMenuHandle(LobbyMenu *menu);
 void lobbyMenuDestroy(LobbyMenu *menu);
 //Pause
 void pauseMenuCreate(PauseMenu *menu, MenuCore *mc);
-void pauseMenuEnable(PauseMenu *menu, ClientSock *csock);
+void pauseMenuEnable(PauseMenu *menu);
 void pauseMenuDisable(PauseMenu *menu);
-int pauseMenuHandle(PauseMenu *menu, float winscale);
+int pauseMenuHandle(PauseMenu *menu, bool gameIsRunning, float winscale);
 void pauseMenuDestroy(PauseMenu *menu);

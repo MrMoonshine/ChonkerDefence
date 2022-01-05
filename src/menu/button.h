@@ -47,6 +47,7 @@ void uiElementsCreate(UIElements *ui, SDL_Renderer *renderer);
 void uiElementsDestroy(UIElements *ui);
 
 void menuButtonCreate(Button *button, const char* title, Image *icon, UIElements *ui, uint8_t colour, ButtonType btype);
+void menuButtonAlterText(Button *button, const char* title);
 //Returns 0. If button is pressed return 1
 int menuButtonHandle(Button *button, int x, int y, float winscale);
 void menuButtonDestroy(Button *button);

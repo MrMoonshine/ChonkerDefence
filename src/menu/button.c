@@ -2,6 +2,40 @@
 
 static const char* TAG = "[BUTTON]";
 
+SDL_Colour WHITE = {
+    .r = 255,
+    .g = 255,
+    .b = 255
+};
+    
+SDL_Colour YELLOW = {
+    .r = 255,
+    .g = 255,
+    .b = 64
+};
+
+static void createButtonText(Button *button, const char* title){
+    fontCreate(&button->text, FONT_DEFAULT, BUTTON_TEXT_SIZE, WHITE, button->ui->renderer);
+    fontRender(&button->text, title);
+    
+    fontCreate(&button->textActive, FONT_DEFAULT, BUTTON_TEXT_SIZE, YELLOW, button->ui->renderer);
+    fontRender(&button->textActive, title);
+    
+    switch(button->btype){
+        case BT_LONG: {
+            button->textOffset.x = (BUTTON_WIDTH_LONG - button->text.rect.w) / 2;
+        }break;
+        case BT_SHORT: {
+            button->textOffset.x = (BUTTON_WIDTH_SHORT - button->text.rect.w) / 2;
+        } break;
+        case BT_VERY_SHORT:{
+            //The -4 is just raw guesswork. Hence: no macro :3
+            button->textOffset.x = (BUTTON_WIDTH_VERY_SHORT - button->text.rect.w) / 2 - 4;
+        } break;
+    }
+    button->textOffset.y = (BUTTON_HEIGHT - button->text.rect.h) / 2;
+}
+
 void uiElementsCreate(UIElements *ui, SDL_Renderer *renderer){
     char buffer[128];
     strcpy(buffer, "");
@@ -47,41 +81,17 @@ void menuButtonCreate(Button *button, const char* title, Image *icon, UIElements
         }break;
     }
     button->hitbox.h = BUTTON_HEIGHT;
-    SDL_Colour white = {
-        .r = 255,
-        .g = 255,
-        .b = 255
-    };
-    
-    SDL_Colour yellow = {
-        .r = 255,
-        .g = 255,
-        .b = 64
-    };
-    
-    fontCreate(&button->text, FONT_DEFAULT, BUTTON_TEXT_SIZE, white, ui->renderer);
-    fontRender(&button->text, title);
-    
-    fontCreate(&button->textActive, FONT_DEFAULT, BUTTON_TEXT_SIZE, yellow, ui->renderer);
-    fontRender(&button->textActive, title);
-    
-    switch(btype){
-        case BT_LONG: {
-            button->textOffset.x = (BUTTON_WIDTH_LONG - button->text.rect.w) / 2;
-        }break;
-        case BT_SHORT: {
-            button->textOffset.x = (BUTTON_WIDTH_SHORT - button->text.rect.w) / 2;
-        } break;
-        case BT_VERY_SHORT:{
-            //The -4 is just raw guesswork. Hence: no macro :3
-            button->textOffset.x = (BUTTON_WIDTH_VERY_SHORT - button->text.rect.w) / 2 - 4;
-        } break;
-    }
-    button->textOffset.y = (BUTTON_HEIGHT - button->text.rect.h) / 2;
+    createButtonText(button, title);
     
     button->bai.period = 0;
     button->bai.frameCount = 4;
     button->bai.frameNumber = colour % button->bai.frameCount;
+}
+
+void menuButtonAlterText(Button *button, const char* title){
+    fontDestroy(&button->text);
+    fontDestroy(&button->textActive);
+    createButtonText(button, title);
 }
 
 int menuButtonHandle(Button *button, int x, int y, float winscale){

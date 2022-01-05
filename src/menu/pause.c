@@ -40,26 +40,32 @@ void pauseMenuCreate(PauseMenu *menu, MenuCore *mc){
     );
 }
 
-void pauseMenuEnable(PauseMenu *menu, ClientSock *csock){
+void pauseMenuEnable(PauseMenu *menu){
+    menuButtonAlterText(&menu->toggle, ">");
     menu->enable = true;
 }
 
 void pauseMenuDisable(PauseMenu *menu){
+    menuButtonAlterText(&menu->toggle, "||");
     menu->enable = false;
 }
 
-int pauseMenuHandle(PauseMenu *menu, float winscale){
-    int a = menuButtonHandle(
+int pauseMenuHandle(PauseMenu *menu, bool gameIsRunning, float winscale){
+    if(!(menu->enable || gameIsRunning))
+        return 0;
+    
+    uint8_t ret = 0;
+    //If the menu is enabled, this is the Resume Button, else it's the button to open the menu
+    ret = menuButtonHandle(
         &menu->toggle,
         APP_WIDTH - menu->toggle.hitbox.w,
         10,
         winscale
-    ) << MENU_PAUSE_BUTTON_ENABLE;
-    
+    ) << (menu->enable ? MENU_PAUSE_BUTTON_RESUME : MENU_PAUSE_BUTTON_ENABLE);
+    // Don't render any other menu components
     if(!menu->enable)
-        return 0;
+        return ret;
     
-    uint8_t ret = 0;
     menuCoreDrawBackground(menu->core);
     fontDraw(
         &menu->title,

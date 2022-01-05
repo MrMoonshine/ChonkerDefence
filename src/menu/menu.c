@@ -402,15 +402,21 @@ int menuHandleAll(ClientSock *client, MainMenu* main, StartMenu* start, LobbyMen
         /*----------------------------------------------------------*/
         /*                   Pause Menu                             */
         /*----------------------------------------------------------*/
-        mmres = pauseMenuHandle(pause, winscale);
+        // Determine if game is running by testing if one of the main menus is enabled
+        mmres = pauseMenuHandle(pause, winscale, !(main->enable || start->enable));
         mmres = start->core->mouse_cooldown ? 0 : mmres;
-        if(mmres & (1 << MENU_PAUSE_BUTTON_RESUME)){
+        if(mmres & (1 << MENU_PAUSE_BUTTON_ENABLE)){
             menuCoreMouseCD(pause->core);
-            pause->enable = false;
+            pauseMenuEnable(pause);
+            SDL_Log("Eable pause!\n");
+        }else if(mmres & (1 << MENU_PAUSE_BUTTON_RESUME)){
+            menuCoreMouseCD(pause->core);
+            pauseMenuDisable(pause);
+            SDL_Log("Resume pause!\n");
         }else if(mmres & (1 << MENU_PAUSE_BUTTON_STOP)){
             //If the player clicks on stop Return to main menu
             menuCoreMouseCD(pause->core);
-            pause->enable = false;
+            pauseMenuDisable(pause);
             main->enable = true;
         }
         
