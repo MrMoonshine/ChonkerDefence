@@ -7,7 +7,7 @@ add_definitions(
     -DAPP_ENGEINE="SDL2"
     -DAPP_WIDTH=1536
     -DAPP_HEIGHT=864
-    -DASSET_PATH="/home/david/Programmieren/C/ChonkerDefenceAssets/assets/"
+    -DASSET_PATH="/home/david/Programmieren/C/ChonkerDefence/assets/"
     -DCDNET_PORT=42069
 )
 
