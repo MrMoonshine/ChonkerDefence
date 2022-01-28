@@ -12,9 +12,3 @@ typedef enum{
     FRONT,
     LEFT
 } Rotation;
-
-typedef struct Node{
-    Image *texture;         //Texture
-    AnimationInfo *aniinfo; //Animation Data for e.g Waterfalls
-    struct Node* next;      //Next Node
-} Node;

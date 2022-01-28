@@ -1,6 +1,6 @@
 #include "menu.h"
 static const char* TAG = "[LOBBY]";
-static const char* LOBBYBG = "/home/david/Programmieren/C/ChonkerDefenceAssets/vorlagen/LobbyMenu.png";
+static const char* LOBBYBG = "textures/ui/background-lobby.png";
 static const unsigned int MENU_LOBBY_ENTRY_WIDTH = 128;
 static const unsigned int MENU_LOBBY_WIDTH = MENU_LOBBY_ENTRY_WIDTH*GAME_PLAYERS_MAX;
 static const unsigned int TEXT_SIZE = 20;
@@ -20,7 +20,13 @@ static void clearNames(LobbyMenu *menu){
 void lobbyMenuCreate(LobbyMenu *menu, MenuCore *mc){
     menu->enable = false;
     menu->core = mc;
-    textureLoad(&menu->background, menu->core->ui.renderer, LOBBYBG);
+    char *buff;
+    buff = (char*)malloc(strlen(ASSET_PATH) + strlen(LOBBYBG));
+    memset(buff, 0, strlen(ASSET_PATH) + strlen(LOBBYBG));
+    strcpy(buff, ASSET_PATH);
+    strcat(buff, LOBBYBG);
+    textureLoad(&menu->background, menu->core->ui.renderer, buff);
+    free(buff);
     
     for(int a = 0; a < GAME_PLAYERS_MAX; a++){
         fontCreate(menu->names + a, FONT_DEFAULT, TEXT_SIZE, NAME_COLOUR, mc->ui.renderer);
@@ -51,7 +57,7 @@ int lobbyMenuHandle(LobbyMenu *menu){
     textureDraw(&menu->background, menux, 0, SDL_FLIP_NONE, NULL);
     
     for(int a = 0; a < GAME_PLAYERS_MAX; a++){
-        fontDraw(menu->names + a, menux + 12 + MENU_LOBBY_ENTRY_WIDTH * a, 70);
+        fontDraw(menu->names + a, menux + 12 + MENU_LOBBY_ENTRY_WIDTH * a, 62);
     }
     
     return 0;

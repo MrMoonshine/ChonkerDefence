@@ -392,7 +392,6 @@ int levelCreateFromServer(Level *level, ClientSock *csock, SDL_Renderer *rendere
     SDL_SetRenderTarget(renderer, level->background.texture);
     SDL_Surface* surface = SDL_CreateRGBSurface(0, level->background.destination.w, level->background.destination.h, 32, 0, 0, 0, 0);
     SDL_RenderReadPixels(renderer, NULL, surface->format->format, surface->pixels, surface->pitch);
-    IMG_SavePNG(surface, "/home/david/oida.png");
     SDL_FreeSurface(surface);
     SDL_SetRenderTarget(renderer, NULL);
     

@@ -1,9 +1,28 @@
 #pragma once
+#include <stdint.h>
 #define GAME_PLAYERS_MAX 3
 #define GAME_PLAYER_NAME_LENGTH 10
+
+//Speeds are for the Mice in the game. Not for your computer mouse
+//Speed in pixels/s
+#define GAME_MOUSE_SPEED 50
+#define GAME_MOUSE_SPEED_DEVIATION 5
 
 
 typedef struct{
     char name[GAME_PLAYER_NAME_LENGTH];
     uint8_t profileImage;
 }PlayerInfo;
+
+typedef struct Path{
+    uint8_t x, y;
+    struct Path *next;
+} Path;
+
+Path * insertPath(Path **head, uint8_t x, uint8_t y);
+//Delete a given element
+void deletePath(Path *head, Path *elem);
+//Purge the entire list
+void deleteAllPath(Path **head);
+//Dump it
+void printPath(Path *head);

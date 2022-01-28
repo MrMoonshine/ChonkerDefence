@@ -17,6 +17,7 @@
 
 #include "nodes.h"
 #include "meta/game.h"
+#include "level.h"
 
 #define SERVER_FLAG_SINGLEPLAYER (1 << 0)
 
@@ -33,7 +34,7 @@ typedef struct{
    bool useIPv6;
    struct sockaddr_in6 saddr6;
    int serverFD, maxSD;
-   
+
    fd_set fds;
    int csocks[SERVER_CONNECTIONS_MAX];
    PlayerInfo pinfo[SERVER_CONNECTIONS_MAX];
@@ -53,8 +54,12 @@ typedef struct {
     // 3 bytes per node: player, x, y
     uint8_t *catNodes;
     uint8_t catNodesCount;
+    //Information regarding paths
+    SDL_Point goal;
+    Path **starts;
+    uint8_t startCount;
 } LevelServer;
 
 int serverStart(unsigned int flags);
 int serverLoadLevel(LevelServer *ls, char* filename);
-void serverDestroy();
+void serverDestroy(LevelServer *ls);
