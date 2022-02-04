@@ -238,7 +238,7 @@ int levelCreateFromServer(Level *level, ClientSock *csock, SDL_Renderer *rendere
                 if(cont != LEVEL_NODE_CODE_GRASS){
                     level->catSpotCount++;
                 }
-            }else if(cont == LEVEL_NODE_CODE_PATH){
+            }else if(cont == LEVEL_NODE_CODE_PATH || cont == LEVEL_NODE_CODE_PATH_FWD){
                 //Draw Grass to merge the path with the map
                 textureDraw(
                     &level->lts.grass,
@@ -249,13 +249,17 @@ int levelCreateFromServer(Level *level, ClientSock *csock, SDL_Renderer *rendere
                 );
                 uint8_t neighbors = 0;
 
-                if(levelNodeInfoAt(ldat8, datCount8, level->width, x, y + 1) == LEVEL_NODE_CODE_PATH)
+                uint8_t ninfo = levelNodeInfoAt(ldat8, datCount8, level->width, x, y + 1);
+                if(ninfo == LEVEL_NODE_CODE_PATH || ninfo == LEVEL_NODE_CODE_PATH_FWD)
                     neighbors |= 1 << 0;
-                if(levelNodeInfoAt(ldat8, datCount8, level->width, x + 1, y) == LEVEL_NODE_CODE_PATH)
+                ninfo = levelNodeInfoAt(ldat8, datCount8, level->width, x + 1, y);
+                if(ninfo == LEVEL_NODE_CODE_PATH || ninfo == LEVEL_NODE_CODE_PATH_FWD)
                     neighbors |= 1 << 1;
-                if(levelNodeInfoAt(ldat8, datCount8, level->width, x, y - 1) == LEVEL_NODE_CODE_PATH)
+                ninfo = levelNodeInfoAt(ldat8, datCount8, level->width, x, y - 1);
+                if(ninfo == LEVEL_NODE_CODE_PATH || ninfo == LEVEL_NODE_CODE_PATH_FWD)
                     neighbors |= 1 << 2;
-                if(levelNodeInfoAt(ldat8, datCount8, level->width, x - 1, y) == LEVEL_NODE_CODE_PATH)
+                ninfo = levelNodeInfoAt(ldat8, datCount8, level->width, x - 1, y);
+                if(ninfo == LEVEL_NODE_CODE_PATH || ninfo == LEVEL_NODE_CODE_PATH_FWD)
                     neighbors |= 1 << 3;
                 
                 switch(neighbors){

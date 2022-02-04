@@ -121,10 +121,6 @@ static int srvLoadCatSpots(LevelServer *ls, LevelSock *lso){
    \ \_______\ \_______\ \__/ /     \ \_______\ \_______\       \ \_______\ \_______\ \__\ \__\ \_______\ \__\ \__\\ \__\ \_______\
     \|_______|\|_______|\|__|/       \|_______|\|_______|        \|_______|\|_______|\|__|\|__|\|_______|\|__|\|__| \|__|\|_______|
  */
-static bool isPath(uint8_t a){
-    return a == LEVEL_NODE_CODE_PATH || a == LEVEL_NODE_CODE_BRIDGE; 
-}
-
 static int serverPathDelete(LevelServer *ls){
     if(ls->starts){
         for(int a = 0; a < ls->startCount; a++){
@@ -134,78 +130,6 @@ static int serverPathDelete(LevelServer *ls){
         free(ls->starts);
     }
     ls->starts = NULL;
-    return 0;
-}
-
-static int serverPathSolicitateStarts(LevelServer *ls){
-    serverPathDelete(ls);
-    ls->startCount = 0;
-    //Left Col
-    for(uint8_t a = 0; a < ls->height; a++)
-        if(isPath(levelNodeInfoAt(ls->nodes, ls->nodesSize, ls->width, 0, a)))
-            ls->startCount++;
-    //Right Col
-    for(uint8_t a = 0; a < ls->height; a++)
-        if(isPath(levelNodeInfoAt(ls->nodes, ls->nodesSize, ls->width, ls->width - 1, a)))
-            ls->startCount++;
-    //Substract Goal
-    ls->startCount--;
-    if(ls->startCount < 1)
-        return -1;
-    SDL_Log("%s\tfound %d beginnings\n",TAG_GAME, ls->startCount);
-    (ls->starts) = (Path**)malloc(sizeof(Path*) * ls->startCount);
-    
-    //Initialize Start Nodes
-    uint8_t index = 0;
-    for(uint8_t a = 0; a < ls->startCount; a++){
-        ls->starts[a] = NULL;
-    }
-    //Left Col
-    for(uint8_t a = 0; a < ls->height; a++){
-        if(isPath(levelNodeInfoAt(ls->nodes, ls->nodesSize, ls->width, 0, a))){
-            insertPath((ls->starts + index++), 0, a);
-        }
-    }
-    //Right Col
-    for(uint8_t a = 0; a < ls->height; a++){
-        if(isPath(levelNodeInfoAt(ls->nodes, ls->nodesSize, ls->width, ls->width - 1, a))){
-            insertPath((ls->starts + index++), ls->width - 1, a);
-        }
-    }
-    ls->startCount = index;
-    
-    for(uint8_t a = 0; a < ls->startCount; a++){
-        SDL_Log("--- List #%d ---\n", a);
-        printPath((ls->starts[a]));
-    }
-
-    return 0;
-}
-
-
-static int serverPathSolicitateIntersections(){
-    return -1;
-}
-
-//Detect the Node that will be the designated Goal for the mice
-static int serverDetectPath(LevelServer *ls){
-    ls->goal.x = 0;
-    ls->goal.y = 0;
-    for(int a = 0; a < ls->height; a++){
-        uint8_t ntype = levelNodeInfoAt(ls->nodes, ls->nodesSize, ls->width, ls->width-1, a);
-        if(ntype == LEVEL_NODE_CODE_PATH || ntype == LEVEL_NODE_CODE_BRIDGE){
-            ls->goal.x = ls->width - 1;
-            ls->goal.y = a;
-            //insertPath(&ls->goal, ls->width - 1, a);
-            SDL_Log("%s\tThe Level's Goal will be (%d|%d)\n",TAG, ls->width - 1, a);
-            break;
-        }
-    }
-    //ERROR: No goal found
-    if(ls->goal.x == 0)
-        return -1;
-    //Continue...
-    serverPathSolicitateStarts(ls);
     return 0;
 }
 
@@ -258,7 +182,12 @@ int serverLoadLevel(LevelServer *ls, char* filename){
     fread(ls->nodes, sizeof(uint8_t), ls->nodesSize, fp);
     fclose(fp);
     SDL_Log("%s\tLoaded %s with style %s\n", TAG, ls->name, ls->style);
-    serverDetectPath(ls);
+    /*--------------------------------------*/
+    /*               SPF                    */
+    /*--------------------------------------*/
+    SPF spf;
+    spfCreate(&spf, ls);
+    spfDestroy(&spf);
     return 0;
 }
 

@@ -16,8 +16,8 @@
 #include <errno.h>
 
 #include "nodes.h"
+#include "spf.h"
 #include "meta/game.h"
-#include "level.h"
 
 #define SERVER_FLAG_SINGLEPLAYER (1 << 0)
 
@@ -40,25 +40,6 @@ typedef struct{
    PlayerInfo pinfo[SERVER_CONNECTIONS_MAX];
    bool singleplayer;
 } LevelSock;
-
-typedef struct {
-    char name[LEVEL_TITLE_LENGTH];   //Name
-    uint8_t width;
-    uint8_t height;
-    char style[LEVEL_STYLE_LENGTH];
-    uint8_t *nodes;
-    size_t nodesSize;
-    //Reserved vars
-    //char reserved[xxx];
-    //Raw Cat node data:
-    // 3 bytes per node: player, x, y
-    uint8_t *catNodes;
-    uint8_t catNodesCount;
-    //Information regarding paths
-    SDL_Point goal;
-    Path **starts;
-    uint8_t startCount;
-} LevelServer;
 
 int serverStart(unsigned int flags);
 int serverLoadLevel(LevelServer *ls, char* filename);
