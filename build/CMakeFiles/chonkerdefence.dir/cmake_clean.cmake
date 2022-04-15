@@ -1,0 +1,41 @@
+file(REMOVE_RECURSE
+  "CMakeFiles/chonkerdefence.dir/src/cat.c.o"
+  "CMakeFiles/chonkerdefence.dir/src/cat.c.o.d"
+  "CMakeFiles/chonkerdefence.dir/src/image.c.o"
+  "CMakeFiles/chonkerdefence.dir/src/image.c.o.d"
+  "CMakeFiles/chonkerdefence.dir/src/level.c.o"
+  "CMakeFiles/chonkerdefence.dir/src/level.c.o.d"
+  "CMakeFiles/chonkerdefence.dir/src/main.c.o"
+  "CMakeFiles/chonkerdefence.dir/src/main.c.o.d"
+  "CMakeFiles/chonkerdefence.dir/src/menu/button.c.o"
+  "CMakeFiles/chonkerdefence.dir/src/menu/button.c.o.d"
+  "CMakeFiles/chonkerdefence.dir/src/menu/lobbymenu.c.o"
+  "CMakeFiles/chonkerdefence.dir/src/menu/lobbymenu.c.o.d"
+  "CMakeFiles/chonkerdefence.dir/src/menu/mainmenu.c.o"
+  "CMakeFiles/chonkerdefence.dir/src/menu/mainmenu.c.o.d"
+  "CMakeFiles/chonkerdefence.dir/src/menu/menu.c.o"
+  "CMakeFiles/chonkerdefence.dir/src/menu/menu.c.o.d"
+  "CMakeFiles/chonkerdefence.dir/src/menu/pause.c.o"
+  "CMakeFiles/chonkerdefence.dir/src/menu/pause.c.o.d"
+  "CMakeFiles/chonkerdefence.dir/src/meta/game.c.o"
+  "CMakeFiles/chonkerdefence.dir/src/meta/game.c.o.d"
+  "CMakeFiles/chonkerdefence.dir/src/meta/protocol.c.o"
+  "CMakeFiles/chonkerdefence.dir/src/meta/protocol.c.o.d"
+  "CMakeFiles/chonkerdefence.dir/src/mouse.c.o"
+  "CMakeFiles/chonkerdefence.dir/src/mouse.c.o.d"
+  "CMakeFiles/chonkerdefence.dir/src/nodes.c.o"
+  "CMakeFiles/chonkerdefence.dir/src/nodes.c.o.d"
+  "CMakeFiles/chonkerdefence.dir/src/server.c.o"
+  "CMakeFiles/chonkerdefence.dir/src/server.c.o.d"
+  "CMakeFiles/chonkerdefence.dir/src/text.c.o"
+  "CMakeFiles/chonkerdefence.dir/src/text.c.o.d"
+  "CMakeFiles/chonkerdefence.dir/src/unisw.c.o"
+  "CMakeFiles/chonkerdefence.dir/src/unisw.c.o.d"
+  "chonkerdefence"
+  "chonkerdefence.pdb"
+)
+
+# Per-language clean rules from dependency scanning.
+foreach(lang C)
+  include(CMakeFiles/chonkerdefence.dir/cmake_clean_${lang}.cmake OPTIONAL)
+endforeach()

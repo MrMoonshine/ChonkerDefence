@@ -58,14 +58,53 @@ int uniswCreate(UNISW *unisw, LevelServer *ls){
         }
     }
     // Debug
-    //printPath(ls->paths);
+    printPath(ls->paths);
     //Get Goal Node
     Path * goal = getGoalNode(ls);
     if(!goal)
         return -1;
+    Path * currentNode = goal;
     // Last node has no other nodes to follow
     goal->follow = NULL;
-    
+    // A buffer to store intersections that haven't been fully processed
+    size_t intersectionBufferSize = 2;
+    Path** intersectionBuffer = (Path**)malloc((sizeof(Path*) * intersectionBufferSize));
+    if(intersectionBuffer == NULL)
+        return -1;
+    // Ladies and Gentlemen, the time has come... to finally trace the path for the mice
+    Path * neighbours[4];
+    uint8_t neighbourCount = 0;
+    while(neighbourCount < 30 || currentNode == goal){
+        //Reset
+        //neighbourCount = 0;
+        memset(neighbours, 0, 4);
+        // Iterating
+        Path *elem = ls->paths;
+        while(elem){
+            if(
+                abs(elem->x - currentNode->x) <= 1 &&
+                abs(elem->y - currentNode->y) <= 1
+            ){
+                // Don't allow diagonal Nodes!
+                if(
+                    ((abs(elem->x - currentNode->x) == 1) !=
+                    (abs(elem->y - currentNode->y) == 1))
+                ){
+                    //(elem->x != ls->goal.x && elem->y != ls->goal.y)
+                    SDL_Log("%s\tNeighbouring node (%d|%d)\n",TAG,elem->x,elem->y);
+                    if(elem->follow == NULL && elem != goal){
+                        elem->follow = currentNode;
+                        currentNode = elem;
+                        neighbourCount++;
+                        break;
+                    }
+                }                
+            }
+            elem = elem->next;
+        }
+        //break;
+    }
+    free(intersectionBuffer);
     return 0; 
 }
 

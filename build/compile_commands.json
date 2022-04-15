@@ -1,0 +1,82 @@
+[
+{
+  "directory": "/home/david/Programmieren/C/ChonkerDefence/build",
+  "command": "/usr/bin/cc -DAPP_ENGEINE=\\\"SDL2\\\" -DAPP_HEIGHT=864 -DAPP_TITLE=\"\\\"Chonker Defence\\\"\" -DAPP_WIDTH=1536 -DASSET_PATH=\\\"/home/david/Programmieren/C/ChonkerDefence/assets/\\\" -DCDNET_PORT=42069 -isystem /usr/include/SDL2 -g -o CMakeFiles/chonkerdefence.dir/src/cat.c.o -c /home/david/Programmieren/C/ChonkerDefence/src/cat.c",
+  "file": "/home/david/Programmieren/C/ChonkerDefence/src/cat.c"
+},
+{
+  "directory": "/home/david/Programmieren/C/ChonkerDefence/build",
+  "command": "/usr/bin/cc -DAPP_ENGEINE=\\\"SDL2\\\" -DAPP_HEIGHT=864 -DAPP_TITLE=\"\\\"Chonker Defence\\\"\" -DAPP_WIDTH=1536 -DASSET_PATH=\\\"/home/david/Programmieren/C/ChonkerDefence/assets/\\\" -DCDNET_PORT=42069 -isystem /usr/include/SDL2 -g -o CMakeFiles/chonkerdefence.dir/src/image.c.o -c /home/david/Programmieren/C/ChonkerDefence/src/image.c",
+  "file": "/home/david/Programmieren/C/ChonkerDefence/src/image.c"
+},
+{
+  "directory": "/home/david/Programmieren/C/ChonkerDefence/build",
+  "command": "/usr/bin/cc -DAPP_ENGEINE=\\\"SDL2\\\" -DAPP_HEIGHT=864 -DAPP_TITLE=\"\\\"Chonker Defence\\\"\" -DAPP_WIDTH=1536 -DASSET_PATH=\\\"/home/david/Programmieren/C/ChonkerDefence/assets/\\\" -DCDNET_PORT=42069 -isystem /usr/include/SDL2 -g -o CMakeFiles/chonkerdefence.dir/src/level.c.o -c /home/david/Programmieren/C/ChonkerDefence/src/level.c",
+  "file": "/home/david/Programmieren/C/ChonkerDefence/src/level.c"
+},
+{
+  "directory": "/home/david/Programmieren/C/ChonkerDefence/build",
+  "command": "/usr/bin/cc -DAPP_ENGEINE=\\\"SDL2\\\" -DAPP_HEIGHT=864 -DAPP_TITLE=\"\\\"Chonker Defence\\\"\" -DAPP_WIDTH=1536 -DASSET_PATH=\\\"/home/david/Programmieren/C/ChonkerDefence/assets/\\\" -DCDNET_PORT=42069 -isystem /usr/include/SDL2 -g -o CMakeFiles/chonkerdefence.dir/src/main.c.o -c /home/david/Programmieren/C/ChonkerDefence/src/main.c",
+  "file": "/home/david/Programmieren/C/ChonkerDefence/src/main.c"
+},
+{
+  "directory": "/home/david/Programmieren/C/ChonkerDefence/build",
+  "command": "/usr/bin/cc -DAPP_ENGEINE=\\\"SDL2\\\" -DAPP_HEIGHT=864 -DAPP_TITLE=\"\\\"Chonker Defence\\\"\" -DAPP_WIDTH=1536 -DASSET_PATH=\\\"/home/david/Programmieren/C/ChonkerDefence/assets/\\\" -DCDNET_PORT=42069 -isystem /usr/include/SDL2 -g -o CMakeFiles/chonkerdefence.dir/src/menu/button.c.o -c /home/david/Programmieren/C/ChonkerDefence/src/menu/button.c",
+  "file": "/home/david/Programmieren/C/ChonkerDefence/src/menu/button.c"
+},
+{
+  "directory": "/home/david/Programmieren/C/ChonkerDefence/build",
+  "command": "/usr/bin/cc -DAPP_ENGEINE=\\\"SDL2\\\" -DAPP_HEIGHT=864 -DAPP_TITLE=\"\\\"Chonker Defence\\\"\" -DAPP_WIDTH=1536 -DASSET_PATH=\\\"/home/david/Programmieren/C/ChonkerDefence/assets/\\\" -DCDNET_PORT=42069 -isystem /usr/include/SDL2 -g -o CMakeFiles/chonkerdefence.dir/src/menu/lobbymenu.c.o -c /home/david/Programmieren/C/ChonkerDefence/src/menu/lobbymenu.c",
+  "file": "/home/david/Programmieren/C/ChonkerDefence/src/menu/lobbymenu.c"
+},
+{
+  "directory": "/home/david/Programmieren/C/ChonkerDefence/build",
+  "command": "/usr/bin/cc -DAPP_ENGEINE=\\\"SDL2\\\" -DAPP_HEIGHT=864 -DAPP_TITLE=\"\\\"Chonker Defence\\\"\" -DAPP_WIDTH=1536 -DASSET_PATH=\\\"/home/david/Programmieren/C/ChonkerDefence/assets/\\\" -DCDNET_PORT=42069 -isystem /usr/include/SDL2 -g -o CMakeFiles/chonkerdefence.dir/src/menu/mainmenu.c.o -c /home/david/Programmieren/C/ChonkerDefence/src/menu/mainmenu.c",
+  "file": "/home/david/Programmieren/C/ChonkerDefence/src/menu/mainmenu.c"
+},
+{
+  "directory": "/home/david/Programmieren/C/ChonkerDefence/build",
+  "command": "/usr/bin/cc -DAPP_ENGEINE=\\\"SDL2\\\" -DAPP_HEIGHT=864 -DAPP_TITLE=\"\\\"Chonker Defence\\\"\" -DAPP_WIDTH=1536 -DASSET_PATH=\\\"/home/david/Programmieren/C/ChonkerDefence/assets/\\\" -DCDNET_PORT=42069 -isystem /usr/include/SDL2 -g -o CMakeFiles/chonkerdefence.dir/src/menu/menu.c.o -c /home/david/Programmieren/C/ChonkerDefence/src/menu/menu.c",
+  "file": "/home/david/Programmieren/C/ChonkerDefence/src/menu/menu.c"
+},
+{
+  "directory": "/home/david/Programmieren/C/ChonkerDefence/build",
+  "command": "/usr/bin/cc -DAPP_ENGEINE=\\\"SDL2\\\" -DAPP_HEIGHT=864 -DAPP_TITLE=\"\\\"Chonker Defence\\\"\" -DAPP_WIDTH=1536 -DASSET_PATH=\\\"/home/david/Programmieren/C/ChonkerDefence/assets/\\\" -DCDNET_PORT=42069 -isystem /usr/include/SDL2 -g -o CMakeFiles/chonkerdefence.dir/src/menu/pause.c.o -c /home/david/Programmieren/C/ChonkerDefence/src/menu/pause.c",
+  "file": "/home/david/Programmieren/C/ChonkerDefence/src/menu/pause.c"
+},
+{
+  "directory": "/home/david/Programmieren/C/ChonkerDefence/build",
+  "command": "/usr/bin/cc -DAPP_ENGEINE=\\\"SDL2\\\" -DAPP_HEIGHT=864 -DAPP_TITLE=\"\\\"Chonker Defence\\\"\" -DAPP_WIDTH=1536 -DASSET_PATH=\\\"/home/david/Programmieren/C/ChonkerDefence/assets/\\\" -DCDNET_PORT=42069 -isystem /usr/include/SDL2 -g -o CMakeFiles/chonkerdefence.dir/src/meta/game.c.o -c /home/david/Programmieren/C/ChonkerDefence/src/meta/game.c",
+  "file": "/home/david/Programmieren/C/ChonkerDefence/src/meta/game.c"
+},
+{
+  "directory": "/home/david/Programmieren/C/ChonkerDefence/build",
+  "command": "/usr/bin/cc -DAPP_ENGEINE=\\\"SDL2\\\" -DAPP_HEIGHT=864 -DAPP_TITLE=\"\\\"Chonker Defence\\\"\" -DAPP_WIDTH=1536 -DASSET_PATH=\\\"/home/david/Programmieren/C/ChonkerDefence/assets/\\\" -DCDNET_PORT=42069 -isystem /usr/include/SDL2 -g -o CMakeFiles/chonkerdefence.dir/src/meta/protocol.c.o -c /home/david/Programmieren/C/ChonkerDefence/src/meta/protocol.c",
+  "file": "/home/david/Programmieren/C/ChonkerDefence/src/meta/protocol.c"
+},
+{
+  "directory": "/home/david/Programmieren/C/ChonkerDefence/build",
+  "command": "/usr/bin/cc -DAPP_ENGEINE=\\\"SDL2\\\" -DAPP_HEIGHT=864 -DAPP_TITLE=\"\\\"Chonker Defence\\\"\" -DAPP_WIDTH=1536 -DASSET_PATH=\\\"/home/david/Programmieren/C/ChonkerDefence/assets/\\\" -DCDNET_PORT=42069 -isystem /usr/include/SDL2 -g -o CMakeFiles/chonkerdefence.dir/src/mouse.c.o -c /home/david/Programmieren/C/ChonkerDefence/src/mouse.c",
+  "file": "/home/david/Programmieren/C/ChonkerDefence/src/mouse.c"
+},
+{
+  "directory": "/home/david/Programmieren/C/ChonkerDefence/build",
+  "command": "/usr/bin/cc -DAPP_ENGEINE=\\\"SDL2\\\" -DAPP_HEIGHT=864 -DAPP_TITLE=\"\\\"Chonker Defence\\\"\" -DAPP_WIDTH=1536 -DASSET_PATH=\\\"/home/david/Programmieren/C/ChonkerDefence/assets/\\\" -DCDNET_PORT=42069 -isystem /usr/include/SDL2 -g -o CMakeFiles/chonkerdefence.dir/src/nodes.c.o -c /home/david/Programmieren/C/ChonkerDefence/src/nodes.c",
+  "file": "/home/david/Programmieren/C/ChonkerDefence/src/nodes.c"
+},
+{
+  "directory": "/home/david/Programmieren/C/ChonkerDefence/build",
+  "command": "/usr/bin/cc -DAPP_ENGEINE=\\\"SDL2\\\" -DAPP_HEIGHT=864 -DAPP_TITLE=\"\\\"Chonker Defence\\\"\" -DAPP_WIDTH=1536 -DASSET_PATH=\\\"/home/david/Programmieren/C/ChonkerDefence/assets/\\\" -DCDNET_PORT=42069 -isystem /usr/include/SDL2 -g -o CMakeFiles/chonkerdefence.dir/src/server.c.o -c /home/david/Programmieren/C/ChonkerDefence/src/server.c",
+  "file": "/home/david/Programmieren/C/ChonkerDefence/src/server.c"
+},
+{
+  "directory": "/home/david/Programmieren/C/ChonkerDefence/build",
+  "command": "/usr/bin/cc -DAPP_ENGEINE=\\\"SDL2\\\" -DAPP_HEIGHT=864 -DAPP_TITLE=\"\\\"Chonker Defence\\\"\" -DAPP_WIDTH=1536 -DASSET_PATH=\\\"/home/david/Programmieren/C/ChonkerDefence/assets/\\\" -DCDNET_PORT=42069 -isystem /usr/include/SDL2 -g -o CMakeFiles/chonkerdefence.dir/src/text.c.o -c /home/david/Programmieren/C/ChonkerDefence/src/text.c",
+  "file": "/home/david/Programmieren/C/ChonkerDefence/src/text.c"
+},
+{
+  "directory": "/home/david/Programmieren/C/ChonkerDefence/build",
+  "command": "/usr/bin/cc -DAPP_ENGEINE=\\\"SDL2\\\" -DAPP_HEIGHT=864 -DAPP_TITLE=\"\\\"Chonker Defence\\\"\" -DAPP_WIDTH=1536 -DASSET_PATH=\\\"/home/david/Programmieren/C/ChonkerDefence/assets/\\\" -DCDNET_PORT=42069 -isystem /usr/include/SDL2 -g -o CMakeFiles/chonkerdefence.dir/src/unisw.c.o -c /home/david/Programmieren/C/ChonkerDefence/src/unisw.c",
+  "file": "/home/david/Programmieren/C/ChonkerDefence/src/unisw.c"
+}
+]

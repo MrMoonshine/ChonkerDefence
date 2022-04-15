@@ -191,7 +191,10 @@ int serverLoadLevel(LevelServer *ls, char* filename){
     /* Unidirectional Layer - 2 Like Paths  */
     /*--------------------------------------*/
     UNISW unisw;
-    uniswCreate(&unisw, ls);
+    if(uniswCreate(&unisw, ls) < 0){
+        SDL_LogError(0, "%s\tUnable to trace the path for the mice. Game is unplayable!\n", TAG);
+        return -1;
+    }
     uniswDestroy(&unisw);
     return 0;
 }
