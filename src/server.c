@@ -130,6 +130,11 @@ static int serverPathDelete(LevelServer *ls){
         free(ls->starts);
     }
     ls->starts = NULL;
+    // Delete saved Path nodes
+    if(ls->paths){
+        deleteAllPath(&ls->paths);
+    }
+    ls->paths = NULL;
     return 0;
 }
 
@@ -183,11 +188,11 @@ int serverLoadLevel(LevelServer *ls, char* filename){
     fclose(fp);
     SDL_Log("%s\tLoaded %s with style %s\n", TAG, ls->name, ls->style);
     /*--------------------------------------*/
-    /*               SPF                    */
+    /* Unidirectional Layer - 2 Like Paths  */
     /*--------------------------------------*/
-    SPF spf;
-    spfCreate(&spf, ls);
-    spfDestroy(&spf);
+    UNISW unisw;
+    uniswCreate(&unisw, ls);
+    uniswDestroy(&unisw);
     return 0;
 }
 
@@ -424,6 +429,7 @@ static void srvInitGameServer(LevelServer *gameServer){
     gameServer->height = LEVEL_HEIGHT;
     gameServer->nodes = NULL;
     gameServer->nodesSize = 0;
+    gameServer->paths = NULL;
     gameServer->catNodes = NULL;
     gameServer->catNodesCount = 0;;
 }
@@ -535,6 +541,6 @@ void serverDestroy(LevelServer *ls){
     if(ls->catNodes){
         free(ls->catNodes);
         ls->catNodes = NULL;
-    }    
+    }  
     serverPathDelete(ls);
 }

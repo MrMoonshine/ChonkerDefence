@@ -5,3 +5,7 @@
 This is a tower defence game with THICCC kitties. Your cats need to eat all approaching mice. To *"summon"* a cat, you'll need some treats. This game is intended to be a LAN-Party game, where multiple players need to "peacefully" share their treats and Cats.
 
 ****
+# Technical Informations
+## Tools used
+- *Coding*: KDevelop
+- *Asset Drawing*: Krita

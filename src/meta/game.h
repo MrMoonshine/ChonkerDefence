@@ -1,5 +1,7 @@
 #pragma once
 #include <stdint.h>
+#include <SDL.h>
+#include "level.h"
 #define GAME_PLAYERS_MAX 3
 #define GAME_PLAYER_NAME_LENGTH 10
 
@@ -16,8 +18,34 @@ typedef struct{
 
 typedef struct Path{
     uint8_t x, y;
+    // Next Path in the actual game
+    struct Path *follow;
+    // Next is the next Path in the data model
     struct Path *next;
 } Path;
+
+typedef struct {
+    char name[LEVEL_TITLE_LENGTH];   //Name
+    uint8_t width;
+    uint8_t height;
+    char style[LEVEL_STYLE_LENGTH];
+    uint8_t *nodes;
+    size_t nodesSize;
+    //Reserved vars
+    //char reserved[xxx];
+    //Raw Cat node data:
+    // 3 bytes per node: player, x, y
+    uint8_t *catNodes;
+    uint8_t catNodesCount;
+    //Information regarding paths
+    // All Paths in a List
+    Path *paths;
+    // Goal
+    SDL_Point goal;
+    // Starts
+    Path **starts;
+    uint8_t startCount;
+} LevelServer;
 
 Path * insertPath(Path **head, uint8_t x, uint8_t y);
 //Delete a given element
