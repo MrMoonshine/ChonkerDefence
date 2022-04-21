@@ -21,13 +21,17 @@ Path * insertPath(Path **head, uint8_t x, uint8_t y){
     return elem;
 }
 //Delete a given element
-void deletePath(Path *head, Path *elem){
-    Path *tmp = head;
+void deletePath(Path **head, Path *elem){
+    Path *tmp = *head;
     Path *prev = NULL;
     while(tmp){
         if(tmp == elem){
-            prev->next = tmp->next;
+            if(prev)
+                prev->next = tmp->next;
+            else
+                *head = tmp->next;
             free(tmp);
+            return;
         }
         prev = tmp;
         tmp = tmp->next;
@@ -50,4 +54,14 @@ void printPath(Path *head){
         elem = elem->next;
     }
     SDL_Log("\n");
+}
+
+size_t lengthPath(Path *head){
+    size_t length = 0;
+    Path *elem = head;
+    while(elem){
+        length++;
+        elem = elem->next;
+    }
+    return length;
 }

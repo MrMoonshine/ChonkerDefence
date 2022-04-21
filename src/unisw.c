@@ -27,6 +27,17 @@ static int electGoal(LevelServer *ls){
     }
     return -1;
 }
+
+// Return a pointer to the path with the given coordinates. NULL on fail
+static Path * whereXYmatchPath(Path *head, uint8_t x, uint8_t y){
+    Path *elem = head;
+    while(elem){
+        if(elem->x == x && elem->y == y)
+            return elem;
+        elem = elem->next;
+    }
+    return NULL;
+}
 // Loop through all Paths until goal node is found
 static Path * getGoalNode(LevelServer *ls){
     Path *elem = ls->paths;
@@ -58,7 +69,7 @@ int uniswCreate(UNISW *unisw, LevelServer *ls){
         }
     }
     // Debug
-    printPath(ls->paths);
+    //printPath(ls->paths);
     //Get Goal Node
     Path * goal = getGoalNode(ls);
     if(!goal)
@@ -66,45 +77,47 @@ int uniswCreate(UNISW *unisw, LevelServer *ls){
     Path * currentNode = goal;
     // Last node has no other nodes to follow
     goal->follow = NULL;
-    // A buffer to store intersections that haven't been fully processed
-    size_t intersectionBufferSize = 2;
-    Path** intersectionBuffer = (Path**)malloc((sizeof(Path*) * intersectionBufferSize));
-    if(intersectionBuffer == NULL)
-        return -1;
+    // Nodes that require Processing NOTE: Do NOT use follow parameter on open set
+    Path * openSet = NULL;
+    insertPath(&openSet, goal->x, goal->y);
     // Ladies and Gentlemen, the time has come... to finally trace the path for the mice
-    Path * neighbours[4];
-    uint8_t neighbourCount = 0;
-    while(neighbourCount < 30 || currentNode == goal){
-        //Reset
-        //neighbourCount = 0;
-        memset(neighbours, 0, 4);
-        // Iterating
-        Path *elem = ls->paths;
-        while(elem){
-            if(
-                abs(elem->x - currentNode->x) <= 1 &&
-                abs(elem->y - currentNode->y) <= 1
-            ){
-                // Don't allow diagonal Nodes!
-                if(
-                    ((abs(elem->x - currentNode->x) == 1) !=
-                    (abs(elem->y - currentNode->y) == 1))
-                ){
-                    //(elem->x != ls->goal.x && elem->y != ls->goal.y)
-                    SDL_Log("%s\tNeighbouring node (%d|%d)\n",TAG,elem->x,elem->y);
-                    if(elem->follow == NULL && elem != goal){
-                        elem->follow = currentNode;
-                        currentNode = elem;
-                        neighbourCount++;
-                        break;
-                    }
-                }                
-            }
-            elem = elem->next;
+    while(lengthPath(openSet)){
+        // Match from original list
+        currentNode = whereXYmatchPath(ls->paths, openSet->x, openSet-> y);
+        if(currentNode == NULL){
+            SDL_LogError(0, "%s\tFailed to parse node (%d|%d) from open set!\n", TAG, openSet->x, openSet-> y);
+            deletePath(&openSet, openSet);
         }
-        //break;
-    }
-    free(intersectionBuffer);
+        // Check all neighbours
+        for(uint8_t a = 0; a < 4; a++){
+            short x = currentNode->x, y = currentNode->y;
+            switch(a){
+                case 0: x++; break;
+                case 1: x--; break;
+                case 2: y++; break;
+                case 3: y--; break;
+                default: break;
+            }
+            //out of dimension
+            if(y < 0 || x < 0 || y > ls->height || x > ls->width)
+                continue;
+            // Check if exists
+            Path * adjacent = whereXYmatchPath(ls->paths, x, y);
+            if(adjacent == NULL)
+                continue;
+            //SDL_Log("%s\tAdjacent node (%d|%d)\n",TAG, x, y);
+            // If goal or already known node continue 
+            if(adjacent == goal || adjacent->follow)
+                continue;
+            SDL_Log("%s\tNew Node in Open Set (%d|%d)\n",TAG, x, y);
+            // Finally valid node
+            insertPath(&openSet, x, y);
+        }
+        // Delete first
+        deletePath(&openSet, openSet);
+        printPath(openSet);
+    };
+    deleteAllPath(&openSet);
     return 0; 
 }
 

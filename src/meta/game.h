@@ -49,8 +49,10 @@ typedef struct {
 
 Path * insertPath(Path **head, uint8_t x, uint8_t y);
 //Delete a given element
-void deletePath(Path *head, Path *elem);
+void deletePath(Path **head, Path *elem);
 //Purge the entire list
 void deleteAllPath(Path **head);
 //Dump it
 void printPath(Path *head);
+// Length
+size_t lengthPath(Path *head);
