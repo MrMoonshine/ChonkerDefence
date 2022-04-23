@@ -74,6 +74,7 @@ int uniswCreate(UNISW *unisw, LevelServer *ls){
     Path * goal = getGoalNode(ls);
     if(!goal)
         return -1;
+    SDL_Log("%s\tGoal is (%d|%d)\n",TAG, goal->x, goal->y);
     Path * currentNode = goal;
     // Last node has no other nodes to follow
     goal->follow = NULL;
@@ -84,9 +85,12 @@ int uniswCreate(UNISW *unisw, LevelServer *ls){
     while(lengthPath(openSet)){
         // Match from original list
         currentNode = whereXYmatchPath(ls->paths, openSet->x, openSet-> y);
+        // Delete first
+        deletePath(&openSet, openSet);
         if(currentNode == NULL){
             SDL_LogError(0, "%s\tFailed to parse node (%d|%d) from open set!\n", TAG, openSet->x, openSet-> y);
-            deletePath(&openSet, openSet);
+            //deletePath(&openSet, openSet);
+            continue;
         }
         // Check all neighbours
         for(uint8_t a = 0; a < 4; a++){
@@ -109,15 +113,24 @@ int uniswCreate(UNISW *unisw, LevelServer *ls){
             // If goal or already known node continue 
             if(adjacent == goal || adjacent->follow)
                 continue;
-            SDL_Log("%s\tNew Node in Open Set (%d|%d)\n",TAG, x, y);
+            //SDL_Log("%s\tNew Node in Open Set (%d|%d)\n",TAG, x, y);
+            adjacent->follow = currentNode;
             // Finally valid node
             insertPath(&openSet, x, y);
         }
-        // Delete first
-        deletePath(&openSet, openSet);
-        printPath(openSet);
+        //printPath(openSet);
     };
     deleteAllPath(&openSet);
+    // Finally show all Nodes With Next
+    Path *elem = ls->paths;
+    while(elem){
+        if(elem->follow)
+            SDL_Log("Path (%d|%d) -> (%d | %d)", elem->x, elem->y, elem->follow->x, elem->follow->y);
+        else
+            SDL_Log("Path (%d|%d) -> NULL", elem->x, elem->y);
+        elem = elem->next;
+    }
+    SDL_Log("\n");
     return 0; 
 }
 

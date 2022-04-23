@@ -37,6 +37,23 @@ void deletePath(Path **head, Path *elem){
         tmp = tmp->next;
     }
 }
+// Delete Last element
+void deleteLastPath(Path **head){
+    Path *tmp = *head;
+    Path *prev = NULL;
+    while(tmp){
+        if(tmp->next == NULL){
+            if(prev)
+                prev->next = tmp->next;
+            else
+                *head = tmp->next;
+            free(tmp);
+            return;
+        }
+        prev = tmp;
+        tmp = tmp->next;
+    }
+}
 //Purge the entire list
 void deleteAllPath(Path **head){
     while(*head){

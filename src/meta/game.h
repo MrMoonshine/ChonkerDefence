@@ -50,6 +50,8 @@ typedef struct {
 Path * insertPath(Path **head, uint8_t x, uint8_t y);
 //Delete a given element
 void deletePath(Path **head, Path *elem);
+// Delete last element
+void deleteLastPath(Path **head);
 //Purge the entire list
 void deleteAllPath(Path **head);
 //Dump it
