@@ -16,7 +16,7 @@
 #include <errno.h>
 
 #include "nodes.h"
-#include "unisw.h"
+#include "mousepath.h"
 #include "meta/game.h"
 
 #define SERVER_FLAG_SINGLEPLAYER (1 << 0)

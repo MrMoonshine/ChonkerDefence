@@ -1,4 +1,4 @@
-#include "unisw.h"
+#include "mousepath.h"
 static const char* TAG = "[UNISW]";
 
 static bool isPath(uint8_t a){
@@ -64,7 +64,7 @@ static int countStarts(LevelServer *ls, uint8_t x){
     return count;
 }
 
-static int uniswSearchStarts(LevelServer *ls){
+static int mousepathSearchStarts(LevelServer *ls){
     // Count
     ls->startCount = countStarts(ls, 0);
     ls->startCount += countStarts(ls, ls->width - 1) - 1;
@@ -106,7 +106,7 @@ static int uniswSearchStarts(LevelServer *ls){
     return ls->startCount;
 }
 
-int uniswCreate(UNISW *unisw, LevelServer *ls){
+int mousepathCreate(LevelServer *ls){
     // Elect Goal. Exit on failure
     if(electGoal(ls) < 0){
         SDL_LogError(0, "%s\tNo goal found in Level", TAG);
@@ -184,10 +184,6 @@ int uniswCreate(UNISW *unisw, LevelServer *ls){
     SDL_Log("\n");
 #endif
     // Search for start nodes
-    uniswSearchStarts(ls);
+    mousepathSearchStarts(ls);
     return 0; 
-}
-
-void uniswDestroy(UNISW *unisw){
-    
 }
