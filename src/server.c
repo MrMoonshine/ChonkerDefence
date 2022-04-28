@@ -123,10 +123,6 @@ static int srvLoadCatSpots(LevelServer *ls, LevelSock *lso){
  */
 static int serverPathDelete(LevelServer *ls){
     if(ls->starts){
-        for(int a = 0; a < ls->startCount; a++){
-            //SDL_Log("Deleteing Start Node\n");
-            deleteAllPath(ls->starts + a);
-        }
         free(ls->starts);
     }
     ls->starts = NULL;
@@ -140,8 +136,7 @@ static int serverPathDelete(LevelServer *ls){
 
 int serverLoadLevel(LevelServer *ls, char* filename){
     ls->starts = NULL;
-    ls->startCount = 0;
-    
+    ls->startCount = 0;    
     
     char *buffer;
     buffer = (char*)malloc(192);

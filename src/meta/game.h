@@ -44,7 +44,7 @@ typedef struct {
     SDL_Point goal;
     // Starts
     Path **starts;
-    uint8_t startCount;
+    size_t startCount;
 } LevelServer;
 
 Path * insertPath(Path **head, uint8_t x, uint8_t y);

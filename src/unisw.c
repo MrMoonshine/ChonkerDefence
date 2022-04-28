@@ -53,6 +53,59 @@ static Path * getGoalNode(LevelServer *ls){
     return NULL;
 }
 
+static int countStarts(LevelServer *ls, uint8_t x){
+    int count = 0;
+    for(int y = 0; y < ls->height; y++){
+        Path * p = whereXYmatchPath(ls->paths, x, y);
+        if(p == NULL)
+            continue;
+        count++;
+    }
+    return count;
+}
+
+static int uniswSearchStarts(LevelServer *ls){
+    // Count
+    ls->startCount = countStarts(ls, 0);
+    ls->startCount += countStarts(ls, ls->width - 1) - 1;
+    //SDL_Log("Found %d start nodes\n", (int)ls->startCount);
+    // Allocate
+    ls->starts = (Path**)malloc(ls->startCount * sizeof(Path*));
+    if(ls->starts == NULL)
+        return -1;
+    // Memset NULL all
+    for(int a = 0; a < ls->startCount; a++){
+        ls->starts[a] = NULL;
+    }
+    // Helper var
+    bool ignoredGoal = false;
+    uint8_t index = 0;
+    // Add from left side
+    for(int y = 0; y < ls->height; y++){
+        Path * p = whereXYmatchPath(ls->paths, 0, y);
+        if(p == NULL)
+            continue;
+        ls->starts[index++] = p;
+    }
+    // Add from right side
+    for(int y = 0; y < ls->height; y++){
+        Path * p = whereXYmatchPath(ls->paths, ls->width - 1, y);
+        if(p == NULL)
+            continue;
+        // Skip it once
+        if(ignoredGoal)
+            ls->starts[index++] = p;
+        else
+            ignoredGoal = true;
+    }
+#ifdef DEBUG_PATH
+    for(int a = 0; a < ls->startCount; a++){
+        SDL_Log("Start node X = %d\tY = %d\n", ls->starts[a]->x, ls->starts[a]->y);
+    }
+#endif
+    return ls->startCount;
+}
+
 int uniswCreate(UNISW *unisw, LevelServer *ls){
     // Elect Goal. Exit on failure
     if(electGoal(ls) < 0){
@@ -68,8 +121,6 @@ int uniswCreate(UNISW *unisw, LevelServer *ls){
             }
         }
     }
-    // Debug
-    //printPath(ls->paths);
     //Get Goal Node
     Path * goal = getGoalNode(ls);
     if(!goal)
@@ -118,9 +169,9 @@ int uniswCreate(UNISW *unisw, LevelServer *ls){
             // Finally valid node
             insertPath(&openSet, x, y);
         }
-        //printPath(openSet);
     };
     deleteAllPath(&openSet);
+#ifdef DEBUG_PATH
     // Finally show all Nodes With Next
     Path *elem = ls->paths;
     while(elem){
@@ -131,6 +182,9 @@ int uniswCreate(UNISW *unisw, LevelServer *ls){
         elem = elem->next;
     }
     SDL_Log("\n");
+#endif
+    // Search for start nodes
+    uniswSearchStarts(ls);
     return 0; 
 }
 
