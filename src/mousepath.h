@@ -4,6 +4,7 @@
 #include <SDL.h>
 #include "meta/game.h"
 
+//#define DEBUG_PATH
 /*
     Every Node has a next and a follow pointer.
     Next is used for the actual data List.

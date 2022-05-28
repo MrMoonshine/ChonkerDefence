@@ -65,7 +65,7 @@ typedef struct{
     uint8_t serverstatus;
     unsigned int level;
     unsigned int flags;
-    //Game Gata
+    //Game Data
     PlayerInfo pinfo[GAME_PLAYERS_MAX];
 } ClientSock;
 

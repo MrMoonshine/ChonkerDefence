@@ -1,5 +1,5 @@
 #include "mousepath.h"
-static const char* TAG = "[UNISW]";
+static const char* TAG = "[MOUSEPATH]";
 
 static bool isPath(uint8_t a){
     return a == LEVEL_NODE_CODE_PATH || a == LEVEL_NODE_CODE_BRIDGE; 
