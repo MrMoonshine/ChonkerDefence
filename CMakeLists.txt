@@ -1,48 +1,47 @@
-cmake_minimum_required(VERSION 3.0)
+cmake_minimum_required(VERSION 3.20)
 
-project(chonkerdefence LANGUAGES C)
+project(chonkerdefence3d LANGUAGES C)
 
 add_definitions(
     -DAPP_TITLE="Chonker Defence"
-    -DAPP_ENGEINE="SDL2"
+    -DAPP_ENGEINE="OpenGL"
     -DAPP_WIDTH=1536
     -DAPP_HEIGHT=864
     -DASSET_PATH="/home/david/Programmieren/C/ChonkerDefence/assets/"
     -DCDNET_PORT=42069
+    -DOpenGL_GL_PREFERENCE=GLVND
 )
 
 file(GLOB SRC_FILES
     "*.c"
     "src/*.c"
-    "src/menu/*.c"
-    "src/meta/*.c"
+    "src/ui/*.c"
 )
 
-#SDL2
-find_package(SDL2 REQUIRED)
-if (NOT SDL2_FOUND)
-    message (FATAL_ERROR "SDL not found")
-else()
-    include_directories (${SDL2_INCLUDE_DIRS})
-    link_directories (${SDL2_LIBRARIES})
-endif ()
-
-#SDL_IMAGE
-add_library(sdl2_image SHARED IMPORTED) # or STATIC instead of SHARED
-set_target_properties(sdl2_image PROPERTIES
-  IMPORTED_LOCATION "/usr/lib/x86_64-linux-gnu/libSDL2_image-2.0.so"
-  INTERFACE_INCLUDE_DIRECTORIES "/usr/include/SDL2"
-)
-#SDL_FONTS
-add_library(sdl2_ttf SHARED IMPORTED) # or STATIC instead of SHARED
-set_target_properties(sdl2_ttf PROPERTIES
-  IMPORTED_LOCATION "/usr/lib/x86_64-linux-gnu/libSDL2_ttf-2.0.so"
-  INTERFACE_INCLUDE_DIRECTORIES "/usr/include/SDL2"
-)
+add_compile_options(-Wall)
 
 add_executable(${PROJECT_NAME} ${SRC_FILES})
-target_link_libraries(${PROJECT_NAME} SDL2)
-target_link_libraries(${PROJECT_NAME} sdl2_image)
-target_link_libraries(${PROJECT_NAME} sdl2_ttf)
 
-install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION bin)
+find_package(OpenGL REQUIRED)
+find_package(glfw3 3.3 REQUIRED)
+find_package(GLEW REQUIRED)
+#find_package(cglm REQUIRED)
+
+# CGLM: https://github.com/recp/cglm.git
+add_subdirectory("lib/cglm/")
+
+set(INC_DIR
+    "./inc"
+    "./lib/cglm/include"
+)
+include_directories(${INC_DIR})
+
+set(ALL_LIBS
+    ${CMAKE_DL_LIBS}
+	${OPENGL_LIBRARY}
+	glfw
+	GLEW::GLEW
+)
+target_link_libraries(${PROJECT_NAME} ${ALL_LIBS} -lm)
+
+install(TARGETS chonkerdefence3d RUNTIME DESTINATION bin)

@@ -1,203 +1,163 @@
 #include <stdio.h>
-#include <stdlib.h>
 #include <stdbool.h>
+#include <glshader.h>
 
-#include <SDL.h>
-#include <SDL_image.h>
-#include <SDL_ttf.h>
+#include <logging.h>
+#include <server.h>
+#include <client.h>
+#include <clilevel.h>
+#include <ui/levelselection.h>
 
-#include <signal.h>
+#include <GL/glew.h>
+#include <GLFW/glfw3.h>
+#include <cglm/cglm.h>
 
-#include "image.h"
-#include "text.h"
-#include "cat.h"
-#include "level.h"
-#include "server.h"
+static const char* TAG = "Main";
 
-#include "menu/menu.h"
-
-bool windowHandleEvents(SDL_Window* window, SDL_Renderer* renderer, float *scale){
-    float scalefactor = 1.0f;
-    SDL_Event event;
-    while(SDL_PollEvent(&event)){
-        switch(event.type){
-            case SDL_QUIT: return false; break;
-            case SDL_WINDOWEVENT:{
-                if(event.window.windowID == SDL_GetWindowID(window)){
-                    switch (event.window.event){
-                        case SDL_WINDOWEVENT_SIZE_CHANGED:{
-                            int w, h;
-                            SDL_GetWindowSize(window, &w, &h);
-                            scalefactor = (float)h/(float)APP_HEIGHT;
-                            //printf("Scale Factor altered to: %d\n", scalefactor);
-                            SDL_RenderSetScale(renderer,scalefactor,scalefactor);
-                            *scale = scalefactor;
-                        }break;
-                        default: break;
-                    }
-                }
-                break;
-            }
-            default: break;
+void dumpMat4(mat4 matrix, const char* title){
+    printf("-------- %s --------\n", title);
+    for(int a = 0; a < 4; a++){
+        for(int b = 0; b < 4; b++){
+            printf("%.2f, ", matrix[a][b]);
         }
+        printf("\n");
     }
-    return true;    
+    printf("------------------------\n");
 }
 
-int main(int argc, char *argv[]){    
-    //The window we'll be rendering to
-    SDL_Window* window = NULL;
-    SDL_Renderer* renderer = NULL;
-    
-    //The surface contained by the window
-    SDL_Surface* screenSurface = NULL;
-
-    //Initialize SDL
-    if( SDL_Init( SDL_INIT_VIDEO | SDL_INIT_EVENTS ) < 0 )
-    {
-        fprintf(stderr ,"SDL could not initialize! SDL_Error: %s\n", SDL_GetError());
-        return EXIT_FAILURE;
+int main(void){
+    //LOGS(TAG, "Starting");
+    glewExperimental = true; // Needed for core profile
+    if(!glfwInit()){
+        LOGE(TAG, "Failed to initialize GLFW");
+        return -1;
     }
-    
-    window = SDL_CreateWindow(
-        APP_TITLE,
-        SDL_WINDOWPOS_UNDEFINED,
-        SDL_WINDOWPOS_UNDEFINED,
-        APP_WIDTH,
-        APP_HEIGHT,
-        SDL_WINDOW_RESIZABLE
-    );
-    
-    if(window == NULL){
-        fprintf(stderr ,"SDL could not initialize Window! SDL_Error: %s\n", SDL_GetError());
-        return EXIT_FAILURE;
+
+    glfwWindowHint(GLFW_SAMPLES, 4); // 4x antialiasing
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3); // We want OpenGL 3.3
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE); // To make MacOS happy; should not be needed
+    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+
+    GLFWwindow* window;
+    window = glfwCreateWindow( APP_WIDTH, APP_HEIGHT, "OpenGL Lab 1", NULL, NULL);
+    if(!window){
+        LOGE(TAG, "Unsupported GPU in use!");
+        glfwTerminate();
+        return -1;
     }
-    
-    //Initialize other stuff
-    IMG_Init(IMG_INIT_PNG | IMG_INIT_JPG);
-    TTF_Init();
-    
-    //Setup random
-    srand(time(NULL));
 
-    //Setup Renderer
-    renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
-    SDL_SetRenderDrawColor(renderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
-    SDL_RenderClear(renderer);
-    SDL_RenderPresent(renderer);
-    
-    Image wallpaper;
-    textureLoad(&wallpaper, renderer, "/home/david/Programmieren/C/ChonkerDefenceAssets/assets/textures/ui/wallpaper.png");
-    
-    CTS orangeCheckered;
-    ctsCreate(&orangeCheckered, renderer, "orange_checkered");
-    
-    Cat cat1;
-    Cat cat2;
-    Cat cat3;
-    Cat cat4;
-    catCreate(&cat1, &orangeCheckered, OH_LAWD_HE_COMIN);
-    catCreate(&cat2, &orangeCheckered, A_HECKIN_CHONKER);
-    catCreate(&cat3, &orangeCheckered, HE_CHOMNK);
-    catCreate(&cat4, &orangeCheckered, OH_LAWD_HE_COMIN);
-    
-    cat2.position.y *= 2;
-    cat2.rotation = LEFT;
-    cat3.position.y *= 3;
-    cat3.rotation = RIGHT;
-    cat4.position.y *= 4;
-    cat4.rotation = REAR;
-    
-    Font font;
-    SDL_Colour yellow = {255,64,16,0};
-    fontCreate(&font, TEST_FONT, 20, yellow, renderer);
-    fontRender(&font, "Oh Lawd He Commin'!");
-
-    ClientSock client;
-    netInitClientMeta(&client);
-    
-    Level lvl1;
-    levelCreateEmpty(&lvl1);
-    //levelCreateFromFile(&lvl1, TEST_LEVEL, renderer);
-    
-    /*----------------------------------------------------------*/
-    /*               Building Menus                             */
-    /*----------------------------------------------------------*/
-    MenuCore menuCore;
-    menuCoreInit(&menuCore,window, renderer);
-    MainMenu mainMenu;
-    mainMenuCreate(&mainMenu, &menuCore);
-    StartMenu startMenu;
-    startMenuCreate(&startMenu, &menuCore);
-    PauseMenu pauseMenu;
-    pauseMenuCreate(&pauseMenu, &menuCore);
-    LobbyMenu lobbyMenu;
-    lobbyMenuCreate(&lobbyMenu, &menuCore);
-    float winscale = 1.0f;
-    
-    //levelSockSetup(&client);
-    
-    //serverStart(0);
-    unsigned int lastTime = 0, currentTime = 0;
-    while(windowHandleEvents(window, renderer, &winscale)){
-        SDL_RenderClear(renderer);      
-        
-        levelDraw(&lvl1);
-        if(!lvl1.loaded)
-            textureDraw(&wallpaper, 0, 0, SDL_FLIP_NONE, NULL);
-            
-
-        catDraw(&cat1);
-        catDraw(&cat2);
-        catDraw(&cat3);
-        catDraw(&cat4);
-        
-        fontDraw(&font, 160, 16);
-        
-        if(menuCore.mouse_cooldown)
-            menuCore.mouse_cooldown--;
-        
-        int mres = menuHandleAll(&client, &mainMenu, &startMenu, &lobbyMenu, &pauseMenu, winscale);
-        if(mres < 0){
-            break;
-        }else if(mres == MENU_ACTION_START_GAME){
-            levelCreateFromServer(&lvl1, &client, renderer);
-            netLobbyDiscovery(&client);
-            if(client.serverstatus == CLIENT_SOCK_SERVER_UP_MULTIPLAYER)
-                lobbyMenuEnable(&lobbyMenu, &client);
-        }
-        
-        currentTime = SDL_GetTicks();
-        if(currentTime > lastTime + CLEINT_SOCK_EVENT_QUEUE_POLL_PERIOD){
-            if(client.serverstatus != CLIENT_SOCK_SERVER_NO_UP)
-                levelHandle(&lvl1, &client);
-            lastTime = currentTime;
-        }
-    
-        SDL_RenderPresent(renderer);
+    glfwMakeContextCurrent(window);
+    if (glewInit() != GLEW_OK) {
+        LOGE(TAG, "Failed to initialize GLEW");
+        return -1;
     }
-    
-    if(client.serverstatus != CLIENT_SOCK_SERVER_NO_UP)
-        netKillServer(&client);
-    
-    levelDestroy(&lvl1);
-    fontDestroy(&font);
-    ctsDestroy(&orangeCheckered);
-    catDestroy(&cat1);
-    catDestroy(&cat2);
-    catDestroy(&cat3);
-    catDestroy(&cat4);
-    
-    mainMenuDestroy(&mainMenu);
-    startMenuDestroy(&startMenu);
-    pauseMenuDestroy(&pauseMenu);
-    lobbyMenuDestroy(&lobbyMenu);
-    menuCoreDestroy(&menuCore);
-    
-    SDL_DestroyWindow(window);
-    IMG_Quit();
-    TTF_Quit();
-    SDL_Quit();
-    SDL_Log("Goodbye :3\n");
+
+    // Ensure we can capture the escape key being pressed below
+    glfwSetInputMode(window, GLFW_STICKY_KEYS, GL_TRUE);
+
+    static const GLfloat g_vertex_buffer_data[] = {
+    -1.0f, -1.0f, 0.0f,
+    1.0f, -1.0f, 0.0f,
+    0.0f,  1.0f, 0.0f,
+    };
+
+    GLuint VertexArrayID;
+    glGenVertexArrays(1, &VertexArrayID);
+    glBindVertexArray(VertexArrayID);
+
+    GLuint vertexbuffer;
+    // Generate 1 buffer, put the resulting identifier in vertexbuffer
+    glGenBuffers(1, &vertexbuffer);
+    // The following commands will talk about our 'vertexbuffer' buffer
+    glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
+    // Give our vertices to OpenGL.
+    glBufferData(GL_ARRAY_BUFFER, sizeof(g_vertex_buffer_data), g_vertex_buffer_data, GL_STATIC_DRAW);
+
+    GLuint programID = glshader_load("../shaders/labver.glsl", "../shaders/labfra.glsl");
+    //printf("Shader ID is %d\n", programID);
+
+    mat4 projection;
+    float angle = 45.0f;
+    glm_make_rad(&angle);
+    glm_ortho(-10.0f, 10.0f, -10.0f, 10.0f, -10.0f, 10.0f, projection);
+
+    mat4 view;
+    vec3 eye = {4, 3, 3};
+    vec3 center = {0, 0, 0};
+    vec3 up = {0, 1, 0};
+    glm_lookat(eye, center, up, view);
+    //dumpMat4(view, "View");
+
+    mat4 model;
+    glm_mat4_identity(model);
+
+    GLuint sProjection = glGetUniformLocation(programID, "projection");
+    GLuint sView = glGetUniformLocation(programID, "view");
+    GLuint sModel = glGetUniformLocation(programID, "model");
+
+    server_initial_params serverparams = {
+        .port = 0
+    };
+    server_start(&serverparams);
+    Client client;
+    client_init(&client);
+    size_t datasize = 1024;
+    unsigned char data[1024];
+    if(0 == clilevel_show(&client, data, &datasize)){
+        printf("Number of levels is %d\n", clilevel_count(data, datasize));
+        for(int a = 0; a < datasize; a++)
+            printf("%x, ", data[a]);
+    }
+
+    LevelSelection selection;
+    levelselection_create(&selection);
+
+    do{
+        // Clear the screen. It's not mentioned before Tutorial 02, but it can cause flickering, so it's there nonetheless.
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        glBindVertexArray(VertexArrayID);
+        glUseProgram(programID);
+
+        glUniformMatrix4fv(sProjection, 1, GL_FALSE, *projection);
+        glUniformMatrix4fv(sView, 1, GL_FALSE, *view);
+        glUniformMatrix4fv(sModel, 1, GL_FALSE, *model);
+
+        glEnableVertexAttribArray(0);
+        glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
+        glVertexAttribPointer(
+        0,                  // attribute 0. No particular reason for 0, but must match the layout in the shader.
+        3,                  // size
+        GL_FLOAT,           // type
+        GL_FALSE,           // normalized?
+        0,                  // stride
+        (void*)0            // array buffer offset
+        );
+
+        // Draw the triangle !
+        glDrawArrays(GL_TRIANGLES, 0, 3); // Starting from vertex 0; 3 vertices total -> 1 triangle
+        glDisableVertexAttribArray(0);
+
+        levelselection_draw(&selection);
+
+        // Swap buffers
+        glfwSwapBuffers(window);
+        glfwPollEvents();
+
+    } // Check if the ESC key was pressed or the window was closed
+    while( glfwGetKey(window, GLFW_KEY_ESCAPE ) != GLFW_PRESS &&
+        glfwWindowShouldClose(window) == 0 );
+
+    // Cleanup VBO and shader
+	glDeleteBuffers(1, &vertexbuffer);
+	glDeleteProgram(programID);
+	glDeleteVertexArrays(1, &VertexArrayID);
+
+    levelselection_destroy(&selection);
+
+	// Close OpenGL window and terminate GLFW
+	glfwTerminate();
+
+    client_server_kill(&client, serverparams.sessionkey, serverparams.thrid);
     return 0;
 }
