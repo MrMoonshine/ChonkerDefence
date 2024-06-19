@@ -130,11 +130,14 @@ void *server_main(void *portNumPtr)
                                             if(data != NULL){
                                                 srvlevel_show(data, &dataSize, &filecount);
                                                 printf("[INFO] %s: Size is %d for %d files\n", TAG, (int)dataSize, filecount);
-                                                //LOGW(TAG, (char*)data);
-                                                /*for(int a = 0; a < dataSize; a++)
-                                                    printf("%x, ", data[a]);*/
 
-                                                send(pfds[i].fd, data, dataSize, 0);
+                                                if(filecount > 1){
+                                                    send(pfds[i].fd, data, dataSize, 0);
+                                                }else{
+                                                    uint8_t status = CD_NET_CODE_FAIL;
+                                                    send(pfds[i].fd, &status, CD_NET_CODE_FAIL, 0);
+                                                }
+
                                                 free(data);
                                             }else{
                                                 LOGE(TAG, "level show: Malloc");

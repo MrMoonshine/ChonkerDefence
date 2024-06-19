@@ -25,6 +25,7 @@ int srvlevel_show(unsigned char* data, size_t* len, uint8_t* filecount){
     size_t position = 0;
 
     if(data == NULL){
+        printf("[INFO] %s: Scanning directory: %s\n", TAG, fullLevelDir);
         *len = 1 + sizeof(size_t) + 1;
     }else{
         memset(data, 0x00, *len);
