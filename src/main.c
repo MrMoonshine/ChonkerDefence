@@ -6,6 +6,9 @@
 #include <server.h>
 #include <client.h>
 #include <clilevel.h>
+
+#include <ui/ui.h>
+#include <ui/container.h>
 #include <ui/levelselection.h>
 
 #include <GL/glew.h>
@@ -13,6 +16,13 @@
 #include <cglm/cglm.h>
 
 static const char* TAG = "Main";
+
+static UI ui;
+
+void window_resize_callback(GLFWwindow* window, int width, int height){
+    //printf("My window size is %dx%d\n", width, height);
+    ui_resize(&ui, width, height);
+}
 
 void dumpMat4(mat4 matrix, const char* title){
     printf("-------- %s --------\n", title);
@@ -40,7 +50,7 @@ int main(void){
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
     GLFWwindow* window;
-    window = glfwCreateWindow( APP_WIDTH, APP_HEIGHT, "OpenGL Lab 1", NULL, NULL);
+    window = glfwCreateWindow( APP_WIDTH, APP_HEIGHT, APP_TITLE, NULL, NULL);
     if(!window){
         LOGE(TAG, "Unsupported GPU in use!");
         glfwTerminate();
@@ -53,8 +63,8 @@ int main(void){
         return -1;
     }
 
-    // Ensure we can capture the escape key being pressed below
     glfwSetInputMode(window, GLFW_STICKY_KEYS, GL_TRUE);
+    glfwSetWindowSizeCallback(window, &window_resize_callback);
 
     static const GLfloat g_vertex_buffer_data[] = {
     -1.0f, -1.0f, 0.0f,
@@ -76,6 +86,7 @@ int main(void){
 
     GLuint programID = glshader_load("../shaders/labver.glsl", "../shaders/labfra.glsl");
     //printf("Shader ID is %d\n", programID);
+    //glEnable(GL_CULL_FACE);
 
     mat4 projection;
     float angle = 45.0f;
@@ -104,16 +115,23 @@ int main(void){
     client_init(&client);
     size_t datasize = 1024;
     unsigned char data[1024];
-    if(0 == clilevel_show(&client, data, &datasize)){
-        printf("Number of levels is %d\n", clilevel_count(data, datasize));
+    if(0 != clilevel_show(&client, data, &datasize)){
+        LOGE(TAG, "Failed to init Client");
+       /* printf("Number of levels is %d\n", clilevel_count(data, datasize));
         for(int a = 0; a < datasize; a++)
-            printf("%x, ", data[a]);
+            printf("%x, ", data[a]);*/
     }
 
-    LevelSelection selection;
-    levelselection_create(&selection);
+    ui_create(&ui);
 
+    LevelSelection selection;
+    levelselection_create(&selection, &ui);
+
+    UIContainer background;
+    int bgwidth = 106, bgheight = 106;
+    ui_container_create_from_png(&background, &ui, &bgwidth, &bgheight, -3, 0.0f, "../build/test4.png");
     do{
+        //glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         // Clear the screen. It's not mentioned before Tutorial 02, but it can cause flickering, so it's there nonetheless.
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glBindVertexArray(VertexArrayID);
@@ -138,6 +156,8 @@ int main(void){
         glDrawArrays(GL_TRIANGLES, 0, 3); // Starting from vertex 0; 3 vertices total -> 1 triangle
         glDisableVertexAttribArray(0);
 
+        ui_enable_vao(&ui);
+        ui_container_draw(&background);
         levelselection_draw(&selection);
 
         // Swap buffers
@@ -153,7 +173,9 @@ int main(void){
 	glDeleteProgram(programID);
 	glDeleteVertexArrays(1, &VertexArrayID);
 
+    ui_container_destroy(&background);
     levelselection_destroy(&selection);
+    ui_destroy(&ui);
 
 	// Close OpenGL window and terminate GLFW
 	glfwTerminate();
