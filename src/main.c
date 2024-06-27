@@ -26,7 +26,7 @@ static UI ui;
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height){
     glViewport(0, 0, width, height);
-    printf("My window size is %dx%d\n", width, height);
+    printf("[INFO] %s: My window size is %dx%d\n", TAG, width, height);
     ui_resize(&ui, width, height);
 }
 
@@ -138,7 +138,7 @@ int main(void){
     levelselection_create(&selection, &ui);
 
     UIContainer background;
-    int bgwidth = APP_WIDTH + 32, bgheight = APP_HEIGHT + 32;
+    int bgwidth = APP_WIDTH * 1.3 + 32, bgheight = APP_HEIGHT*1.2 + 32;
     ui_container_create_from_png(&background, &ui, &bgwidth, &bgheight, -16, 0.0f, "../build/test4.png");
     do{
         // Clear the screen. It's not mentioned before Tutorial 02, but it can cause flickering, so it's there nonetheless.

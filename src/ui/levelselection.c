@@ -33,7 +33,7 @@ int levelselection_create(LevelSelection *selection, UI* ui){
     glBufferData(GL_ARRAY_BUFFER, sizeof(g_uv_buffer_data), g_uv_buffer_data, GL_STATIC_DRAW);
     texture_create(&selection->texture, "../build/test2.png");
 
-    ui_text2d_create(&selection->title, ui, "the quick brown fox jumps\r\nover the lazy dog!", 32.0f);
+    ui_text2d_create(&selection->title, ui, "the quick brown fox jumps\r\nover the lazy dog!", 64.0f);
     selection->title.x = 64;
     selection->title.y = 128;
     return 0;

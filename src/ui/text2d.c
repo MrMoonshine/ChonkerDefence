@@ -58,6 +58,9 @@ int ui_text2d_create(Text2D* text, UI *ui, const char* message, float size){
     text->ui = ui;
     text->width = 0.0f;
     text->height = size;
+    // Set no color blending as initial
+    for(uint8_t i = 0; i < 4; i++)
+        text->color[i] = 0.0f;
 
     float *vertexBufferData, *uvBufferData;
     size_t vertexBufferSize, uvBufferSize;
@@ -120,7 +123,9 @@ void ui_text2d_draw(Text2D* text){
 
     vec3 transformation = {text->x, text->y, 0};
     glm_translate(model, transformation);
+
     glUniformMatrix4fv(text->ui->model, 1, GL_FALSE, *model);
+    glUniform4fv(text->ui->colorize, 1, text->color);
 
     glEnableVertexAttribArray(0);
     glBindBuffer(GL_ARRAY_BUFFER, text->vertexbuffer);
