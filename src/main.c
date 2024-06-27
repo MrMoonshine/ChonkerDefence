@@ -64,6 +64,10 @@ int main(void){
         return -1;
     }
 
+    GLFWcursor* cursor_default = glfwCreateStandardCursor(GLFW_ARROW_CURSOR );
+    GLFWcursor* cursor_pointer = glfwCreateStandardCursor(GLFW_HAND_CURSOR);
+    glfwSetCursor(window, cursor_default);
+
     glfwMakeContextCurrent(window);
     if (glewInit() != GLEW_OK) {
         LOGE(TAG, "Failed to initialize GLEW");
@@ -132,7 +136,7 @@ int main(void){
             printf("%x, ", data[a]);*/
     }
 
-    ui_create(&ui);
+    ui_create(&ui, window);
 
     LevelSelection selection;
     levelselection_create(&selection, &ui);
@@ -169,6 +173,8 @@ int main(void){
         ui_mainmenu_draw(&mainmenu);
         levelselection_draw(&selection);
 
+        glfwSetCursor(window, ui.anyButtonHover ? cursor_pointer : cursor_default);
+
         // Swap buffers
         glfwSwapBuffers(window);
         glfwPollEvents();
@@ -186,6 +192,9 @@ int main(void){
     levelselection_destroy(&selection);
     ui_destroy(&ui);
 
+    glfwDestroyCursor(cursor_default);
+    glfwDestroyCursor(cursor_pointer);
+    glfwDestroyWindow(window);
 	// Close OpenGL window and terminate GLFW
 	glfwTerminate();
 

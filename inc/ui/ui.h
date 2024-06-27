@@ -13,12 +13,15 @@
 #define UI_SHADER_LAYOUT_FRAGMENT 2
 
 typedef struct UI{
+    GLFWwindow* window;
     GLuint vao, shader;
     // Projection Uniforms
     GLint model, view, projection;
     // Uniforms for colorizing
     GLint colorize;
     //float intensity;
+
+    bool anyButtonHover;
 
     int windowWidth, windowHeight;
     Texture font, widgets;
@@ -27,7 +30,7 @@ typedef struct UI{
 /*
     @brief Create UI object
 */
-int ui_create(UI *ui);
+int ui_create(UI *ui, GLFWwindow* window);
 /*
     @brief Cleanup
 */

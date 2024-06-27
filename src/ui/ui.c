@@ -12,7 +12,12 @@ static vec4 UI_NO_COLORIZE = {0.0f, 0.0f, 0.0f, 0.0f};
 
 static const char* TAG = "UI";
 
-int ui_create(UI *ui){
+int ui_create(UI *ui, GLFWwindow* window){
+    ui->windowWidth = APP_WIDTH;
+    ui->windowHeight = APP_HEIGHT;
+    ui->window = window;
+    ui->anyButtonHover = false;
+
     glGenVertexArrays(1, &ui->vao);
     glBindVertexArray(ui->vao);
     ui->shader = glshader_load("../shaders/guiver.glsl", "../shaders/guifra.glsl");
@@ -50,6 +55,8 @@ int ui_destroy(UI *ui){
 }
 
 void ui_resize(UI *ui, int width, int height){
+    ui->windowWidth = width;
+    ui->windowHeight = height;
     float scaleY = (float)height/(float)APP_HEIGHT;
 
     glBindVertexArray(ui->vao);
@@ -67,6 +74,8 @@ void ui_no_colorize(UI *ui){
 
 
 void ui_enable_vao(UI *ui){
+    ui->anyButtonHover = false;
+
     glUseProgram(ui->shader);
     glBindVertexArray(ui->vao);
 

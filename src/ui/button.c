@@ -79,8 +79,11 @@ int ui_button_create(Button *button, UI *ui, float width, float height, const ch
 
     if(strstr(text, "\n") != NULL || strstr(text, "\r") != NULL)
         LOGW(TAG, "Button with multiline text might result in broken menu!");
-//int ui_text2d_create(Text2D* text, UI *ui, const char* message, float size);
+
     ui_text2d_create(&button->text, button->ui, text, height/2.0f);
+    button->text.color[0] = 0.9f;
+    button->text.color[1] = 0.9f;
+    button->text.color[2] = 0.1f;
     // Init arrays
     float vertexBufferData[VERTEX_POINT_COUNT];
     for(unsigned int i = 0; i < VERTEX_POINT_COUNT; i++)
@@ -158,13 +161,45 @@ void ui_button_draw(Button *button){
     // unbind texture
     glBindTexture( GL_TEXTURE_2D, 0);
 
+    //button->x = button->ui->windowWidth/2 - button->width/2; // Center to window
+
     button->text.x = button->x + button->width/2 - button->text.width/2;
     button->text.y = button->y + button->height/2- button->text.height/2;
     ui_text2d_draw(&button->text);
+
+    if(ui_button_mouse_click(button)){
+        printf("Clicked Button!\n");
+    }
 }
 
 void ui_button_destroy(Button *button){
     ui_text2d_destroy(&button->text);
     glDeleteBuffers(1, &button->vertexbuffer);
     glDeleteBuffers(1, &button->uvbuffer);
+}
+
+bool ui_button_mouse_click(Button* button){
+    // No coloring of button text
+    button->text.color[3] = 0.0f;
+
+    double xpos, ypos;
+    glfwGetCursorPos(button->ui->window, &xpos, &ypos);
+    ypos = button->ui->windowHeight - ypos;
+    xpos -= button->x;
+    ypos -= button->y;
+
+    //printf("Oida Pos is (%.2f|%.2f)\n", xpos, ypos);
+
+    if(xpos < 0 || ypos < 0)
+        return false;
+
+    if(!(xpos <= button->width && ypos <= button->height)){
+        return false;
+    }
+
+    button->text.color[3] = 1.0f;
+
+    button->ui->anyButtonHover |= true;
+    bool ret = GLFW_PRESS == glfwGetMouseButton(button->ui->window, GLFW_MOUSE_BUTTON_LEFT);
+    return ret;
 }

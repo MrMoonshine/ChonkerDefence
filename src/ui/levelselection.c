@@ -41,6 +41,7 @@ int levelselection_create(LevelSelection *selection, UI* ui){
 }
 
 int levelselection_draw(LevelSelection *selection){
+    ui_no_colorize(selection->ui);
     glBindTexture( GL_TEXTURE_2D, selection->texture.bufferID);
 
     mat4 model;

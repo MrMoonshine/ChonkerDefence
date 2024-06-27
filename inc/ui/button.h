@@ -22,3 +22,4 @@ typedef struct Button{
 int ui_button_create(Button *button, UI *ui, float width, float height, const char* text);
 void ui_button_draw(Button *button);
 void ui_button_destroy(Button *button);
+bool ui_button_mouse_click(Button* button);
