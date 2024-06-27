@@ -15,6 +15,7 @@
 typedef struct UI{
     GLuint vao, shader;
     GLuint model, view, projection;
+    int windowWidth, windowHeight;
     Texture font;
 }UI;
 

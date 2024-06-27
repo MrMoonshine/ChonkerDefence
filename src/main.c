@@ -19,10 +19,17 @@ static const char* TAG = "Main";
 
 static UI ui;
 
-void window_resize_callback(GLFWwindow* window, int width, int height){
-    //printf("My window size is %dx%d\n", width, height);
+/*void window_resize_callback(GLFWwindow* window, int width, int height){
+    printf("My window size is %dx%d\n", width, height);
+    //ui_resize(&ui, width, height);
+}*/
+
+void framebuffer_size_callback(GLFWwindow* window, int width, int height){
+    glViewport(0, 0, width, height);
+    printf("My window size is %dx%d\n", width, height);
     ui_resize(&ui, width, height);
 }
+
 
 void dumpMat4(mat4 matrix, const char* title){
     printf("-------- %s --------\n", title);
@@ -64,7 +71,8 @@ int main(void){
     }
 
     glfwSetInputMode(window, GLFW_STICKY_KEYS, GL_TRUE);
-    glfwSetWindowSizeCallback(window, &window_resize_callback);
+    //glfwSetWindowSizeCallback(window, &window_resize_callback);
+    glfwSetFramebufferSizeCallback(window, &framebuffer_size_callback);
 
     static const GLfloat g_vertex_buffer_data[] = {
     -1.0f, -1.0f, 0.0f,
@@ -87,6 +95,8 @@ int main(void){
     GLuint programID = glshader_load("../shaders/labver.glsl", "../shaders/labfra.glsl");
     //printf("Shader ID is %d\n", programID);
     //glEnable(GL_CULL_FACE);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     mat4 projection;
     float angle = 45.0f;
@@ -128,10 +138,9 @@ int main(void){
     levelselection_create(&selection, &ui);
 
     UIContainer background;
-    int bgwidth = 106, bgheight = 106;
-    ui_container_create_from_png(&background, &ui, &bgwidth, &bgheight, -3, 0.0f, "../build/test4.png");
+    int bgwidth = APP_WIDTH + 32, bgheight = APP_HEIGHT + 32;
+    ui_container_create_from_png(&background, &ui, &bgwidth, &bgheight, -16, 0.0f, "../build/test4.png");
     do{
-        //glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         // Clear the screen. It's not mentioned before Tutorial 02, but it can cause flickering, so it's there nonetheless.
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glBindVertexArray(VertexArrayID);

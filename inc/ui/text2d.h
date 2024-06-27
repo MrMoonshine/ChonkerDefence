@@ -17,6 +17,7 @@ typedef struct Text2D{
     GLuint vertexbuffer, uvbuffer;
     size_t length;
     float size, x, y;
+    float width, height;    // Dimensions of text block
     UI* ui;
 }Text2D;
 

@@ -2,23 +2,65 @@
 
 static const char* TAG = "Text2D";
 
+static void text2d_create_letter(Text2D *text,char letter, float xorigin, float yorigin, float* vertexbuffer, float* uvbuffer){
+    //float xorigin = text->size*index;
+    // Reset values
+    for(int j = 0; j < 18; j++){
+        *(vertexbuffer+j) = 0.0f;
+    }
+    // Vertex
+            // Vertex #1
+                // Vertex #1 P1
+    *(vertexbuffer + 0) = xorigin;
+    *(vertexbuffer + 1) = yorigin;
+                // Vertex #1 P2
+    *(vertexbuffer + 3) = xorigin + text->size;
+    *(vertexbuffer + 4) = yorigin + text->size;
+                // Vertex #1 P3
+    *(vertexbuffer + 6) = xorigin;
+    *(vertexbuffer + 7) = yorigin + text->size;
+        // Vertex #2
+                // Vertex #2 P1
+    *(vertexbuffer + 9) = xorigin;
+    *(vertexbuffer + 10) = yorigin;
+                // Vertex #2 P2
+    *(vertexbuffer + 12) = xorigin + text->size;
+    *(vertexbuffer + 13) = yorigin;
+                // Vertex #2 P3
+    *(vertexbuffer + 15) = xorigin + text->size;
+    *(vertexbuffer + 16) = yorigin + text->size;
+
+    // UV
+    float column = (int)letter % (int)UI_TEXT2D_FONT_TILES_X;
+    float row = 16.0f - ((int)letter - column) / UI_TEXT2D_FONT_TILES_X;
+
+    //printf("Character '%c' has coordinates (%.2f|%.2f)\n", letter, column, row);
+
+    *(uvbuffer + 0) = (column)/UI_TEXT2D_FONT_TILES_X;
+    *(uvbuffer + 1) = (row - 1)/UI_TEXT2D_FONT_TILES_Y;
+    *(uvbuffer + 2) = (column + 1)/UI_TEXT2D_FONT_TILES_X;
+    *(uvbuffer + 3) = (row + 0)/UI_TEXT2D_FONT_TILES_X;
+    *(uvbuffer + 4) = (column)/UI_TEXT2D_FONT_TILES_Y;
+    *(uvbuffer + 5) = (row + 0)/UI_TEXT2D_FONT_TILES_Y;
+
+    *(uvbuffer + 6) = (column)/UI_TEXT2D_FONT_TILES_X;
+    *(uvbuffer + 7) = (row - 1)/UI_TEXT2D_FONT_TILES_Y;
+    *(uvbuffer + 8) = (column + 1)/UI_TEXT2D_FONT_TILES_X;
+    *(uvbuffer + 9) = (row -1)/UI_TEXT2D_FONT_TILES_X;
+    *(uvbuffer + 10) = (column + 1)/UI_TEXT2D_FONT_TILES_Y;
+    *(uvbuffer + 11) = (row + 0)/UI_TEXT2D_FONT_TILES_Y;
+}
+
 int ui_text2d_create(Text2D* text, UI *ui, const char* message, float size){
     text->size = size;
     text->x = 0.0f;
     text->y = 0.0f;
     text->ui = ui;
+    text->width = 0.0f;
+    text->height = size;
 
     float *vertexBufferData, *uvBufferData;
     size_t vertexBufferSize, uvBufferSize;
-
-    const GLfloat g_uv_buffer_data[] = {
-        0.0f, 0.0f,
-        1.0f, 1.0f,
-        0.0f, 1.0f,
-        0.0f, 0.0f,
-        1.0f, 0.0f,
-        1.0f, 1.0f,
-    };
 
     text->length = strlen(message);
     if(text->length < 1){
@@ -37,35 +79,23 @@ int ui_text2d_create(Text2D* text, UI *ui, const char* message, float size){
         return -2;
     }
 
-    memset(vertexBufferData, 0.0f, vertexBufferSize/sizeof(float));
-
-    const uint8_t oordinateCount = 18;
+    float xorigin = 0.0f, yorigin = 0.0f;
     for(size_t i = 0; i < text->length; i++){
-        float xorigin = text->size*i;
-        // Vertex
-            // Vertex #1
-                // Vertex #1 P1
-        vertexBufferData[oordinateCount*i +  0] = xorigin;
-        vertexBufferData[oordinateCount*i +  1] = 0.0f;
-                // Vertex #1 P2
-        vertexBufferData[oordinateCount*i +  3] = xorigin + text->size;
-        vertexBufferData[oordinateCount*i +  4] = text->size;
-                // Vertex #1 P3
-        vertexBufferData[oordinateCount*i +  6] = xorigin;
-        vertexBufferData[oordinateCount*i +  7] = text->size;
-        // Vertex #2
-                // Vertex #2 P1
-        vertexBufferData[oordinateCount*i +  9] = xorigin;
-        vertexBufferData[oordinateCount*i + 10] = 0.0f;
-                // Vertex #2 P2
-        vertexBufferData[oordinateCount*i + 12] = xorigin + text->size;
-        vertexBufferData[oordinateCount*i + 13] = 0.0f;
-                // Vertex #2 P3
-        vertexBufferData[oordinateCount*i + 15] = xorigin + text->size;
-        vertexBufferData[oordinateCount*i + 16] = text->size;
-        // UV
-        memcpy(uvBufferData + 12*i, g_uv_buffer_data, sizeof(g_uv_buffer_data));
-        //printf("%.2f, ", *(uvBufferData+12*i+1));
+        switch(message[i]){
+            case '\r':
+                xorigin = 0.0f;
+                break;
+            case '\n':
+                yorigin -= text->size;
+                text->height += text->size;
+                break;
+            default:
+                text2d_create_letter(text, message[i], xorigin, yorigin, vertexBufferData + 18*i, uvBufferData + 12*i);
+                xorigin += text->size;
+                if(xorigin >= text->width)
+                    text->width = xorigin;
+                break;
+        }
     }
 
     glBindVertexArray(ui->vao);
@@ -85,6 +115,13 @@ int ui_text2d_create(Text2D* text, UI *ui, const char* message, float size){
 
 void ui_text2d_draw(Text2D* text){
     glBindTexture( GL_TEXTURE_2D, text->ui->font.bufferID);
+    mat4 model;
+    glm_mat4_identity(model);
+
+    vec3 transformation = {text->x, text->y, 0};
+    glm_translate(model, transformation);
+    glUniformMatrix4fv(text->ui->model, 1, GL_FALSE, *model);
+
     glEnableVertexAttribArray(0);
     glBindBuffer(GL_ARRAY_BUFFER, text->vertexbuffer);
     glVertexAttribPointer(

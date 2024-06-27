@@ -5,20 +5,20 @@ int ui_container_create(UIContainer* container, UI* ui, int *width, int *height,
     glBindVertexArray(ui->vao);         // UI VAO
 
     const GLfloat vertex_buffer_data[] = {
+        (*width) - 2*margin,    (*height) - 2*margin,   zindex,
         margin,                 (*height) - 2*margin,   zindex,
-        (*width) - 2*margin,    (*height) - 2*margin,   zindex,
         margin,                 margin,                 zindex,
-        (*width) - 2*margin,    (*height) - 2*margin,   zindex,
         (*width) - 2*margin,    margin,                 zindex,
+        (*width) - 2*margin,    (*height) - 2*margin,   zindex,
         margin,                 margin,                 zindex,
     };
 
     const GLfloat uv_buffer_data[] = {
+        1.0f, 1.0f,
         0.0f, 1.0f,
-        1.0f, 1.0f,
         0.0f, 0.0f,
-        1.0f, 1.0f,
         1.0f, 0.0f,
+        1.0f, 1.0f,
         0.0f, 0.0f,
     };
 

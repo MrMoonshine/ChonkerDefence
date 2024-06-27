@@ -15,7 +15,7 @@ int ui_create(UI *ui){
     glBindVertexArray(ui->vao);
     ui->shader = glshader_load("../shaders/guiver.glsl", "../shaders/guifra.glsl");
 
-    glm_ortho(0.0f, 100.0f, 0.0f, 100.0f, -1.0f, 1.0f, projection);
+    glm_ortho(0.0f, APP_WIDTH, 0.0f, APP_HEIGHT, -1.0f, 1.0f, projection);
     glm_lookat(eye, center, up, view);
     glm_mat4_identity(model);
     vec3 transformation = {0, 1, 0};
@@ -40,16 +40,15 @@ int ui_destroy(UI *ui){
 }
 
 void ui_resize(UI *ui, int width, int height){
-    //float aspectX = (float)APP_WIDTH / (float)width;
-    float aspectY = (float)APP_HEIGHT / (float)height;
-    //printf("Aspects are (%.2f|%.2f)\n", aspectX, aspectY);
+    float scaleY = (float)height/(float)APP_HEIGHT;
 
     glBindVertexArray(ui->vao);
-    glm_ortho(0.0f, 100.0f * aspectY, 0.0f, 100.0f * aspectY, -1.0f, 1.0f, projection);
+    glm_ortho(0.0f, width, 0.0f, height, -1.0f, 1.0f, projection);
     glm_lookat(eye, center, up, view);
     glm_mat4_identity(model);
     vec3 transformation = {0, 1, 0};
     glm_translate(model, transformation);
+    glm_scale_uni(model, scaleY);
 }
 
 void ui_enable_vao(UI *ui){
