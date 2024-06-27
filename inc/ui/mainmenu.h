@@ -7,13 +7,16 @@
 
 #include <ui/ui.h>
 #include <ui/container.h>
+#include <ui/button.h>
 
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #include <cglm/cglm.h>
 
 typedef struct MainMenu{
-
+    UI *ui;
+    UIContainer background;
+    Button btnSingleplayer;
 }MainMenu;
 
 int ui_mainmenu_create(MainMenu* menu, UI* ui);

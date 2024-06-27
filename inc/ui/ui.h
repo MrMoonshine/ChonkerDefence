@@ -21,7 +21,7 @@ typedef struct UI{
     //float intensity;
 
     int windowWidth, windowHeight;
-    Texture font;
+    Texture font, widgets;
 }UI;
 
 /*
@@ -36,6 +36,8 @@ int ui_destroy(UI *ui);
     @brief resize handler
 */
 void ui_resize(UI *ui, int width, int height);
+
+void ui_no_colorize(UI *ui);
 /*
     @brief Enable the UI's VAO to before drawing VBOs
 */

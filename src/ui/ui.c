@@ -34,10 +34,15 @@ int ui_create(UI *ui){
         LOGE(TAG, "Error while loading fonts. No text shown in GUI!");
         return -1;
     }
+    if(0 != texture_create(&ui->widgets, "../build/widgets1.png")){
+        LOGE(TAG, "Error while GUI Texture!");
+        return -1;
+    }
     return 0;
 }
 
 int ui_destroy(UI *ui){
+    texture_destroy(&ui->widgets);
     texture_destroy(&ui->font);
     glDeleteProgram(ui->shader);
 	glDeleteVertexArrays(1, &ui->vao);
@@ -56,6 +61,11 @@ void ui_resize(UI *ui, int width, int height){
     glm_scale_uni(model, scaleY);
 }
 
+void ui_no_colorize(UI *ui){
+    glUniform4fv(ui->colorize, 1, UI_NO_COLORIZE);
+}
+
+
 void ui_enable_vao(UI *ui){
     glUseProgram(ui->shader);
     glBindVertexArray(ui->vao);
@@ -63,7 +73,7 @@ void ui_enable_vao(UI *ui){
     glUniformMatrix4fv(ui->projection, 1, GL_FALSE, *projection);
     glUniformMatrix4fv(ui->view, 1, GL_FALSE, *view);
     glUniformMatrix4fv(ui->model, 1, GL_FALSE, *model);
-    glUniform4fv(ui->colorize, 1, (UI_NO_COLORIZE));
+    ui_no_colorize(ui);
 }
 
 

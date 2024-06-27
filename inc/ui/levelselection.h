@@ -13,6 +13,7 @@
 #include <cglm/cglm.h>
 
 typedef struct LevelSelection{
+    UI *ui;
     GLuint bgvbo, bguvvbo;
     Texture texture;
     GLuint textureUniform;

@@ -3,6 +3,7 @@
 static const char* TAG = "GUI: Levelselection:";
 
 int levelselection_create(LevelSelection *selection, UI* ui){
+    selection->ui = ui;
     static const GLfloat g_vertex_buffer_data[] = {
         1.0f, 98.0f, 0.0f,
         1.0f,  1.0f, 0.0f,
@@ -41,6 +42,14 @@ int levelselection_create(LevelSelection *selection, UI* ui){
 
 int levelselection_draw(LevelSelection *selection){
     glBindTexture( GL_TEXTURE_2D, selection->texture.bufferID);
+
+    mat4 model;
+    glm_mat4_identity(model);
+    vec3 transformation = {0, 0, 0};
+    glm_translate(model, transformation);
+
+    glUniformMatrix4fv(selection->ui->model, 1, GL_FALSE, *model);
+
     glEnableVertexAttribArray(0);
     glBindBuffer(GL_ARRAY_BUFFER, selection->bgvbo);
     glVertexAttribPointer(

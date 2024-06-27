@@ -8,7 +8,7 @@
 #include <clilevel.h>
 
 #include <ui/ui.h>
-#include <ui/container.h>
+#include <ui/mainmenu.h>
 #include <ui/levelselection.h>
 
 #include <GL/glew.h>
@@ -94,7 +94,7 @@ int main(void){
 
     GLuint programID = glshader_load("../shaders/labver.glsl", "../shaders/labfra.glsl");
     //printf("Shader ID is %d\n", programID);
-    //glEnable(GL_CULL_FACE);
+    glEnable(GL_CULL_FACE);
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
@@ -137,9 +137,9 @@ int main(void){
     LevelSelection selection;
     levelselection_create(&selection, &ui);
 
-    UIContainer background;
-    int bgwidth = APP_WIDTH * 1.3 + 32, bgheight = APP_HEIGHT*1.2 + 32;
-    ui_container_create_from_png(&background, &ui, &bgwidth, &bgheight, -16, 0.0f, "../build/test4.png");
+    MainMenu mainmenu;
+    ui_mainmenu_create(&mainmenu, &ui);
+
     do{
         // Clear the screen. It's not mentioned before Tutorial 02, but it can cause flickering, so it's there nonetheless.
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -166,7 +166,7 @@ int main(void){
         glDisableVertexAttribArray(0);
 
         ui_enable_vao(&ui);
-        ui_container_draw(&background);
+        ui_mainmenu_draw(&mainmenu);
         levelselection_draw(&selection);
 
         // Swap buffers
@@ -182,7 +182,7 @@ int main(void){
 	glDeleteProgram(programID);
 	glDeleteVertexArrays(1, &VertexArrayID);
 
-    ui_container_destroy(&background);
+    ui_mainmenu_destroy(&mainmenu);
     levelselection_destroy(&selection);
     ui_destroy(&ui);
 
