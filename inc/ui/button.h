@@ -6,6 +6,8 @@
 #include <texture.h>
 #include <ui/ui.h>
 #include <ui/text2d.h>
+#include <time.h>
+#include <sys/time.h>
 
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
@@ -17,9 +19,16 @@ typedef struct Button{
     Text2D text;
     float width, height;
     float x, y;
+
+    float lastClickTime;
+    bool blocked;
 }Button;
 
 int ui_button_create(Button *button, UI *ui, float width, float height, const char* text);
-void ui_button_draw(Button *button);
+/*
+    @returns if button is pressed (with sanitizing)
+*/
+bool ui_button_draw(Button *button);
 void ui_button_destroy(Button *button);
 bool ui_button_mouse_click(Button* button);
+void ui_button_set_position(Button* button,vec2 pos);

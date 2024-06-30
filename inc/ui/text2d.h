@@ -33,3 +33,4 @@ typedef struct Text2D{
 int ui_text2d_create(Text2D* text, UI *ui, const char* message, float size);
 void ui_text2d_draw(Text2D* text);
 void ui_text2d_destroy(Text2D* text);
+void ui_text2d_set_color(Text2D* text, const vec4 color);

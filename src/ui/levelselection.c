@@ -1,6 +1,6 @@
 #include <ui/levelselection.h>
 
-static const char* TAG = "GUI: Levelselection:";
+//static const char* TAG = "GUI: Levelselection:";
 
 int levelselection_create(LevelSelection *selection, UI* ui){
     selection->ui = ui;

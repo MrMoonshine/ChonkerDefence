@@ -10,6 +10,8 @@ static const size_t UV_POINT_COUNT = VERTEX_COUNT*3*2;
 static const float WIDTH_SIDE_FACTOR = 0.1;
 static const float WIDTH_CENTER_FACTOR = 0.8;
 
+static const double COOLDOWN_PERIOD_MS = 250;
+
 static float button_vertices(float* vertexbuffer, float* uvbuffer, float xorigin, float width, float height, int index){
     vertexbuffer[0] = xorigin;
     vertexbuffer[1] = 0.0f;
@@ -76,6 +78,8 @@ int ui_button_create(Button *button, UI *ui, float width, float height, const ch
     button->y = 0;
     button->height = height;
     button->width = width;
+    button->lastClickTime = glfwGetTime();
+    button->blocked = false;
 
     if(strstr(text, "\n") != NULL || strstr(text, "\r") != NULL)
         LOGW(TAG, "Button with multiline text might result in broken menu!");
@@ -118,7 +122,7 @@ int ui_button_create(Button *button, UI *ui, float width, float height, const ch
     return 0;
 }
 
-void ui_button_draw(Button *button){
+bool ui_button_draw(Button *button){
     glBindTexture( GL_TEXTURE_2D, button->ui->widgets.bufferID);
     mat4 model;
     glm_mat4_identity(model);
@@ -167,9 +171,7 @@ void ui_button_draw(Button *button){
     button->text.y = button->y + button->height/2- button->text.height/2;
     ui_text2d_draw(&button->text);
 
-    if(ui_button_mouse_click(button)){
-        printf("Clicked Button!\n");
-    }
+    return ui_button_mouse_click(button);
 }
 
 void ui_button_destroy(Button *button){
@@ -198,8 +200,27 @@ bool ui_button_mouse_click(Button* button){
     }
 
     button->text.color[3] = 1.0f;
-
     button->ui->anyButtonHover |= true;
+
+
     bool ret = GLFW_PRESS == glfwGetMouseButton(button->ui->window, GLFW_MOUSE_BUTTON_LEFT);
+    if(ret){
+        float current = glfwGetTime();
+        float diff = current - button->lastClickTime;
+        //printf("Clock time diff is %f\n", diff);
+        if(1000.0f*diff >= COOLDOWN_PERIOD_MS && !button->blocked){
+            button->lastClickTime = current;
+            button->blocked = true;
+        }else{
+            return false;
+        }
+    }else if(!ret){
+        button->blocked = false;
+    }
     return ret;
+}
+
+void ui_button_set_position(Button* button, vec2 pos){
+    button->x = pos[0];
+    button->y = pos[1];
 }

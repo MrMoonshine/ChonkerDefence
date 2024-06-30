@@ -164,3 +164,9 @@ void ui_text2d_destroy(Text2D* text){
     glDeleteBuffers(1, &text->vertexbuffer);
     glDeleteBuffers(1, &text->uvbuffer);
 }
+
+void ui_text2d_set_color(Text2D* text, const vec4 color){
+    for(uint8_t i = 0; i < 4; i++){
+        text->color[i] = color[i];
+    }
+}

@@ -144,6 +144,7 @@ int main(void){
     MainMenu mainmenu;
     ui_mainmenu_create(&mainmenu, &ui);
 
+    bool mainLoopClosing = false;
     do{
         // Clear the screen. It's not mentioned before Tutorial 02, but it can cause flickering, so it's there nonetheless.
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -170,8 +171,13 @@ int main(void){
         glDisableVertexAttribArray(0);
 
         ui_enable_vao(&ui);
-        ui_mainmenu_draw(&mainmenu);
-        levelselection_draw(&selection);
+        switch(ui_mainmenu_draw(&mainmenu)){
+            case UI_MAINMENU_QUIT:
+                mainLoopClosing = true;
+                break;
+            default: break;
+        }
+        //levelselection_draw(&selection);
 
         glfwSetCursor(window, ui.anyButtonHover ? cursor_pointer : cursor_default);
 
@@ -180,8 +186,7 @@ int main(void){
         glfwPollEvents();
 
     } // Check if the ESC key was pressed or the window was closed
-    while( glfwGetKey(window, GLFW_KEY_ESCAPE ) != GLFW_PRESS &&
-        glfwWindowShouldClose(window) == 0 );
+    while( glfwGetKey(window, GLFW_KEY_ESCAPE ) != GLFW_PRESS && glfwWindowShouldClose(window) == 0 && !mainLoopClosing);
 
     // Cleanup VBO and shader
 	glDeleteBuffers(1, &vertexbuffer);
