@@ -21,7 +21,7 @@ typedef struct Client{
     int socket;
 }Client;
 
-int client_init(Client *client);
+int client_init(Client *client, const char* address_str, unsigned short portnum);
 int client_disconnect(Client *client);
 /*
     @brief shut down server

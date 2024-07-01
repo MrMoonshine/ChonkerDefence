@@ -12,15 +12,15 @@
 #include <GLFW/glfw3.h>
 #include <cglm/cglm.h>
 
-typedef struct LevelSelection{
+typedef struct LevelMenu{
     UI *ui;
     GLuint bgvbo, bguvvbo;
     Texture texture;
     GLuint textureUniform;
 
     Text2D title;
-}LevelSelection;
+}LevelMenu;
 
-int levelselection_create(LevelSelection *selection, UI* ui);
-int levelselection_draw(LevelSelection *selection);
-int levelselection_destroy(LevelSelection *selection);
+int levelselection_create(LevelMenu *selection, UI* ui);
+int levelselection_draw(LevelMenu *selection);
+int levelselection_destroy(LevelMenu *selection);

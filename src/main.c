@@ -9,7 +9,7 @@
 
 #include <ui/ui.h>
 #include <ui/mainmenu.h>
-#include <ui/levelselection.h>
+#include <ui/levelmenu.h>
 
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
@@ -18,6 +18,12 @@
 static const char* TAG = "Main";
 
 static UI ui;
+
+// Used for the Menus as some sort of state machine
+typedef enum {
+    MENU_MAIN,
+    MENU_LEVELSELECTION
+} MenuState;
 
 /*void window_resize_callback(GLFWwindow* window, int width, int height){
     printf("My window size is %dx%d\n", width, height);
@@ -121,27 +127,19 @@ int main(void){
     GLuint sView = glGetUniformLocation(programID, "view");
     GLuint sModel = glGetUniformLocation(programID, "model");
 
+    bool server_running = false;
     server_initial_params serverparams = {
         .port = 0
     };
-    server_start(&serverparams);
     Client client;
-    client_init(&client);
-    size_t datasize = 1024;
-    unsigned char data[1024];
-    if(0 != clilevel_show(&client, data, &datasize)){
-        LOGE(TAG, "Failed to init Client");
-       /* printf("Number of levels is %d\n", clilevel_count(data, datasize));
-        for(int a = 0; a < datasize; a++)
-            printf("%x, ", data[a]);*/
-    }
+
 
     ui_create(&ui, window);
 
-    LevelSelection selection;
-    levelselection_create(&selection, &ui);
-
     MainMenu mainmenu;
+    LevelMenu selection;
+    // Create initial Menu
+    MenuState currentMenu = MENU_MAIN;
     ui_mainmenu_create(&mainmenu, &ui);
 
     bool mainLoopClosing = false;
@@ -171,13 +169,38 @@ int main(void){
         glDisableVertexAttribArray(0);
 
         ui_enable_vao(&ui);
-        switch(ui_mainmenu_draw(&mainmenu)){
-            case UI_MAINMENU_QUIT:
-                mainLoopClosing = true;
-                break;
+        /*----------------------------------
+                    Menus
+        -----------------------------------*/
+        switch(currentMenu){
+            case MENU_MAIN:{
+                switch(ui_mainmenu_draw(&mainmenu)){
+                    case UI_MAINMENU_SINGLEPLAYER:
+                        if(server_running){
+                            LOGW(TAG, "Server already running!\n");
+                        }else{
+                            serverparams.port = 0;  // Singleplayer
+                            server_start(&serverparams);
+                            server_running = true;
+                            client_init(&client, "::1", SERVER_PORT_DEFAULT);
+                            printf("Singleplayer start! %d\n", server_running);
+                            // Switch menu
+                            currentMenu = MENU_LEVELSELECTION;
+                            levelselection_create(&selection, &ui);
+                            ui_mainmenu_destroy(&mainmenu);
+                        }
+                        break;
+                    case UI_MAINMENU_QUIT:
+                        mainLoopClosing = true;
+                        break;
+                    default: break;
+                }
+            }break;
+            case MENU_LEVELSELECTION:{
+                levelselection_draw(&selection);
+            }break;
             default: break;
         }
-        //levelselection_draw(&selection);
 
         glfwSetCursor(window, ui.anyButtonHover ? cursor_pointer : cursor_default);
 
@@ -193,8 +216,22 @@ int main(void){
 	glDeleteProgram(programID);
 	glDeleteVertexArrays(1, &VertexArrayID);
 
-    ui_mainmenu_destroy(&mainmenu);
-    levelselection_destroy(&selection);
+    if(server_running){
+        client_server_kill(&client, serverparams.sessionkey, serverparams.thrid);
+    }
+
+    switch(currentMenu){
+        case MENU_MAIN:
+            ui_mainmenu_destroy(&mainmenu);
+            break;
+        case MENU_LEVELSELECTION:
+            levelselection_destroy(&selection);
+            break;
+        default: break;
+    }
+
+    // ui_mainmenu_destroy(&mainmenu);
+    // levelselection_destroy(&selection);
     ui_destroy(&ui);
 
     glfwDestroyCursor(cursor_default);
@@ -203,6 +240,6 @@ int main(void){
 	// Close OpenGL window and terminate GLFW
 	glfwTerminate();
 
-    client_server_kill(&client, serverparams.sessionkey, serverparams.thrid);
+    //client_server_kill(&client, serverparams.sessionkey, serverparams.thrid);
     return 0;
 }

@@ -1,11 +1,11 @@
 #include <client.h>
 
-int client_init(Client *client){
+int client_init(Client *client, const char* address_str, unsigned short portnum){
     struct sockaddr_in6 addr;
     client->socket = socket(AF_INET6, SOCK_STREAM, 0);
     addr.sin6_family = AF_INET6;
-    addr.sin6_port = htons(42069);
-    inet_pton(AF_INET6, "::1", &addr.sin6_addr);
+    addr.sin6_port = htons(portnum);
+    inet_pton(AF_INET6, address_str, &addr.sin6_addr);
     connect(client->socket, (struct sockaddr *)&addr, sizeof(addr));
     return 0;
 }

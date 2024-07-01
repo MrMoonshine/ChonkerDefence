@@ -1,16 +1,16 @@
-#include <ui/levelselection.h>
+#include <ui/levelmenu.h>
 
 //static const char* TAG = "GUI: Levelselection:";
 
-int levelselection_create(LevelSelection *selection, UI* ui){
+int levelselection_create(LevelMenu *selection, UI* ui){
     selection->ui = ui;
     static const GLfloat g_vertex_buffer_data[] = {
-        1.0f, 98.0f, 0.0f,
+        1.0f, 100.0f, 0.0f,
         1.0f,  1.0f, 0.0f,
-        34.0f, 98.0f, 0.0f,
-        34.0f, 98.0f, 0.0f,
+        100.0f, 100.0f, 0.0f,
+        100.0f, 100.0f, 0.0f,
         1.0f,  1.0f, 0.0f,
-        34.0f, 1.0f, 0.0f,
+        100.0f, 1.0f, 0.0f,
     };
 
     static const GLfloat g_uv_buffer_data[] = {
@@ -40,7 +40,7 @@ int levelselection_create(LevelSelection *selection, UI* ui){
     return 0;
 }
 
-int levelselection_draw(LevelSelection *selection){
+int levelselection_draw(LevelMenu *selection){
     ui_no_colorize(selection->ui);
     glBindTexture( GL_TEXTURE_2D, selection->texture.bufferID);
 
@@ -48,6 +48,7 @@ int levelselection_draw(LevelSelection *selection){
     glm_mat4_identity(model);
     vec3 transformation = {0, 0, 0};
     glm_translate(model, transformation);
+    glm_scale_uni(model, 8.0f);
 
     glUniformMatrix4fv(selection->ui->model, 1, GL_FALSE, *model);
 
@@ -85,7 +86,7 @@ int levelselection_draw(LevelSelection *selection){
     return 0;
 }
 
-int levelselection_destroy(LevelSelection *selection){
+int levelselection_destroy(LevelMenu *selection){
     ui_text2d_destroy(&selection->title);
     texture_destroy(&selection->texture);
     glDeleteBuffers(1, &selection->bgvbo);
