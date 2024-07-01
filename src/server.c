@@ -8,7 +8,6 @@ void *server_main(void *portNumPtr)
     server_initial_params sip;
     //server_initial_params *s_i = (server_initial_params*)portNumPtr;
     memcpy(&sip, (server_initial_params*)portNumPtr, sizeof(server_initial_params));
-    sem_post(&sParamCpy);          // Allow main thread to return
 
     int server_fd, new_socket;
     struct sockaddr_in6 address;
@@ -23,7 +22,7 @@ void *server_main(void *portNumPtr)
     // Creating socket file descriptor
     if ((server_fd = socket(AF_INET6, SOCK_STREAM, 0)) == 0)
     {
-        LOGE(TAG, "socket failed");
+        LOGERRNO(TAG, "socket failed");
         exit(EXIT_FAILURE);
     }
 
@@ -31,7 +30,7 @@ void *server_main(void *portNumPtr)
     if (setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT,
                                                   &opt, sizeof(opt)))
     {
-        LOGE(TAG, "setsockopt");
+        LOGERRNO(TAG, "setsockopt");
         exit(EXIT_FAILURE);
     }
     address.sin6_family = AF_INET6;
@@ -49,29 +48,33 @@ void *server_main(void *portNumPtr)
     if (bind(server_fd, (struct sockaddr *)&address,
                                  sizeof(address))<0)
     {
-        LOGE(TAG, "bind failed");
+        LOGERRNO(TAG, "bind failed");
         exit(EXIT_FAILURE);
     }
     if (listen(server_fd, 3) < 0)
     {
-        LOGE(TAG, "listen failed");
+        LOGERRNO(TAG, "listen failed");
         exit(EXIT_FAILURE);
     }
 
     pfds[0].fd = server_fd;
-    pfds[0].events = POLLIN;
+    pfds[0].events = POLLIN | POLLPRI | POLLERR;
     fdCount = 1;
     char buffer[SERVER_RCV_BUFF_SIZE] = {0};
 
-    bool server_running = true;
+    bool server_running = true, firstRun = true;
     while(server_running){
-        //LOGI(TAG,"Poll Start");
+        LOGI(TAG,"Poll Start");
+        if(firstRun){
+            firstRun = false;
+            sem_post(&sParamCpy);          // Allow main thread to return
+        }
         int pollCount = poll(pfds, fdCount, -1);
-        if (pollCount == -1) {
-            LOGE(TAG, "poll");
+        if (pollCount < 0) {
+            LOGERRNO(TAG, "poll");
             exit(1);
         }
-        //LOGI(TAG,"Poll finished");
+        LOGI(TAG,"Poll finished");
 
         for(int i = 0; i < fdCount; i++){
             // is one ready?
@@ -172,6 +175,7 @@ void *server_main(void *portNumPtr)
             }
         }
     }
+    free(pfds);
     LOGS(TAG, "Stop!");
     return NULL;
 }

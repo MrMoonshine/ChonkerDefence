@@ -72,6 +72,7 @@ static float button_vertices(float* vertexbuffer, float* uvbuffer, float xorigin
     return xorigin + width;
 }
 
+
 int ui_button_create(Button *button, UI *ui, float width, float height, const char* text){
     button->ui = ui;
     button->x = 0;

@@ -4,9 +4,13 @@
 #include <glshader.h>
 #include <logging.h>
 #include <texture.h>
+#include <protocol.h>
+#include <client.h>
+#include <clilevel.h>
 
 #include <ui/ui.h>
 #include <ui/text2d.h>
+#include <ui/button.h>
 
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
@@ -14,13 +18,14 @@
 
 typedef struct LevelMenu{
     UI *ui;
-    GLuint bgvbo, bguvvbo;
-    Texture texture;
-    GLuint textureUniform;
+    Client* client;
 
     Text2D title;
+    Button* buttons;
+    uint8_t buttonCount;
 }LevelMenu;
 
-int levelselection_create(LevelMenu *selection, UI* ui);
-int levelselection_draw(LevelMenu *selection);
-int levelselection_destroy(LevelMenu *selection);
+int ui_levelmenu_create(LevelMenu *menu, UI* ui, Client* client);
+int ui_levelmenu_draw(LevelMenu *menu);
+int ui_levelmenu_destroy(LevelMenu *menu);
+

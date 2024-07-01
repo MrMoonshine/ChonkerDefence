@@ -1,95 +1,86 @@
 #include <ui/levelmenu.h>
 
-//static const char* TAG = "GUI: Levelselection:";
+//static const char* TAG = "GUI: Levelmenu:";
 
-int levelselection_create(LevelMenu *selection, UI* ui){
-    selection->ui = ui;
-    static const GLfloat g_vertex_buffer_data[] = {
-        1.0f, 100.0f, 0.0f,
-        1.0f,  1.0f, 0.0f,
-        100.0f, 100.0f, 0.0f,
-        100.0f, 100.0f, 0.0f,
-        1.0f,  1.0f, 0.0f,
-        100.0f, 1.0f, 0.0f,
-    };
+//static const size_t BUFFER_SIZE = 1024;
+static const uint8_t BUTTON_COLUMNS = 3;
+static const float BUTTON_GAP = 16.0f;
+static const float BUTTON_HEIGHT = 40.0f;
+static const float BUTTON_WIDTH = APP_WIDTH/BUTTON_COLUMNS - BUTTON_GAP;
+static const float TITLE_FONT_SIZE = 60.0f;
+static const float BUTTON_CONTAINER_WIDTH = BUTTON_COLUMNS*(BUTTON_WIDTH + BUTTON_GAP) - BUTTON_GAP;
 
-    static const GLfloat g_uv_buffer_data[] = {
-        0.0f, 1.0f,
-        0.0f, 0.0f,
-        1.0f, 1.0f,
-        1.0f, 1.0f,
-        0.0f, 0.0f,
-        1.0f, 0.0f,
-    };
+static int ui_levelmenu_build_buttons(LevelMenu *menu){
+    size_t len = 0;
+    uint8_t status = clilevel_get_info(menu->client, &len);
+    if(status != CD_NET_CODE_OK || len < 1){
+        return -1;
+    }
+    uint8_t *buffer;
+    buffer = (uint8_t*)malloc(len);
+    recv(menu->client->socket, buffer, len, 0);
+    size_t pos = 0;
+    // First byte is levelcount
+    menu->buttonCount = buffer[pos++];
+    menu->buttons = (Button*)malloc(menu->buttonCount * sizeof(Button));
 
-    //glGenVertexArrays(1, &ui->vao);
-    glBindVertexArray(ui->vao);
-
-    glGenBuffers(1, &selection->bgvbo);
-    glBindBuffer(GL_ARRAY_BUFFER, selection->bgvbo);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(g_vertex_buffer_data), g_vertex_buffer_data, GL_STATIC_DRAW);
-
-    glGenBuffers(1, &selection->bguvvbo);
-    glBindBuffer(GL_ARRAY_BUFFER, selection->bguvvbo);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(g_uv_buffer_data), g_uv_buffer_data, GL_STATIC_DRAW);
-    texture_create(&selection->texture, "../build/test2.png");
-
-    ui_text2d_create(&selection->title, ui, "the quick brown fox jumps\r\nover the lazy dog!", 64.0f);
-    selection->title.x = 64;
-    selection->title.y = 128;
+    for(uint8_t i = 0; i < menu->buttonCount; i++){
+        uint8_t slen = buffer[pos++];
+        //printf("%s\tStrlen is %d\n", (char*)(buffer + pos), slen);
+        ui_button_create(menu->buttons + i, menu->ui,  BUTTON_WIDTH,  BUTTON_HEIGHT, (char*)(buffer + pos));
+        pos += slen + 1; // +1 for the \0
+    }
+    free(buffer);
     return 0;
 }
 
-int levelselection_draw(LevelMenu *selection){
-    ui_no_colorize(selection->ui);
-    glBindTexture( GL_TEXTURE_2D, selection->texture.bufferID);
+int ui_levelmenu_create(LevelMenu *menu, UI* ui, Client* client){
+    menu->ui = ui;
+    menu->client = client;
+    menu->buttonCount = 0;
 
-    mat4 model;
-    glm_mat4_identity(model);
-    vec3 transformation = {0, 0, 0};
-    glm_translate(model, transformation);
-    glm_scale_uni(model, 8.0f);
+    ui_text2d_create(&menu->title, ui, "Levels", TITLE_FONT_SIZE);
 
-    glUniformMatrix4fv(selection->ui->model, 1, GL_FALSE, *model);
-
-    glEnableVertexAttribArray(0);
-    glBindBuffer(GL_ARRAY_BUFFER, selection->bgvbo);
-    glVertexAttribPointer(
-        0,                  // attribute 0. No particular reason for 0, but must match the layout in the shader.
-        3,                  // size
-        GL_FLOAT,           // type
-        GL_FALSE,           // normalized?
-        0,                  // stride
-        (void*)0            // array buffer offset
-    );
-    // Draw the triangle !
-    glDrawArrays(GL_TRIANGLES, 0, 6); // Starting from vertex 0; 3 vertices total -> 1 triangle
-    //LOGGLERR(TAG);
-    glEnableVertexAttribArray(1);
-
-    glBindBuffer(GL_ARRAY_BUFFER, selection->bguvvbo);
-    glVertexAttribPointer(
-        1,                                // attribute. No particular reason for 1, but must match the layout in the shader.
-        2,                                // size : U+V => 2
-        GL_FLOAT,                         // type
-        GL_FALSE,                         // normalized?
-        0,                                // stride
-        (void*)0                          // array buffer offset
-    );
-    // Draw the triangle !
-    glDrawArrays(GL_TRIANGLES, 0, 2*3);
-
-    glDisableVertexAttribArray(0);
-    glDisableVertexAttribArray(1);
-
-    ui_text2d_draw(&selection->title);
+    ui_levelmenu_build_buttons(menu);
     return 0;
 }
 
-int levelselection_destroy(LevelMenu *selection){
-    ui_text2d_destroy(&selection->title);
-    texture_destroy(&selection->texture);
-    glDeleteBuffers(1, &selection->bgvbo);
-    glDeleteBuffers(1, &selection->bguvvbo);
+int ui_levelmenu_draw(LevelMenu *menu){
+    ui_no_colorize(menu->ui);
+
+    menu->title.x = menu->ui->windowWidth/2 - menu->title.width/2;
+    menu->title.y = menu->ui->windowHeight - TITLE_FONT_SIZE - BUTTON_GAP;
+
+    float containerInitialX = menu->ui->windowWidth/2 - BUTTON_CONTAINER_WIDTH/2;
+    vec2 pos = {
+        containerInitialX,
+        menu->ui->windowHeight - (2*TITLE_FONT_SIZE + 2*BUTTON_GAP)
+    };
+
+    for(uint8_t i = 0; i < menu->buttonCount; i++){
+        ui_button_set_position(menu->buttons + i, pos);
+        ui_button_draw(menu->buttons + i);
+
+        if(i % BUTTON_COLUMNS == BUTTON_COLUMNS - 1){
+            pos[0] = containerInitialX;
+            pos[1] -= BUTTON_GAP + BUTTON_HEIGHT;
+        }else{
+            pos[0] += BUTTON_GAP + BUTTON_WIDTH;
+        }
+    }
+
+    ui_text2d_draw(&menu->title);
+    return 0;
+}
+
+int ui_levelmenu_destroy(LevelMenu *menu){
+    ui_text2d_destroy(&menu->title);
+    if(menu->buttonCount > 0){
+        for(uint8_t i = 0; i < menu->buttonCount; i++)
+            ui_button_destroy(menu->buttons + i);
+
+        free(menu->buttons);
+        menu->buttons = NULL;
+    }
     return 0;
 }

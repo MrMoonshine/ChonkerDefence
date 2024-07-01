@@ -31,7 +31,8 @@ int srvlevel_show(unsigned char* data, size_t* len, uint8_t* filecount){
         memset(data, 0x00, *len);
         //memcpy(data + position++, &status, 1);
         data[position++] = status;
-        memcpy(data + position, len, sizeof(size_t));
+        size_t levellen = (*len) - 2 - sizeof(size_t);
+        memcpy(data + position, &levellen, sizeof(size_t));
         position += sizeof(size_t);
         data[position++] = *filecount;
         //printf("Filecount in data is %x hex or %d dec\tpos is %lu\n", data[9], data[9], position);
@@ -44,12 +45,15 @@ int srvlevel_show(unsigned char* data, size_t* len, uint8_t* filecount){
         puts(ep->d_name);*/
         if(data == NULL){
             (*filecount)++;
-            *len += 1 + strlen(ep->d_name);
+            *len += 1 + strlen(ep->d_name) - strlen(LEVEL_FILE_EXTENSION) + 1;
         }else{
-            uint8_t filelen = strlen(ep->d_name);
+
+
+            uint8_t filelen = strlen(ep->d_name) - strlen(LEVEL_FILE_EXTENSION);
             memcpy(data + position++, &filelen,1);
             memcpy(data + position, (unsigned char*)ep->d_name,filelen);
             position += filelen;
+            data[position++] = '\0';
         }
     };
     closedir((dp1));

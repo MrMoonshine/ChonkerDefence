@@ -16,6 +16,10 @@ void LOGE(const char* TAG, const char* msg){
     fprintf(stderr,"\e[0;31m[ERROR] %s: %s\e[0m\n", TAG, msg);
 }
 
+void LOGERRNO(const char* TAG, const char* msg){
+    fprintf(stderr,"\e[0;31m[ERROR] %s: %s: %s\e[0m\n", TAG, msg, strerror(errno));
+}
+
 void LOGGLERR(const char* TAG){
     GLenum err = glGetError();
     switch(err){

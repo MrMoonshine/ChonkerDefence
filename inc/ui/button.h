@@ -25,6 +25,7 @@ typedef struct Button{
 }Button;
 
 int ui_button_create(Button *button, UI *ui, float width, float height, const char* text);
+//int ui_button_create_fixed_str(Button *button, UI *ui, float width, float height, const char* text, size_t stringLength);
 /*
     @returns if button is pressed (with sanitizing)
 */

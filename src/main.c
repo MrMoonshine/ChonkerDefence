@@ -137,7 +137,7 @@ int main(void){
     ui_create(&ui, window);
 
     MainMenu mainmenu;
-    LevelMenu selection;
+    LevelMenu levelmenu;
     // Create initial Menu
     MenuState currentMenu = MENU_MAIN;
     ui_mainmenu_create(&mainmenu, &ui);
@@ -182,11 +182,11 @@ int main(void){
                             serverparams.port = 0;  // Singleplayer
                             server_start(&serverparams);
                             server_running = true;
+
                             client_init(&client, "::1", SERVER_PORT_DEFAULT);
-                            printf("Singleplayer start! %d\n", server_running);
                             // Switch menu
                             currentMenu = MENU_LEVELSELECTION;
-                            levelselection_create(&selection, &ui);
+                            ui_levelmenu_create(&levelmenu, &ui, &client);
                             ui_mainmenu_destroy(&mainmenu);
                         }
                         break;
@@ -197,7 +197,7 @@ int main(void){
                 }
             }break;
             case MENU_LEVELSELECTION:{
-                levelselection_draw(&selection);
+                ui_levelmenu_draw(&levelmenu);
             }break;
             default: break;
         }
@@ -225,13 +225,13 @@ int main(void){
             ui_mainmenu_destroy(&mainmenu);
             break;
         case MENU_LEVELSELECTION:
-            levelselection_destroy(&selection);
+            ui_levelmenu_destroy(&levelmenu);
             break;
         default: break;
     }
 
     // ui_mainmenu_destroy(&mainmenu);
-    // levelselection_destroy(&selection);
+    // levelmenu_destroy(&menu);
     ui_destroy(&ui);
 
     glfwDestroyCursor(cursor_default);
