@@ -6,7 +6,7 @@
 #include <texture.h>
 
 #include <ui/ui.h>
-#include <ui/container.h>
+#include <ui/image2d.h>
 #include <ui/button.h>
 
 #include <GL/glew.h>
@@ -23,7 +23,7 @@ typedef struct MainMenu{
     UI *ui;
 
     Text2D title;
-    UIContainer background;
+    Image2D background;
 
     Button btnSingleplayer;
     Button btnServer;

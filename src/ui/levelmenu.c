@@ -39,17 +39,25 @@ int ui_levelmenu_create(LevelMenu *menu, UI* ui, Client* client){
     menu->client = client;
     menu->buttonCount = 0;
 
-    ui_text2d_create(&menu->title, ui, "Levels", TITLE_FONT_SIZE);
+    //Background
+    int bgwidth = APP_WIDTH * 1.3 + 32, bgheight = APP_HEIGHT*1.2 + 32;
+    ui_image2d_create_from_png(&menu->background, ui, "../build/test3.png");
 
+    ui_button_create(&menu->btnBack, menu->ui,  BUTTON_HEIGHT*5,  BUTTON_HEIGHT*1.5f, "Back");
+
+    ui_text2d_create(&menu->title, ui, "Levels", TITLE_FONT_SIZE);
     ui_levelmenu_build_buttons(menu);
     return 0;
 }
 
 int ui_levelmenu_draw(LevelMenu *menu){
-    ui_no_colorize(menu->ui);
+    int ret = 0;
 
     menu->title.x = menu->ui->windowWidth/2 - menu->title.width/2;
     menu->title.y = menu->ui->windowHeight - TITLE_FONT_SIZE - BUTTON_GAP;
+
+    menu->btnBack.x = BUTTON_GAP;
+    menu->btnBack.y = menu->ui->windowHeight - BUTTON_GAP - BUTTON_HEIGHT*1.5f;
 
     float containerInitialX = menu->ui->windowWidth/2 - BUTTON_CONTAINER_WIDTH/2;
     vec2 pos = {
@@ -57,9 +65,17 @@ int ui_levelmenu_draw(LevelMenu *menu){
         menu->ui->windowHeight - (2*TITLE_FONT_SIZE + 2*BUTTON_GAP)
     };
 
+    ui_no_colorize(menu->ui);
+    ui_image2d_draw(&menu->background);
+    ui_text2d_draw(&menu->title);
+
+    if(ui_button_draw(&menu->btnBack))
+        ret = UI_LEVELMENU_BACK;
+
     for(uint8_t i = 0; i < menu->buttonCount; i++){
         ui_button_set_position(menu->buttons + i, pos);
-        ui_button_draw(menu->buttons + i);
+        if(ui_button_draw(menu->buttons + i))
+            ret = i+1;
 
         if(i % BUTTON_COLUMNS == BUTTON_COLUMNS - 1){
             pos[0] = containerInitialX;
@@ -68,13 +84,13 @@ int ui_levelmenu_draw(LevelMenu *menu){
             pos[0] += BUTTON_GAP + BUTTON_WIDTH;
         }
     }
-
-    ui_text2d_draw(&menu->title);
-    return 0;
+    return ret;
 }
 
 int ui_levelmenu_destroy(LevelMenu *menu){
     ui_text2d_destroy(&menu->title);
+    ui_button_destroy(&menu->btnBack);
+    ui_image2d_destroy(&menu->background);
     if(menu->buttonCount > 0){
         for(uint8_t i = 0; i < menu->buttonCount; i++)
             ui_button_destroy(menu->buttons + i);

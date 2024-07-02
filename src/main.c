@@ -25,17 +25,11 @@ typedef enum {
     MENU_LEVELSELECTION
 } MenuState;
 
-/*void window_resize_callback(GLFWwindow* window, int width, int height){
-    printf("My window size is %dx%d\n", width, height);
-    //ui_resize(&ui, width, height);
-}*/
-
 void framebuffer_size_callback(GLFWwindow* window, int width, int height){
     glViewport(0, 0, width, height);
     printf("[INFO] %s: My window size is %dx%d\n", TAG, width, height);
     ui_resize(&ui, width, height);
 }
-
 
 void dumpMat4(mat4 matrix, const char* title){
     printf("-------- %s --------\n", title);
@@ -186,8 +180,8 @@ int main(void){
                             client_init(&client, "::1", SERVER_PORT_DEFAULT);
                             // Switch menu
                             currentMenu = MENU_LEVELSELECTION;
-                            ui_levelmenu_create(&levelmenu, &ui, &client);
                             ui_mainmenu_destroy(&mainmenu);
+                            ui_levelmenu_create(&levelmenu, &ui, &client);
                         }
                         break;
                     case UI_MAINMENU_QUIT:
@@ -197,7 +191,26 @@ int main(void){
                 }
             }break;
             case MENU_LEVELSELECTION:{
-                ui_levelmenu_draw(&levelmenu);
+                int levelmenuaction = ui_levelmenu_draw(&levelmenu);
+                switch(levelmenuaction){
+                    case UI_LEVELMENU_BACK:{
+                        if(server_running){
+                            client_server_kill(&client, serverparams.sessionkey, serverparams.thrid);
+                            server_running = false;
+                        }
+                        currentMenu = MENU_MAIN;
+                        ui_levelmenu_destroy(&levelmenu);
+                        ui_mainmenu_create(&mainmenu, &ui);
+                    }break;
+                    case 0:
+                        break;
+                    default: {
+                        if(levelmenuaction > 0){
+                            uint8_t levelID = levelmenuaction - 1;
+                            printf("Loading level ID %d\n", levelID);
+                        }
+                    }break;
+                }
             }break;
             default: break;
         }
@@ -209,7 +222,7 @@ int main(void){
         glfwPollEvents();
 
     } // Check if the ESC key was pressed or the window was closed
-    while( glfwGetKey(window, GLFW_KEY_ESCAPE ) != GLFW_PRESS && glfwWindowShouldClose(window) == 0 && !mainLoopClosing);
+    while(/*glfwGetKey(window, GLFW_KEY_ESCAPE ) != GLFW_PRESS && */glfwWindowShouldClose(window) == 0 && !mainLoopClosing);
 
     // Cleanup VBO and shader
 	glDeleteBuffers(1, &vertexbuffer);

@@ -64,7 +64,7 @@ void *server_main(void *portNumPtr)
 
     bool server_running = true, firstRun = true;
     while(server_running){
-        LOGI(TAG,"Poll Start");
+        //LOGI(TAG,"Poll Start");
         if(firstRun){
             firstRun = false;
             sem_post(&sParamCpy);          // Allow main thread to return
@@ -74,7 +74,7 @@ void *server_main(void *portNumPtr)
             LOGERRNO(TAG, "poll");
             exit(1);
         }
-        LOGI(TAG,"Poll finished");
+        //LOGI(TAG,"Poll finished");
 
         for(int i = 0; i < fdCount; i++){
             // is one ready?
@@ -176,6 +176,8 @@ void *server_main(void *portNumPtr)
         }
     }
     free(pfds);
+    pfds = NULL;
+    close(server_fd);
     LOGS(TAG, "Stop!");
     return NULL;
 }
