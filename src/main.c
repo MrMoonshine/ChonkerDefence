@@ -22,7 +22,8 @@ static UI ui;
 // Used for the Menus as some sort of state machine
 typedef enum {
     MENU_MAIN,
-    MENU_LEVELSELECTION
+    MENU_LEVELSELECTION,
+    MENU_GAME
 } MenuState;
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height){
@@ -126,6 +127,7 @@ int main(void){
         .port = 0
     };
     Client client;
+    ClientLevel level;
 
 
     ui_create(&ui, window);
@@ -207,7 +209,13 @@ int main(void){
                     default: {
                         if(levelmenuaction > 0){
                             uint8_t levelID = levelmenuaction - 1;
-                            printf("Loading level ID %d\n", levelID);
+                            // Loading level
+                            printf("Main: Loading Level #%d\n", levelID);
+                            size_t len = 0;
+                            clilevel_get_level(&client, &len, levelID, &level);
+                            printf("Level: %s, style: %s\tdimensions are (%d|%d)\n", level.name, level.style, level.width, level.height);
+                            currentMenu = MENU_GAME;
+                            ui_levelmenu_destroy(&levelmenu);
                         }
                     }break;
                 }

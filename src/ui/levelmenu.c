@@ -1,6 +1,6 @@
 #include <ui/levelmenu.h>
 
-//static const char* TAG = "GUI: Levelmenu:";
+static const char* TAG = "GUI: Levelmenu:";
 
 //static const size_t BUFFER_SIZE = 1024;
 static const uint8_t BUTTON_COLUMNS = 3;
@@ -11,11 +11,15 @@ static const float TITLE_FONT_SIZE = 60.0f;
 static const float BUTTON_CONTAINER_WIDTH = BUTTON_COLUMNS*(BUTTON_WIDTH + BUTTON_GAP) - BUTTON_GAP;
 
 static int ui_levelmenu_build_buttons(LevelMenu *menu){
+    int ictlret;
     size_t len = 0;
-    uint8_t status = clilevel_get_info(menu->client, &len);
+    uint8_t status = clilevel_list_levels(menu->client, &len);
     if(status != CD_NET_CODE_OK || len < 1){
         return -1;
     }
+
+    ioctl(menu->client->socket, FIONREAD, &ictlret);
+    printf("[INFO] %s: IOCTL count is %d; len is %lu\n", TAG, ictlret, len);
     uint8_t *buffer;
     buffer = (uint8_t*)malloc(len);
     recv(menu->client->socket, buffer, len, 0);
@@ -40,7 +44,6 @@ int ui_levelmenu_create(LevelMenu *menu, UI* ui, Client* client){
     menu->buttonCount = 0;
 
     //Background
-    int bgwidth = APP_WIDTH * 1.3 + 32, bgheight = APP_HEIGHT*1.2 + 32;
     ui_image2d_create_from_png(&menu->background, ui, "../build/test3.png");
 
     ui_button_create(&menu->btnBack, menu->ui,  BUTTON_HEIGHT*5,  BUTTON_HEIGHT*1.5f, "Back");

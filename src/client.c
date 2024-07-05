@@ -21,3 +21,14 @@ int client_server_kill(Client *client, uint32_t key, pthread_t tid){
     pthread_join(tid, NULL);
     return ret;
 }
+
+void client_flush(Client* client){
+    /*int count = 0;
+    ioctl(client->socket, FIONREAD, &count);
+    printf("Client has %d bytes to flush\n", count);
+    recv(client->socket, NULL, count, 0);
+    ioctl(client->socket, FIONREAD, &count);
+    printf("after: Client has %d bytes to flush\n", count);*/
+    //char c;
+    //while(0 < recv(client->socket, &c, 1, 0)){};
+}

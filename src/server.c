@@ -126,24 +126,17 @@ void *server_main(void *portNumPtr)
                                 if(byteCount > 1){
                                     switch(buffer[1]){
                                         case PROTO_CMD_SHOW: {
-                                            size_t dataSize = 0;
-                                            uint8_t filecount = 0;
-                                            srvlevel_show(NULL, &dataSize, &filecount);
-                                            unsigned char* data = (unsigned char*)malloc(dataSize);
-                                            if(data != NULL){
-                                                srvlevel_show(data, &dataSize, &filecount);
-                                                printf("[INFO] %s: Size is %d for %d files\n", TAG, (int)dataSize, filecount);
-
-                                                if(filecount > 1){
-                                                    send(pfds[i].fd, data, dataSize, 0);
-                                                }else{
-                                                    uint8_t status = CD_NET_CODE_FAIL;
-                                                    send(pfds[i].fd, &status, CD_NET_CODE_FAIL, 0);
-                                                }
-
-                                                free(data);
-                                            }else{
-                                                LOGE(TAG, "level show: Malloc");
+                                            //printf("Server: Bytecount is %d\n", byteCount);
+                                            switch(byteCount){
+                                                case PROTO_CMD_LEVEL_SHOW_LEN:{
+                                                    // pfds[i].fd
+                                                    srvlevel_show(pfds+i, 1, NULL);
+                                                }break;
+                                                case PROTO_CMD_LEVEL_SHOW_INSTANCE_LEN:{
+                                                    // All FDs except server
+                                                    srvlevel_show(pfds+1, fdCount -1, (uint8_t*)(buffer + 2));
+                                                }break;
+                                                default: break;
                                             }
                                         } break;
                                         default: break;

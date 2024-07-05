@@ -9,6 +9,8 @@
 #include <client.h>
 #include <clilevel.h>
 
+#include <sys/ioctl.h>
+
 #include <ui/ui.h>
 #include <ui/text2d.h>
 #include <ui/button.h>

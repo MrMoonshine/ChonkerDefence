@@ -13,6 +13,7 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include <sys/ioctl.h>
 
 #include <logging.h>
 #include <protocol.h>
@@ -31,3 +32,4 @@ int client_disconnect(Client *client);
     @return -1 on error
 */
 int client_server_kill(Client *client, uint32_t key, pthread_t tid);
+void client_flush(Client* client);
