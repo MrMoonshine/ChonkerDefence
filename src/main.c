@@ -18,6 +18,7 @@
 static const char* TAG = "Main";
 
 static UI ui;
+static ClientLevel level;
 
 // Used for the Menus as some sort of state machine
 typedef enum {
@@ -30,6 +31,7 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height){
     glViewport(0, 0, width, height);
     printf("[INFO] %s: My window size is %dx%d\n", TAG, width, height);
     ui_resize(&ui, width, height);
+    clilevel_resize(&level, width, height);
 }
 
 void dumpMat4(mat4 matrix, const char* title){
@@ -79,56 +81,14 @@ int main(void){
     //glfwSetWindowSizeCallback(window, &window_resize_callback);
     glfwSetFramebufferSizeCallback(window, &framebuffer_size_callback);
 
-    static const GLfloat g_vertex_buffer_data[] = {
-    -1.0f, -1.0f, 0.0f,
-    1.0f, -1.0f, 0.0f,
-    0.0f,  1.0f, 0.0f,
-    };
-
-    GLuint VertexArrayID;
-    glGenVertexArrays(1, &VertexArrayID);
-    glBindVertexArray(VertexArrayID);
-
-    GLuint vertexbuffer;
-    // Generate 1 buffer, put the resulting identifier in vertexbuffer
-    glGenBuffers(1, &vertexbuffer);
-    // The following commands will talk about our 'vertexbuffer' buffer
-    glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
-    // Give our vertices to OpenGL.
-    glBufferData(GL_ARRAY_BUFFER, sizeof(g_vertex_buffer_data), g_vertex_buffer_data, GL_STATIC_DRAW);
-
-    GLuint programID = glshader_load("../shaders/labver.glsl", "../shaders/labfra.glsl");
-    //printf("Shader ID is %d\n", programID);
-    glEnable(GL_CULL_FACE);
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-    mat4 projection;
-    float angle = 45.0f;
-    glm_make_rad(&angle);
-    glm_ortho(-10.0f, 10.0f, -10.0f, 10.0f, -10.0f, 10.0f, projection);
-
-    mat4 view;
-    vec3 eye = {4, 3, 3};
-    vec3 center = {0, 0, 0};
-    vec3 up = {0, 1, 0};
-    glm_lookat(eye, center, up, view);
-    //dumpMat4(view, "View");
-
-    mat4 model;
-    glm_mat4_identity(model);
-
-    GLuint sProjection = glGetUniformLocation(programID, "projection");
-    GLuint sView = glGetUniformLocation(programID, "view");
-    GLuint sModel = glGetUniformLocation(programID, "model");
 
     bool server_running = false;
     server_initial_params serverparams = {
         .port = 0
     };
     Client client;
-    ClientLevel level;
-
 
     ui_create(&ui, window);
 
@@ -142,27 +102,11 @@ int main(void){
     do{
         // Clear the screen. It's not mentioned before Tutorial 02, but it can cause flickering, so it's there nonetheless.
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        glBindVertexArray(VertexArrayID);
-        glUseProgram(programID);
 
-        glUniformMatrix4fv(sProjection, 1, GL_FALSE, *projection);
-        glUniformMatrix4fv(sView, 1, GL_FALSE, *view);
-        glUniformMatrix4fv(sModel, 1, GL_FALSE, *model);
-
-        glEnableVertexAttribArray(0);
-        glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
-        glVertexAttribPointer(
-        0,                  // attribute 0. No particular reason for 0, but must match the layout in the shader.
-        3,                  // size
-        GL_FLOAT,           // type
-        GL_FALSE,           // normalized?
-        0,                  // stride
-        (void*)0            // array buffer offset
-        );
-
-        // Draw the triangle !
-        glDrawArrays(GL_TRIANGLES, 0, 3); // Starting from vertex 0; 3 vertices total -> 1 triangle
-        glDisableVertexAttribArray(0);
+        if(currentMenu == MENU_GAME){
+            clilevel_enable_vao(&level);
+            clilevel_draw(&level);
+        }
 
         ui_enable_vao(&ui);
         /*----------------------------------
@@ -212,8 +156,8 @@ int main(void){
                             // Loading level
                             printf("Main: Loading Level #%d\n", levelID);
                             size_t len = 0;
-                            clilevel_get_level(&client, &len, levelID, &level);
-                            printf("Level: %s, style: %s\tdimensions are (%d|%d)\n", level.name, level.style, level.width, level.height);
+                            clilevel_get_level(&level, &client, window, &len, levelID);
+                            clilevel_dump(&level);
                             currentMenu = MENU_GAME;
                             ui_levelmenu_destroy(&levelmenu);
                         }
@@ -229,18 +173,11 @@ int main(void){
         glfwSwapBuffers(window);
         glfwPollEvents();
 
-    } // Check if the ESC key was pressed or the window was closed
-    while(/*glfwGetKey(window, GLFW_KEY_ESCAPE ) != GLFW_PRESS && */glfwWindowShouldClose(window) == 0 && !mainLoopClosing);
-
-    // Cleanup VBO and shader
-	glDeleteBuffers(1, &vertexbuffer);
-	glDeleteProgram(programID);
-	glDeleteVertexArrays(1, &VertexArrayID);
+    }while(/*glfwGetKey(window, GLFW_KEY_ESCAPE ) != GLFW_PRESS && */glfwWindowShouldClose(window) == 0 && !mainLoopClosing);
 
     if(server_running){
         client_server_kill(&client, serverparams.sessionkey, serverparams.thrid);
     }
-
     switch(currentMenu){
         case MENU_MAIN:
             ui_mainmenu_destroy(&mainmenu);
@@ -248,16 +185,22 @@ int main(void){
         case MENU_LEVELSELECTION:
             ui_levelmenu_destroy(&levelmenu);
             break;
+        case MENU_GAME:
+            clilevel_destroy(&level);
+            break;
         default: break;
     }
-
     // ui_mainmenu_destroy(&mainmenu);
     // levelmenu_destroy(&menu);
     ui_destroy(&ui);
 
+    printf("Here 1\n");
     glfwDestroyCursor(cursor_default);
+    printf("Here 2\n");
     glfwDestroyCursor(cursor_pointer);
+    printf("Here 3: %d\n", window == NULL);
     glfwDestroyWindow(window);
+    printf("Here 4\n");
 	// Close OpenGL window and terminate GLFW
 	glfwTerminate();
 

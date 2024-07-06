@@ -13,12 +13,27 @@
 #include <client.h>
 #include <protocol.h>
 #include <level.h>
+#include <glshader.h>
+#include <tilemap.h>
+
+#include <GL/glew.h>
+#include <GLFW/glfw3.h>
+#include <cglm/cglm.h>
 
 typedef struct ClientLevel{
+    GLFWwindow* window;
     char name[LEVEL_NAME_LENGTH];
     char style[LEVEL_STYLE_LENGTH];
     uint8_t width, height;
     Client* client;
+    Tilemap tilemap;
+
+    float windowScale;
+    float modelScale;
+    GLuint vao, shader;
+    // Projection Uniforms
+    GLint model, view, projection;
+    GLuint terrainVertexbuffer, terrainUVBuffer;
 }ClientLevel;
 
 /*
@@ -29,7 +44,10 @@ typedef struct ClientLevel{
 */
 uint8_t clilevel_list_levels(Client *client, size_t *len);
 
-uint8_t clilevel_get_level(Client *client, size_t *len, uint8_t levelID, ClientLevel *level);
+uint8_t clilevel_get_level(ClientLevel *level, Client *client, GLFWwindow* window, size_t *len, uint8_t levelID);
 void clilevel_destroy(ClientLevel *level);
 
-//uint8_t clilevel_count(unsigned char* data, size_t len);
+void clilevel_dump(ClientLevel *level);
+void clilevel_resize(ClientLevel *level, int width, int height);
+void clilevel_enable_vao(ClientLevel* level);
+int clilevel_draw(ClientLevel *level);
