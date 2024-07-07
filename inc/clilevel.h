@@ -15,6 +15,7 @@
 #include <level.h>
 #include <glshader.h>
 #include <tilemap.h>
+#include <common.h>
 
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
@@ -34,6 +35,7 @@ typedef struct ClientLevel{
     // Projection Uniforms
     GLint model, view, projection;
     GLuint terrainVertexbuffer, terrainUVBuffer;
+    size_t terrainVertexCount;
 }ClientLevel;
 
 /*

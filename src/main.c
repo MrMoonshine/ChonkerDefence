@@ -1,5 +1,7 @@
 #include <stdio.h>
 #include <stdbool.h>
+#include <time.h>
+#include <stdlib.h>
 #include <glshader.h>
 
 #include <logging.h>
@@ -46,6 +48,7 @@ void dumpMat4(mat4 matrix, const char* title){
 }
 
 int main(void){
+    srand(time(NULL));
     //LOGS(TAG, "Starting");
     glewExperimental = true; // Needed for core profile
     if(!glfwInit()){
@@ -81,6 +84,7 @@ int main(void){
     //glfwSetWindowSizeCallback(window, &window_resize_callback);
     glfwSetFramebufferSizeCallback(window, &framebuffer_size_callback);
 
+    //glEnable(GL_CULL_FACE);
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
