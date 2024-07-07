@@ -159,6 +159,8 @@ static size_t clilevel_square_xy_skirt(ClientLevel *level, float* buffer, uint8_
         return 0;
     }
 
+    printf("(%d|%d) has %d land neighbours: hex: %x\n", x, y, neiCounter, neighbourPattern);
+
     short xOrigin = x - level->width/2;
     short yOrigin = y - level->height/2;
     int8_t deltaX = 1;
