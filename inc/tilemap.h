@@ -21,4 +21,4 @@ typedef struct Tilemap{
 */
 int tilemap_create(Tilemap *tilemap, uint8_t width, uint8_t height, const char* filepath);
 void tilemap_destroy(Tilemap *tilemap);
-void tilemap_get_UV_square(Tilemap *tilemap, float* buffer, uint8_t x, uint8_t y);
+void tilemap_get_block_UV(Tilemap *tilemap, float* buffer, uint8_t vertexCount, uint8_t x, uint8_t y);

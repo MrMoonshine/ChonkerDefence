@@ -121,35 +121,40 @@ static void clilevel_square_xy(ClientLevel *level, float* buffer, uint8_t x, uin
     size_t posVertex = 0;
     short xOrigin = x - level->width/2;
     short yOrigin = y - level->height/2;
+
+    buffer[posVertex++] = xOrigin + 1;
+    buffer[posVertex++] = yOrigin + 1;
+    buffer[posVertex++] = 1.0f;
     // Vertex 1 Point 1
     buffer[posVertex++] = xOrigin + 0;
     buffer[posVertex++] = yOrigin + 0;
     buffer[posVertex++] = 1.0f;
     // Vertex 1 Point 2
-    buffer[posVertex++] = xOrigin + 1;
+    buffer[posVertex++] = xOrigin + 0;
     buffer[posVertex++] = yOrigin + 1;
     buffer[posVertex++] = 1.0f;
     // Vertex 1 Point 3
-    buffer[posVertex++] = xOrigin + 0;
+
+    buffer[posVertex++] = xOrigin + 1;
     buffer[posVertex++] = yOrigin + 1;
+    buffer[posVertex++] = 1.0f;
+
+    buffer[posVertex++] = xOrigin + 1;
+    buffer[posVertex++] = yOrigin + 0;
     buffer[posVertex++] = 1.0f;
     // Vertex 2 Point 1
     buffer[posVertex++] = xOrigin + 0;
     buffer[posVertex++] = yOrigin + 0;
     buffer[posVertex++] = 1.0f;
     // Vertex 2 Point 2
-    buffer[posVertex++] = xOrigin + 1;
-    buffer[posVertex++] = yOrigin + 0;
-    buffer[posVertex++] = 1.0f;
+
     // Vertex 2 Point 3
-    buffer[posVertex++] = xOrigin + 1;
-    buffer[posVertex++] = yOrigin + 1;
-    buffer[posVertex++] = 1.0f;
     return;
 }
 
 static size_t clilevel_square_xy_skirt(ClientLevel *level, float* buffer, uint8_t x, uint8_t y, uint8_t neighbourPattern){
     uint8_t neiCounter = 0;
+    size_t retval = 0;
     for(uint8_t i = 0; i < 4; i++){
         if(neighbourPattern & (1 << i))
             neiCounter++;
@@ -165,72 +170,130 @@ static size_t clilevel_square_xy_skirt(ClientLevel *level, float* buffer, uint8_
     short yOrigin = y - level->height/2;
     int8_t deltaX = 1;
     int8_t deltaY = 1;
+    bool sonw = false;
+
+    size_t posVertex = 0;
 
     if(neiCounter == 1){
+        retval = 2;
         switch(neighbourPattern){
             case 0b0001:
+                // North
                 xOrigin += 0;
-                yOrigin += 1;
+                yOrigin += 0;
                 deltaX = 1;
                 deltaY = 0;
                 break;
             case 0b0010:
+                // East
                 xOrigin += 1;
-                yOrigin += 1;
-                deltaX = 0;
-                deltaY = -1;
-                break;
-            case 0b0100:
-                xOrigin += 1;
-                yOrigin += 1;
-                deltaX = -0;
-                deltaY = 0;
-                break;
-            case 0b1000:
-                xOrigin += 0;
                 yOrigin += 0;
                 deltaX = 0;
                 deltaY = 1;
+                break;
+            case 0b0100:
+                // South
+                xOrigin += 1;
+                yOrigin += 1;
+                deltaX = -1;
+                deltaY = 0;
+                break;
+            case 0b1000:
+                // West
+                xOrigin += 0;
+                yOrigin += 1;
+                deltaX = 0;
+                deltaY = -1;
                 break;
             default:
                 break;
         }
 
-        size_t posVertex = 0;
+    }else if(neiCounter == 2){
+        retval = 3;
+        switch(neighbourPattern){
+            case 0b0011:
+                // North-East
+                xOrigin += 0;
+                yOrigin += 0;
+                deltaX = 1;
+                deltaY = 1;
+                break;
+            case 0b0110:
+                // South-East
+                xOrigin += 1;
+                yOrigin += 0;
+                deltaX = -1;
+                deltaY = 1;
+                sonw = true;
+                break;
+            case 0b1100:
+                // South-West
+                xOrigin += 1;
+                yOrigin += 1;
+                deltaX = -1;
+                deltaY = -1;
+                break;
+            case 0b1001:
+                // North-West
+                xOrigin += 0;
+                yOrigin += 1;
+                deltaX = 1;
+                deltaY = -1;
+                sonw = true;
+                break;
+            default:
+                break;
+        }
+    }
+    // Vertex 1 Point 1
+    buffer[posVertex++] = xOrigin + deltaX * 0;
+    buffer[posVertex++] = yOrigin + deltaY * 0;
+    buffer[posVertex++] = 0.0f;
+    // Vertex 1 Point 2
+    buffer[posVertex++] = xOrigin + deltaX * 1;
+    buffer[posVertex++] = yOrigin + deltaY * 1;
+    buffer[posVertex++] = 1.0f;
+    // Vertex 1 Point 3
+    buffer[posVertex++] = xOrigin + deltaX * 0;
+    buffer[posVertex++] = yOrigin + deltaY * 0;
+    buffer[posVertex++] = 1.0f;
+    // Vertex 2 Point 1
+    buffer[posVertex++] = xOrigin + deltaX * 0;
+    buffer[posVertex++] = yOrigin + deltaY * 0;
+    buffer[posVertex++] = 0.0f;
+    // Vertex 2 Point 2
+    buffer[posVertex++] = xOrigin + deltaX * 1;
+    buffer[posVertex++] = yOrigin + deltaY * 1;
+    buffer[posVertex++] = 0.0f;
+    // Vertex 2 Point 3
+    buffer[posVertex++] = xOrigin + deltaX * 1;
+    buffer[posVertex++] = yOrigin + deltaY * 1;
+    buffer[posVertex++] = 1.0f;
+
+    if(neiCounter == 2){
+        // Lid for inner corners
         // Vertex 1 Point 1
-        buffer[posVertex++] = xOrigin;
-        buffer[posVertex++] = yOrigin;
-        buffer[posVertex++] = 0.0f;
+        buffer[posVertex++] = xOrigin + deltaX * 0;
+        buffer[posVertex++] = yOrigin + deltaY * 0;
+        buffer[posVertex++] = 1.0f;
         // Vertex 1 Point 2
         buffer[posVertex++] = xOrigin + deltaX * 1;
         buffer[posVertex++] = yOrigin + deltaY * 1;
-        buffer[posVertex++] = 0.0f;
+        buffer[posVertex++] = 1.0f;
         // Vertex 1 Point 3
-        buffer[posVertex++] = xOrigin + deltaX * 0;
-        buffer[posVertex++] = yOrigin + deltaY * 1;
-        buffer[posVertex++] = 1.0f;
-        // Vertex 2 Point 1
-        buffer[posVertex++] = xOrigin;
-        buffer[posVertex++] = yOrigin;
-        buffer[posVertex++] = 0.0f;
-        // Vertex 2 Point 2
-        buffer[posVertex++] = xOrigin + deltaX;
-        buffer[posVertex++] = yOrigin;
-        buffer[posVertex++] = 1.0f;
-        // Vertex 2 Point 3
-        buffer[posVertex++] = xOrigin + deltaX;
-        buffer[posVertex++] = yOrigin + deltaY;
-        buffer[posVertex++] = 1.0f;
+        if(sonw){
+            buffer[posVertex++] = x - level->width/2 + (neighbourPattern == 0b0110 ? 1 : 0);
+            buffer[posVertex++] = y - level->height/2 + (neighbourPattern == 0b0110 ? 1 : 0);;
 
-        /*for(uint8_t i = 0; i < 3*6; i++){
-            printf("%.2f, ", buffer[i]);
-            if(i % 3 == 2)
-                printf("\n");
-        }*/
-        return 2;
+        }else{
+            buffer[posVertex++] = xOrigin + deltaX * 1;
+            buffer[posVertex++] = yOrigin + deltaY * 0;
+        }
+        buffer[posVertex++] = 1.0f;
     }
 
-    return 0;
+    return retval;
 }
 
 static int clilevel_build(ClientLevel *level, uint8_t *buffer, size_t len){
@@ -252,6 +315,9 @@ static int clilevel_build(ClientLevel *level, uint8_t *buffer, size_t len){
     for(uint8_t x = 0; x < level->width; x++)
         printf("%.1d", x % 10);
     printf("\n");
+    /*
+        Counting Dry Run
+    */
     for(uint8_t y = 0; y < level->height; y++){
         printf("%.2d ", y);
         for(uint8_t x = 0; x < level->width; x++){
@@ -274,10 +340,10 @@ static int clilevel_build(ClientLevel *level, uint8_t *buffer, size_t len){
                 level->terrainVertexCount += 2;
             }else if(LEVEL_IS_WATER(nnibble)){
                 uint8_t neiCounter = 0;
-                neiCounter += LEVEL_IS_LAND(clilevel_get_node_at(level, x + 1, y + 0, buffer, len)) ? 1 : 0;
-                neiCounter += LEVEL_IS_LAND(clilevel_get_node_at(level, x + 0, y + 1, buffer, len)) ? 1 : 0;
-                neiCounter += LEVEL_IS_LAND(clilevel_get_node_at(level, x - 1, y + 0, buffer, len)) ? 1 : 0;
-                neiCounter += LEVEL_IS_LAND(clilevel_get_node_at(level, x + 0, y - 1, buffer, len)) ? 1 : 0;
+                neiCounter += LEVEL_IS_SKIRT_REQURED(clilevel_get_node_at(level, x + 1, y + 0, buffer, len)) ? 1 : 0;
+                neiCounter += LEVEL_IS_SKIRT_REQURED(clilevel_get_node_at(level, x + 0, y + 1, buffer, len)) ? 1 : 0;
+                neiCounter += LEVEL_IS_SKIRT_REQURED(clilevel_get_node_at(level, x - 1, y + 0, buffer, len)) ? 1 : 0;
+                neiCounter += LEVEL_IS_SKIRT_REQURED(clilevel_get_node_at(level, x + 0, y - 1, buffer, len)) ? 1 : 0;
 
                 switch(neiCounter){
                     case 1: level->terrainVertexCount += 2; break;
@@ -310,35 +376,40 @@ static int clilevel_build(ClientLevel *level, uint8_t *buffer, size_t len){
     for(uint8_t y = 0; y < level->height; y++){
         for(uint8_t x = 0; x < level->width; x++){
             uint8_t nnibble = clilevel_get_node_at(level, x, y, buffer, len);
-            if(LEVEL_IS_LAND(nnibble)){
-                clilevel_square_xy(level, terrainVertexBuffer + posVertex, x, y);
-                posVertex += 2*VERTEX_SIZE/sizeof(float);
-                tilemap_get_UV_square(&level->tilemap, terrainUVBuffer + posUV, rand() % LEVEL_TILEMAP_TERRAIN_WIDTH, LEVEL_TILEMAP_TERRAIN_HEIGHT - 1);
-                posUV += 2*UV_SIZE / sizeof(float);
-            }else if(LEVEL_IS_WATER(nnibble)){
+            if(LEVEL_IS_WATER(nnibble)){
                 uint8_t neiPattern = 0;
-
-                neiPattern |= LEVEL_IS_LAND(clilevel_get_node_at(level, x + 0, y + 1, buffer, len)) ? 1 << NEIGHBOUR_BIT_N : 0;
-                neiPattern |= LEVEL_IS_LAND(clilevel_get_node_at(level, x + 1, y + 0, buffer, len)) ? 1 << NEIGHBOUR_BIT_E : 0;
-                neiPattern |= LEVEL_IS_LAND(clilevel_get_node_at(level, x + 0, y - 1, buffer, len)) ? 1 << NEIGHBOUR_BIT_S : 0;
-                neiPattern |= LEVEL_IS_LAND(clilevel_get_node_at(level, x - 1, y + 0, buffer, len)) ? 1 << NEIGHBOUR_BIT_W : 0;
+                neiPattern |= LEVEL_IS_SKIRT_REQURED(clilevel_get_node_at(level, x + 0, y - 1, buffer, len)) ? 1 << NEIGHBOUR_BIT_N : 0;
+                neiPattern |= LEVEL_IS_SKIRT_REQURED(clilevel_get_node_at(level, x + 1, y + 0, buffer, len)) ? 1 << NEIGHBOUR_BIT_E : 0;
+                neiPattern |= LEVEL_IS_SKIRT_REQURED(clilevel_get_node_at(level, x + 0, y + 1, buffer, len)) ? 1 << NEIGHBOUR_BIT_S : 0;
+                neiPattern |= LEVEL_IS_SKIRT_REQURED(clilevel_get_node_at(level, x - 1, y + 0, buffer, len)) ? 1 << NEIGHBOUR_BIT_W : 0;
 
                 size_t terrainSkirtVertexCount = clilevel_square_xy_skirt(level, terrainVertexBuffer + posVertex, x, y, neiPattern);
                 posVertex += terrainSkirtVertexCount * VERTEX_SIZE/sizeof(float);
                 switch(terrainSkirtVertexCount){
                     case 2:
-                        tilemap_get_UV_square(&level->tilemap, terrainUVBuffer + posUV, rand() % LEVEL_TILEMAP_TERRAIN_WIDTH, 1);
+                        tilemap_get_block_UV(&level->tilemap, terrainUVBuffer + posUV, 2, rand() % LEVEL_TILEMAP_TERRAIN_WIDTH, 1);
                         posUV += 2*UV_SIZE / sizeof(float);
+                        break;
+                    case 3:
+                        tilemap_get_block_UV(&level->tilemap, terrainUVBuffer + posUV, 2, rand() % LEVEL_TILEMAP_TERRAIN_WIDTH, 1);
+                        posUV += 2*UV_SIZE / sizeof(float);
+                        tilemap_get_block_UV(&level->tilemap, terrainUVBuffer + posUV, 1, rand() % LEVEL_TILEMAP_TERRAIN_WIDTH, LEVEL_TILEMAP_TERRAIN_HEIGHT - 1);
+                        posUV += 1*UV_SIZE / sizeof(float);
                         break;
                     default: break;
                 }
-                printf("Oida total: %lu\tskirt: %lu\n", level->terrainVertexCount, posVertex / (VERTEX_SIZE/sizeof(float)));
-                /*switch(neiCounter){
-                    case 1: level->terrainVertexCount += 2; break;
-                    case 2: level->terrainVertexCount += 3; break;
-                    case 3: level->terrainVertexCount += 3*2; break;
-                    default: break;
-                }*/
+            }
+        }
+    }
+
+    for(uint8_t y = 0; y < level->height; y++){
+        for(uint8_t x = 0; x < level->width; x++){
+            uint8_t nnibble = clilevel_get_node_at(level, x, y, buffer, len);
+            if(LEVEL_IS_LAND(nnibble)){
+                clilevel_square_xy(level, terrainVertexBuffer + posVertex, x, y);
+                posVertex += 2*VERTEX_SIZE/sizeof(float);
+                tilemap_get_block_UV(&level->tilemap, terrainUVBuffer + posUV, 2,  rand() % LEVEL_TILEMAP_TERRAIN_WIDTH, LEVEL_TILEMAP_TERRAIN_HEIGHT - 1);
+                posUV += 2*UV_SIZE / sizeof(float);
             }
         }
     }
@@ -487,7 +558,7 @@ int clilevel_draw(ClientLevel *level){
     moveX += glfwGetKey(level->window, GLFW_KEY_UP ) == GLFW_PRESS ? -0.2f : 0.0f;
     moveY += glfwGetKey(level->window, GLFW_KEY_RIGHT ) == GLFW_PRESS ? 0.2f : 0.0f;
     moveY += glfwGetKey(level->window, GLFW_KEY_LEFT ) == GLFW_PRESS ? -0.2f : 0.0f;
-    angle += glfwGetKey(level->window, GLFW_KEY_SPACE ) == GLFW_PRESS ? -0.2f : 0.0f;
+    angle += glfwGetKey(level->window, GLFW_KEY_SPACE ) == GLFW_PRESS ? -0.5f : 0.0f;
 
     glm_lookat(eye, center, up, view);
     glm_mat4_identity(model);

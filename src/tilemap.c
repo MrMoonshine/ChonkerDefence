@@ -17,7 +17,7 @@ void tilemap_destroy(Tilemap *tilemap){
     texture_destroy(&tilemap->texture);
 }
 
-void tilemap_get_UV_square(Tilemap *tilemap, float* buffer, uint8_t x, uint8_t y){
+void tilemap_get_block_UV(Tilemap *tilemap, float* buffer, uint8_t vertexCount, uint8_t x, uint8_t y){
     if(x >= tilemap->width || y >= tilemap->height){
         memset(buffer, 0.0f, 2*UV_SIZE / sizeof(float));
         return;
@@ -36,6 +36,8 @@ void tilemap_get_UV_square(Tilemap *tilemap, float* buffer, uint8_t x, uint8_t y
     // Vertex1 Point 3
     buffer[pos++] = unitX * (x + 0);
     buffer[pos++] = unitY * (y + 1);
+    if(vertexCount <= 1)
+        return;
     // Vertex2 Point 1
     buffer[pos++] = unitX * (x + 0);
     buffer[pos++] = unitY * (y + 0);

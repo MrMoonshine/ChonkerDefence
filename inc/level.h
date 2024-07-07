@@ -17,6 +17,8 @@
 #define LEVEL_IS_WATER(node) (node == LEVEL_BLOCK_WATER || node == LEVEL_BLOCK_BRIDGE || node == LEVEL_BLOCK_DECORATION_WATER)
 #define LEVEL_IS_PATH(node) (node == LEVEL_BLOCK_PATH || node == LEVEL_BLOCK_BRIDGE)
 
-#define LEVEL_TILEMAP_TERRAIN_WIDTH 3
+#define LEVEL_IS_SKIRT_REQURED(node) (LEVEL_IS_LAND(node) || node == LEVEL_BLOCK_PATH)
+
+#define LEVEL_TILEMAP_TERRAIN_WIDTH 2
 #define LEVEL_TILEMAP_TERRAIN_HEIGHT 3
-#define LEVEL_TILEMAP_TERRAIN_FILE "../build/Tilemap1.png"
+#define LEVEL_TILEMAP_TERRAIN_FILE "../assets/textures/world/terrain_default.png"
