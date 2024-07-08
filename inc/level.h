@@ -21,4 +21,4 @@
 
 #define LEVEL_TILEMAP_TERRAIN_WIDTH 2
 #define LEVEL_TILEMAP_TERRAIN_HEIGHT 3
-#define LEVEL_TILEMAP_TERRAIN_FILE "../assets/textures/world/terrain_default.png"
+#define LEVEL_TILEMAP_TERRAIN_FILE_PATTERN "../assets/textures/world/terrain_%s.png"

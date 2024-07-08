@@ -15,6 +15,7 @@
 #include <level.h>
 #include <glshader.h>
 #include <tilemap.h>
+#include <terrain.h>
 #include <common.h>
 
 #include <GL/glew.h>
@@ -27,15 +28,16 @@ typedef struct ClientLevel{
     char style[LEVEL_STYLE_LENGTH];
     uint8_t width, height;
     Client* client;
-    Tilemap tilemap;
+    //Tilemap tilemap;
 
     float windowScale;
     float modelScale;
     GLuint vao, shader;
     // Projection Uniforms
     GLint model, view, projection;
-    GLuint terrainVertexbuffer, terrainUVBuffer;
-    size_t terrainVertexCount;
+    Terrain terrain;
+    /*GLuint terrainVertexbuffer, terrainUVBuffer;
+    size_t terrainVertexCount;*/
 }ClientLevel;
 
 /*
