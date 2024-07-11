@@ -6,7 +6,7 @@ int texture_create(Texture* texture, const char* filename){
     fp = fopen(filename, "r");
     if(!fp){
         fprintf(stderr,"\e[0;31m[ERROR] %s: Unable to open file %s\e[0m\n", TAG, filename);
-        return 0;
+        return -1;
     }
 
     //int is_png;

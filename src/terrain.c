@@ -18,6 +18,15 @@ static const uint8_t terrain_get_node_at(Terrain* terrain, uint8_t x, uint8_t y,
     return totalPos % 2 ? (buffer[pos] & 0x0f) : ((buffer[pos] & 0xf0) >> 4);
 }
 
+static uint8_t terrain_count_neighbours_from_pattern(uint8_t pattern){
+    uint8_t neiCounter = 0;
+    for(uint8_t i = 0; i < 4; i++){
+        if(pattern & (1 << i))
+            neiCounter++;
+    }
+    return neiCounter;
+}
+
 static void terrain_square_xy(Terrain* terrain, float* buffer, uint8_t x, uint8_t y){
     size_t posVertex = 0;
     short xOrigin = x - terrain->width/2;
@@ -54,18 +63,19 @@ static void terrain_square_xy(Terrain* terrain, float* buffer, uint8_t x, uint8_
 }
 
 static size_t terrain_square_xy_skirt(Terrain* terrain, float* buffer, uint8_t x, uint8_t y, uint8_t neighbourPattern){
-    uint8_t neiCounter = 0;
     size_t retval = 0;
+    uint8_t neiCounter = terrain_count_neighbours_from_pattern(neighbourPattern);
+    /*uint8_t neiCounter = 0;
     for(uint8_t i = 0; i < 4; i++){
         if(neighbourPattern & (1 << i))
             neiCounter++;
-    }
+    }*/
 
     if(neiCounter < 1){
         return 0;
     }
 
-    printf("(%d|%d) has %d land neighbours: hex: %x\n", x, y, neiCounter, neighbourPattern);
+    //printf("(%d|%d) has %d land neighbours: hex: %x\n", x, y, neiCounter, neighbourPattern);
 
     short xOrigin = x - terrain->width/2;
     short yOrigin = y - terrain->height/2;
@@ -197,6 +207,69 @@ static size_t terrain_square_xy_skirt(Terrain* terrain, float* buffer, uint8_t x
     return retval;
 }
 
+static void terrain_path_piece(uint8_t pattern, uint8_t *piece, uint8_t *rotation){
+    uint8_t neiCounter = terrain_count_neighbours_from_pattern(pattern);
+    switch(neiCounter){
+        case 1:
+            *piece = 0;
+            if(pattern & (1 << NEIGHBOUR_BIT_N) || pattern & (1 << NEIGHBOUR_BIT_S)){
+                *rotation = 0;
+            }else{
+                *rotation = 1;
+            }
+            break;
+        case 2:
+            switch (pattern){
+                case 0b0101:
+                    // N - S
+                    *piece = 0;
+                    *rotation = 0;
+                    break;
+                case 0b1010:
+                    // E - W
+                    *piece = 0;
+                    *rotation = 1;
+                    break;
+                case 0b0110:
+                    // S - E
+                    *piece = 1;
+                    *rotation = 0;
+                    break;
+                case 0b1100:
+                    // S - W
+                    *piece = 1;
+                    *rotation = 3;
+                    break;
+                case 0b0011:
+                    // N - E
+                    *piece = 1;
+                    *rotation = 1;
+                    break;
+                case 0b1001:
+                    // N - E
+                    *piece = 1;
+                    *rotation = 2;
+                    break;
+                default:
+                    *piece = 1;
+                    *rotation = 0;
+                    printf("pattern is %x\n", pattern);
+                    break;
+            }
+            break;
+        case 3:{
+                uint8_t counter = 0;
+                while((pattern >> counter++) & 1 || counter > 3){}
+                *piece = 2;
+                *rotation = 4 - counter;
+            } break;
+        default:
+            *piece = 3;
+            *rotation = 0;
+            break;
+    }
+}
+
 int terrain_create(Terrain* terrain, uint8_t* buffer_i, size_t bufferSize){
     terrain->vertexCount = 0;
     char style[LEVEL_STYLE_LENGTH];
@@ -323,7 +396,6 @@ int terrain_create(Terrain* terrain, uint8_t* buffer_i, size_t bufferSize){
         }
     }
 
-    uint8_t counter = 0;
     for(uint8_t y = 0; y < terrain->height; y++){
         for(uint8_t x = 0; x < terrain->width; x++){
             uint8_t nnibble = terrain_get_node_at(terrain, x, y, buffer, len);
@@ -333,10 +405,19 @@ int terrain_create(Terrain* terrain, uint8_t* buffer_i, size_t bufferSize){
                 tilemap_get_block_UV(&terrain->tilemap, terrainUVBuffer + posUV, 2,  rand() % LEVEL_TILEMAP_TERRAIN_WIDTH, LEVEL_TILEMAP_TERRAIN_GRASS);
                 posUV += 2*UV_SIZE / sizeof(float);
             }else if(nnibble == LEVEL_BLOCK_PATH){
+                uint8_t neiPattern = 0;
+                neiPattern |= LEVEL_IS_PATH(terrain_get_node_at(terrain, x + 0, y - 1, buffer, len)) ? 1 << NEIGHBOUR_BIT_N : 0;
+                neiPattern |= LEVEL_IS_PATH(terrain_get_node_at(terrain, x + 1, y + 0, buffer, len)) ? 1 << NEIGHBOUR_BIT_E : 0;
+                neiPattern |= LEVEL_IS_PATH(terrain_get_node_at(terrain, x + 0, y + 1, buffer, len)) ? 1 << NEIGHBOUR_BIT_S : 0;
+                neiPattern |= LEVEL_IS_PATH(terrain_get_node_at(terrain, x - 1, y + 0, buffer, len)) ? 1 << NEIGHBOUR_BIT_W : 0;
+
+                uint8_t piece = 0, rotation = 0;
+                terrain_path_piece(neiPattern, &piece, &rotation);
+                // Build vertices
                 terrain_square_xy(terrain, terrainVertexBuffer + posVertex, x, y);
                 posVertex += 2*VERTEX_SIZE/sizeof(float);
-
-                tilemap_get_block_UV_rotate(&terrain->tilemap, terrainUVBuffer + posUV, 2,  1, LEVEL_TILEMAP_TERRAIN_PATH, counter++%4);
+                // Get UV Coordinates
+                tilemap_get_block_UV_rotate(&terrain->tilemap, terrainUVBuffer + posUV, 2,  piece, LEVEL_TILEMAP_TERRAIN_PATH, rotation);
                 posUV += 2*UV_SIZE / sizeof(float);
             }
         }
