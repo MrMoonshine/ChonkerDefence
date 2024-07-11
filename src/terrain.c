@@ -257,7 +257,7 @@ int terrain_create(Terrain* terrain, uint8_t* buffer_i, size_t bufferSize){
             }
             printf("%c", node);
 
-            if(LEVEL_IS_LAND(nnibble)){
+            if(LEVEL_IS_LAND(nnibble) || nnibble == LEVEL_BLOCK_PATH){
                 terrain->vertexCount += 2;
             }else if(LEVEL_IS_WATER(nnibble)){
                 uint8_t neiCounter = 0;
@@ -289,7 +289,9 @@ int terrain_create(Terrain* terrain, uint8_t* buffer_i, size_t bufferSize){
     for(size_t a = 0; a < terrain->vertexCount*UV_SIZE/sizeof(float); a++)
         terrainUVBuffer[a] = 0.0f;
 
-    // Build terrain
+    /*
+     * Build terrain
+    */
     size_t posVertex = 0;
     size_t posUV = 0;
     for(uint8_t y = 0; y < terrain->height; y++){
@@ -306,13 +308,13 @@ int terrain_create(Terrain* terrain, uint8_t* buffer_i, size_t bufferSize){
                 posVertex += terrainSkirtVertexCount * VERTEX_SIZE/sizeof(float);
                 switch(terrainSkirtVertexCount){
                     case 2:
-                        tilemap_get_block_UV(&terrain->tilemap, terrainUVBuffer + posUV, 2, rand() % LEVEL_TILEMAP_TERRAIN_WIDTH, 1);
+                        tilemap_get_block_UV(&terrain->tilemap, terrainUVBuffer + posUV, 2, rand() % LEVEL_TILEMAP_TERRAIN_WIDTH, LEVEL_TILEMAP_TERRAIN_SKIRT);
                         posUV += 2*UV_SIZE / sizeof(float);
                         break;
                     case 3:
-                        tilemap_get_block_UV(&terrain->tilemap, terrainUVBuffer + posUV, 2, rand() % LEVEL_TILEMAP_TERRAIN_WIDTH, 1);
+                        tilemap_get_block_UV(&terrain->tilemap, terrainUVBuffer + posUV, 2, rand() % LEVEL_TILEMAP_TERRAIN_WIDTH, LEVEL_TILEMAP_TERRAIN_SKIRT);
                         posUV += 2*UV_SIZE / sizeof(float);
-                        tilemap_get_block_UV(&terrain->tilemap, terrainUVBuffer + posUV, 1, rand() % LEVEL_TILEMAP_TERRAIN_WIDTH, LEVEL_TILEMAP_TERRAIN_HEIGHT - 1);
+                        tilemap_get_block_UV(&terrain->tilemap, terrainUVBuffer + posUV, 1, rand() % LEVEL_TILEMAP_TERRAIN_WIDTH, LEVEL_TILEMAP_TERRAIN_GRASS);
                         posUV += 1*UV_SIZE / sizeof(float);
                         break;
                     default: break;
@@ -321,13 +323,20 @@ int terrain_create(Terrain* terrain, uint8_t* buffer_i, size_t bufferSize){
         }
     }
 
+    uint8_t counter = 0;
     for(uint8_t y = 0; y < terrain->height; y++){
         for(uint8_t x = 0; x < terrain->width; x++){
             uint8_t nnibble = terrain_get_node_at(terrain, x, y, buffer, len);
             if(LEVEL_IS_LAND(nnibble)){
                 terrain_square_xy(terrain, terrainVertexBuffer + posVertex, x, y);
                 posVertex += 2*VERTEX_SIZE/sizeof(float);
-                tilemap_get_block_UV(&terrain->tilemap, terrainUVBuffer + posUV, 2,  rand() % LEVEL_TILEMAP_TERRAIN_WIDTH, LEVEL_TILEMAP_TERRAIN_HEIGHT - 1);
+                tilemap_get_block_UV(&terrain->tilemap, terrainUVBuffer + posUV, 2,  rand() % LEVEL_TILEMAP_TERRAIN_WIDTH, LEVEL_TILEMAP_TERRAIN_GRASS);
+                posUV += 2*UV_SIZE / sizeof(float);
+            }else if(nnibble == LEVEL_BLOCK_PATH){
+                terrain_square_xy(terrain, terrainVertexBuffer + posVertex, x, y);
+                posVertex += 2*VERTEX_SIZE/sizeof(float);
+
+                tilemap_get_block_UV_rotate(&terrain->tilemap, terrainUVBuffer + posUV, 2,  1, LEVEL_TILEMAP_TERRAIN_PATH, counter++%4);
                 posUV += 2*UV_SIZE / sizeof(float);
             }
         }

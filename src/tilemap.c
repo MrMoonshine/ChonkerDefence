@@ -18,6 +18,33 @@ void tilemap_destroy(Tilemap *tilemap){
 }
 
 void tilemap_get_block_UV(Tilemap *tilemap, float* buffer, uint8_t vertexCount, uint8_t x, uint8_t y){
+    return tilemap_get_block_UV_rotate(tilemap, buffer, vertexCount, x, y, 0);
+}
+
+
+/*static uint8_t tilemap_rotate_UV_helper_bithelper(uint8_t pattern, uint8_t pos){
+    return (pattern & (1 << pos)) >> pos;
+}
+// Helper function for rotated
+// returns 0 or 1
+static uint8_t tilemap_rotate_UV_helper(uint8_t vertex, uint8_t point, uint8_t xy, uint8_t rotation){
+    //                  0bxyxyxy
+    //uint8_t pattern = xy % 2 == 0 ? 0b010011 : 0b011001;
+    uint8_t pattern = xy % 2 == 0 ? 0b110010 : 0b100110;
+    for(uint8_t i = 0; i < rotation; i++){
+        uint8_t buff = pattern & 0b11;
+        pattern >>= 2;
+        pattern |= buff << 4;
+    }
+    uint8_t pos = vertex * 3 + point;
+
+    uint8_t retval = 0;
+    retval = tilemap_rotate_UV_helper_bithelper(pattern, pos);
+    printf("Pattern: %.2x\tPos: %d\tResult: %d\n", pattern, pos, retval);
+    return retval;
+}*/
+
+void tilemap_get_block_UV_rotate(Tilemap *tilemap, float* buffer, uint8_t vertexCount, uint8_t x, uint8_t y, uint8_t rotation){
     if(x >= tilemap->width || y >= tilemap->height){
         memset(buffer, 0.0f, 2*UV_SIZE / sizeof(float));
         return;
@@ -27,6 +54,97 @@ void tilemap_get_block_UV(Tilemap *tilemap, float* buffer, uint8_t vertexCount, 
     float unitY = 1.0f / (float)tilemap->height;
 
     size_t pos = 0;
+    switch(rotation % 4){
+        case 3:
+            // Vertex1 Point 1
+            buffer[pos++] = unitX * (x + 1);
+            buffer[pos++] = unitY * (y + 0);
+            // Vertex1 Point 2
+            buffer[pos++] = unitX * (x + 0);
+            buffer[pos++] = unitY * (y + 1);
+            // Vertex1 Point 3
+            buffer[pos++] = unitX * (x + 0);
+            buffer[pos++] = unitY * (y + 0);
+            if(vertexCount <= 1)
+                return;
+            // Vertex2 Point 1
+            buffer[pos++] = unitX * (x + 1);
+            buffer[pos++] = unitY * (y + 0);
+            // Vertex2 Point 2
+            buffer[pos++] = unitX * (x + 1);
+            buffer[pos++] = unitY * (y + 1);
+            // Vertex2 Point 3
+            buffer[pos++] = unitX * (x + 0);
+            buffer[pos++] = unitY * (y + 1);
+            break;
+        case 2:
+            // Vertex1 Point 1
+            buffer[pos++] = unitX * (x + 1);
+            buffer[pos++] = unitY * (y + 1);
+            // Vertex1 Point 2
+            buffer[pos++] = unitX * (x + 0);
+            buffer[pos++] = unitY * (y + 0);
+            // Vertex1 Point 3
+            buffer[pos++] = unitX * (x + 1);
+            buffer[pos++] = unitY * (y + 0);
+            if(vertexCount <= 1)
+                return;
+            // Vertex2 Point 1
+            buffer[pos++] = unitX * (x + 1);
+            buffer[pos++] = unitY * (y + 1);
+            // Vertex2 Point 2
+            buffer[pos++] = unitX * (x + 0);
+            buffer[pos++] = unitY * (y + 1);
+            // Vertex2 Point 3
+            buffer[pos++] = unitX * (x + 0);
+            buffer[pos++] = unitY * (y + 0);
+            break;
+        case 1:
+            // Vertex1 Point 1
+            buffer[pos++] = unitX * (x + 0);
+            buffer[pos++] = unitY * (y + 1);
+            // Vertex1 Point 2
+            buffer[pos++] = unitX * (x + 1);
+            buffer[pos++] = unitY * (y + 0);
+            // Vertex1 Point 3
+            buffer[pos++] = unitX * (x + 1);
+            buffer[pos++] = unitY * (y + 1);
+            if(vertexCount <= 1)
+                return;
+            // Vertex2 Point 1
+            buffer[pos++] = unitX * (x + 0);
+            buffer[pos++] = unitY * (y + 1);
+            // Vertex2 Point 2
+            buffer[pos++] = unitX * (x + 0);
+            buffer[pos++] = unitY * (y + 0);
+            // Vertex2 Point 3
+            buffer[pos++] = unitX * (x + 1);
+            buffer[pos++] = unitY * (y + 0);
+            break;
+        default:
+            // Vertex1 Point 1
+            buffer[pos++] = unitX * (x + 0);
+            buffer[pos++] = unitY * (y + 0);
+            // Vertex1 Point 2
+            buffer[pos++] = unitX * (x + 1);
+            buffer[pos++] = unitY * (y + 1);
+            // Vertex1 Point 3
+            buffer[pos++] = unitX * (x + 0);
+            buffer[pos++] = unitY * (y + 1);
+            if(vertexCount <= 1)
+                return;
+            // Vertex2 Point 1
+            buffer[pos++] = unitX * (x + 0);
+            buffer[pos++] = unitY * (y + 0);
+            // Vertex2 Point 2
+            buffer[pos++] = unitX * (x + 1);
+            buffer[pos++] = unitY * (y + 0);
+            // Vertex2 Point 3
+            buffer[pos++] = unitX * (x + 1);
+            buffer[pos++] = unitY * (y + 1);
+            break;
+    }
+    /*size_t pos = 0;
     // Vertex1 Point 1
     buffer[pos++] = unitX * (x + 0);
     buffer[pos++] = unitY * (y + 0);
@@ -46,5 +164,24 @@ void tilemap_get_block_UV(Tilemap *tilemap, float* buffer, uint8_t vertexCount, 
     buffer[pos++] = unitY * (y + 0);
     // Vertex2 Point 3
     buffer[pos++] = unitX * (x + 1);
-    buffer[pos++] = unitY * (y + 1);
+    buffer[pos++] = unitY * (y + 1);*/
+    /*size_t pos = 0;
+    uint8_t vertexNum = 0, pointNum = 0;
+
+    for(uint8_t i = 0; i < 3; i++){
+        buffer[pos++] = unitX * (x + tilemap_rotate_UV_helper(vertexNum, pointNum, 0, rotation));
+        buffer[pos++] = unitY * (y + tilemap_rotate_UV_helper(vertexNum, pointNum, 1, rotation));
+        pointNum++;
+    }
+
+    if(vertexCount <= 1)
+        return;
+
+    vertexNum = 1;
+    pointNum = 0;
+    for(uint8_t i = 0; i < 3; i++){
+        buffer[pos++] = unitX * (x + tilemap_rotate_UV_helper(vertexNum, pointNum, 0, rotation));
+        buffer[pos++] = unitY * (y + tilemap_rotate_UV_helper(vertexNum, pointNum, 1, rotation));
+        pointNum++;
+    }*/
 }
