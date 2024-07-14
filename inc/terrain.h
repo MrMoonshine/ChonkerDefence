@@ -16,6 +16,7 @@
 #include <glshader.h>
 #include <tilemap.h>
 #include <common.h>
+#include <decoration.h>
 
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
@@ -26,6 +27,9 @@ typedef struct Terrain{
     size_t vertexCount;
     Tilemap tilemap;
     uint8_t width, height;
+
+    Decoration* decorations;
+    size_t decorationCount;
 }Terrain;
 
 /*

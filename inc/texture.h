@@ -10,6 +10,8 @@
 
 #include <png.h>
 
+#define TEXTURE_UNKNOWN "../build/test9.png"
+
 typedef struct Texture{
     GLuint bufferID;
     uint32_t width, height;

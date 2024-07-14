@@ -1,0 +1,10 @@
+newmtl Mat0
+Ns 500
+Ka 0.2 0.2 0.2
+Kd 1.0 1.0 1.0
+Ks 0 0 0
+Tr 0
+d 1
+Ni 0
+illum 3
+map_Kd maus.albedo.png

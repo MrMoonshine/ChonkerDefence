@@ -1,0 +1,72 @@
+# Blender 3.3.0 MTL File: '2016.blend'
+# www.blender.org
+
+newmtl Mat0.004
+Ns 499.999969
+Ka 0.200000 0.200000 0.200000
+Ks 0.000000 0.000000 0.000000
+Ke 0.000000 0.000000 0.000000
+Ni 0.000000
+d 1.000000
+illum 1
+map_Kd /home/david/Dokumente/Minecraft/Mods/Railroading/2016/2016frame.albedo.png
+
+newmtl Mat0.014
+Ns 499.999969
+Ka 0.200000 0.200000 0.200000
+Ks 0.000000 0.000000 0.000000
+Ke 0.000000 0.000000 0.000000
+Ni 0.000000
+d 1.000000
+illum 1
+map_Kd /home/david/Dokumente/Minecraft/Mods/Railroading/2016/2016bogey.albedo.png
+
+newmtl Mat0.015
+Ns 499.999969
+Ka 0.200000 0.200000 0.200000
+Ks 0.000000 0.000000 0.000000
+Ke 0.000000 0.000000 0.000000
+Ni 0.000000
+d 1.000000
+illum 1
+map_Kd /home/david/Dokumente/Minecraft/Mods/Railroading/2016/2016bogey.albedo.png
+
+newmtl Mat0.020
+Ns 499.999969
+Ka 0.200000 0.200000 0.200000
+Ks 0.000000 0.000000 0.000000
+Ke 0.000000 0.000000 0.000000
+Ni 0.000000
+d 1.000000
+illum 1
+map_Kd /home/david/Dokumente/Minecraft/Mods/Railroading/2016/2016wheel.albedo.png
+
+newmtl Mat0.021
+Ns 499.999969
+Ka 0.200000 0.200000 0.200000
+Ks 0.000000 0.000000 0.000000
+Ke 0.000000 0.000000 0.000000
+Ni 0.000000
+d 1.000000
+illum 1
+map_Kd /home/david/Dokumente/Minecraft/Mods/Railroading/2016/2016wheel.albedo.png
+
+newmtl Mat0.022
+Ns 499.999969
+Ka 0.200000 0.200000 0.200000
+Ks 0.000000 0.000000 0.000000
+Ke 0.000000 0.000000 0.000000
+Ni 0.000000
+d 1.000000
+illum 1
+map_Kd /home/david/Dokumente/Minecraft/Mods/Railroading/2016/2016wheel.albedo.png
+
+newmtl Mat0.023
+Ns 499.999969
+Ka 0.200000 0.200000 0.200000
+Ks 0.000000 0.000000 0.000000
+Ke 0.000000 0.000000 0.000000
+Ni 0.000000
+d 1.000000
+illum 1
+map_Kd /home/david/Dokumente/Minecraft/Mods/Railroading/2016/2016wheel.albedo.png

@@ -157,13 +157,13 @@ int main(void){
                     default: {
                         if(levelmenuaction > 0){
                             uint8_t levelID = levelmenuaction - 1;
+                            ui_levelmenu_destroy(&levelmenu);
                             // Loading level
-                            printf("Main: Loading Level #%d\n", levelID);
+                            printf("[INFO] Main: Loading Level #%d\n", levelID);
                             size_t len = 0;
                             clilevel_get_level(&level, &client, window, &len, levelID);
                             clilevel_dump(&level);
                             currentMenu = MENU_GAME;
-                            ui_levelmenu_destroy(&levelmenu);
                         }
                     }break;
                 }

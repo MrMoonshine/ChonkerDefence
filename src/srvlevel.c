@@ -130,10 +130,10 @@ int srvlevel_show(struct pollfd* clientFDs, uint8_t fdCount, uint8_t* levelID){
 
             fclose(fp);
 
-            printf("SRVLevel\n");
+            /*printf("SRVLevel\n");
             for(uint8_t i = 0; i < 9; i++)
                 printf("%x, ", buffer[i]);
-            printf("\n");
+            printf("\n");*/
 
             /*size_t oida;
             memcpy(&oida, buffer + 1, sizeof(size_t));

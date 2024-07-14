@@ -1,6 +1,6 @@
 #include <ui/levelmenu.h>
 
-static const char* TAG = "GUI: Levelmenu:";
+static const char* TAG = "GUI: Levelmenu";
 
 //static const size_t BUFFER_SIZE = 1024;
 static const uint8_t BUTTON_COLUMNS = 3;
@@ -101,5 +101,6 @@ int ui_levelmenu_destroy(LevelMenu *menu){
         free(menu->buttons);
         menu->buttons = NULL;
     }
+    LOGS(TAG, "Here 5");
     return 0;
 }

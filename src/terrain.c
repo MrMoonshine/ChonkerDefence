@@ -272,7 +272,11 @@ static void terrain_path_piece(uint8_t pattern, uint8_t *piece, uint8_t *rotatio
 
 int terrain_create(Terrain* terrain, uint8_t* buffer_i, size_t bufferSize){
     terrain->vertexCount = 0;
+    terrain->decorationCount = 0;
+    terrain->decorations = NULL;
     char style[LEVEL_STYLE_LENGTH];
+
+    LOGI(TAG, "Building terrain...");
 
     size_t pos = 0;
     pos += LEVEL_NAME_LENGTH;
@@ -423,17 +427,14 @@ int terrain_create(Terrain* terrain, uint8_t* buffer_i, size_t bufferSize){
         }
     }
 
-    /*for(int a = 0; a < posVertex/sizeof(float); a++){
-        printf("%.2f, ", terrainVertexBuffer[a]);
-        if( a % 3 == 2)
-            printf("\n");
-    }*/
-
-    /*for(int a = 0; a < posUV/sizeof(float); a++){
-        printf("%.2f, ", terrainUVBuffer[a] * 3);
-        if( a % 2 == 1)
-            printf("\n");
-    }*/
+    /*
+        Decorations
+    */
+    terrain->decorationCount = 1;
+    terrain->decorations = (Decoration*)malloc(terrain->decorationCount * sizeof(Decoration));
+    for(size_t i = 0; i < terrain->decorationCount; i++){
+        decoration_create(terrain->decorations + i);
+    }
 
     glGenBuffers(1, &terrain->vertexbuffer);
     glBindBuffer(GL_ARRAY_BUFFER, terrain->vertexbuffer);
@@ -484,11 +485,19 @@ void terrain_draw(Terrain* terrain){
     glDisableVertexAttribArray(1);
     // unbind texture
     glBindTexture( GL_TEXTURE_2D, 0);
+
+    decoration_draw(terrain->decorations);
 }
 
 void terrain_destroy(Terrain* terrain){
     glDeleteBuffers(1, &terrain->uvbuffer);
     glDeleteBuffers(1, &terrain->vertexbuffer);
     tilemap_destroy(&terrain->tilemap);
+
+    for(size_t i = 0; i < terrain->decorationCount; i++){
+        decoration_destroy(terrain->decorations + i);
+    }
+    free(terrain->decorations);
+    terrain->decorations = NULL;
 }
 

@@ -19,90 +19,6 @@ static mat4 model;
 static mat4 view;
 static mat4 projection;
 
-/*static const uint8_t NEIGHBOUR_POSITION_N  = 1 << NEIGHBOUR_BIT_N;
-static const uint8_t NEIGHBOUR_POSITION_E  = 1 << NEIGHBOUR_BIT_E;
-static const uint8_t NEIGHBOUR_POSITION_S  = 1 << NEIGHBOUR_BIT_S;
-static const uint8_t NEIGHBOUR_POSITION_W  = 1 << NEIGHBOUR_BIT_W;;
-
-static const GLfloat g_vertex_buffer_data[] = {
-    -1.0f,-1.0f,-1.0f, // triangle 1 : begin
-    -1.0f,-1.0f, 1.0f,
-    -1.0f, 1.0f, 1.0f, // triangle 1 : end
-    1.0f, 1.0f,-1.0f, // triangle 2 : begin
-    -1.0f,-1.0f,-1.0f,
-    -1.0f, 1.0f,-1.0f, // triangle 2 : end
-    1.0f,-1.0f, 1.0f,
-    -1.0f,-1.0f,-1.0f,
-    1.0f,-1.0f,-1.0f,
-    1.0f, 1.0f,-1.0f,
-    1.0f,-1.0f,-1.0f,
-    -1.0f,-1.0f,-1.0f,
-    -1.0f,-1.0f,-1.0f,
-    -1.0f, 1.0f, 1.0f,
-    -1.0f, 1.0f,-1.0f,
-    1.0f,-1.0f, 1.0f,
-    -1.0f,-1.0f, 1.0f,
-    -1.0f,-1.0f,-1.0f,
-    -1.0f, 1.0f, 1.0f,
-    -1.0f,-1.0f, 1.0f,
-    1.0f,-1.0f, 1.0f,
-    1.0f, 1.0f, 1.0f,
-    1.0f,-1.0f,-1.0f,
-    1.0f, 1.0f,-1.0f,
-    1.0f,-1.0f,-1.0f,
-    1.0f, 1.0f, 1.0f,
-    1.0f,-1.0f, 1.0f,
-    1.0f, 1.0f, 1.0f,
-    1.0f, 1.0f,-1.0f,
-    -1.0f, 1.0f,-1.0f,
-    1.0f, 1.0f, 1.0f,
-    -1.0f, 1.0f,-1.0f,
-    -1.0f, 1.0f, 1.0f,
-    1.0f, 1.0f, 1.0f,
-    -1.0f, 1.0f, 1.0f,
-    1.0f,-1.0f, 1.0f
-};
-
-static const GLfloat g_uv_buffer_data[] = {
-        1.0f, 1.0f,
-        0.0f, 1.0f,
-        0.0f, 0.0f,
-        1.0f, 0.0f,
-        1.0f, 1.0f,
-        0.0f, 0.0f,
-        1.0f, 1.0f,
-        0.0f, 1.0f,
-        0.0f, 0.0f,
-        1.0f, 0.0f,
-        1.0f, 1.0f,
-        0.0f, 0.0f,
-        1.0f, 1.0f,
-        0.0f, 1.0f,
-        0.0f, 0.0f,
-        1.0f, 0.0f,
-        1.0f, 1.0f,
-        0.0f, 0.0f,
-        1.0f, 1.0f,
-        0.0f, 1.0f,
-        0.0f, 0.0f,
-        1.0f, 0.0f,
-        1.0f, 1.0f,
-        0.0f, 0.0f,
-        1.0f, 1.0f,
-        0.0f, 1.0f,
-        0.0f, 0.0f,
-        1.0f, 0.0f,
-        1.0f, 1.0f,
-        0.0f, 0.0f,
-        1.0f, 1.0f,
-        0.0f, 1.0f,
-        0.0f, 0.0f,
-        1.0f, 0.0f,
-        1.0f, 1.0f,
-        0.0f, 0.0f
-};
-*/
-
 uint8_t clilevel_list_levels(Client *client, size_t* len){
     // Send command to server
     uint8_t cmd[] = {PROTO_SCOPE_LEVELS, PROTO_CMD_SHOW};
@@ -138,7 +54,7 @@ uint8_t clilevel_get_level(ClientLevel *level, Client *client, GLFWwindow* windo
     }
 
     recv(client->socket, len, sizeof(size_t), 0);
-    printf("Level data size is %lx\n", *len);
+    printf("[INFO] %s: Level size is %luB\n", TAG, *len);
 
     uint8_t* buffer = (uint8_t*)malloc(*len);
     if(buffer == NULL){
@@ -152,7 +68,7 @@ uint8_t clilevel_get_level(ClientLevel *level, Client *client, GLFWwindow* windo
             printf("\n");
     }*/
 
-    printf("[INFO] %s: Size is %lu\n", TAG, *len);
+    //printf("[INFO] %s: Size is %lu\n", TAG, *len);
     size_t pos = 0;
     memcpy(level->name, buffer + pos, LEVEL_NAME_LENGTH);
     pos += LEVEL_NAME_LENGTH;
@@ -166,6 +82,7 @@ uint8_t clilevel_get_level(ClientLevel *level, Client *client, GLFWwindow* windo
     glGenVertexArrays(1, &level->vao);
     glBindVertexArray(level->vao);
     level->shader = glshader_load("../shaders/gamever.glsl", "../shaders/gamefra.glsl");
+    LOGI(TAG, "Shaders Compiled");
 
     glm_ortho(0.0f, (float)APP_WIDTH, 0.0f, (float)APP_HEIGHT, -1000.0f, 1000.0f, projection);
 
@@ -179,7 +96,7 @@ uint8_t clilevel_get_level(ClientLevel *level, Client *client, GLFWwindow* windo
     level->model = glGetUniformLocation(level->shader, "model");
 
     terrain_create(&level->terrain, buffer, *len);
-
+    LOGI(TAG, "Terrain creation completed");
     free(buffer);
     return 0;
 }

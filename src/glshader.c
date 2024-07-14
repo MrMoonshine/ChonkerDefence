@@ -36,7 +36,7 @@ static void dump_shader_status(GLuint shdrid){
     if(infoLogLength > 0){
         char text[infoLogLength + 1];
         glGetShaderInfoLog(shdrid, infoLogLength, NULL, text);
-        fprintf(stderr, "[%s] %s", TAG, text);
+        LOGE(TAG, text);
     }
 } 
 
@@ -44,7 +44,7 @@ GLuint glshader_load(const char* vrtxshdrf, const char* frgmntshdrf){
     //printf("Loading Shaders:\n%s\n%s\n",vrtxshdrf,frgmntshdrf);
     GLuint vsid = glCreateShader(GL_VERTEX_SHADER);
     GLuint fsid = glCreateShader(GL_FRAGMENT_SHADER);
-    printf("[%s] Compiling shaders...\n",TAG);
+    LOGI(TAG, "Compiling shaders");
 
     /*---------------------------------*/
     /*         Vertexshader            */
