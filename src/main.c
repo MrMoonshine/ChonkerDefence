@@ -79,6 +79,9 @@ int main(void){
         LOGE(TAG, "Failed to initialize GLEW");
         return -1;
     }
+    // Show version
+    printf("[INFO] %s: OpenGL version is %s\n", TAG, glGetString(GL_VERSION));
+    printf("[INFO] %s: GLFW   version is %s\n", TAG, glfwGetVersionString());
 
     glfwSetInputMode(window, GLFW_STICKY_KEYS, GL_TRUE);
     //glfwSetWindowSizeCallback(window, &window_resize_callback);

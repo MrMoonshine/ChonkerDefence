@@ -16,6 +16,11 @@ void LOGE(const char* TAG, const char* msg){
     fprintf(stderr,"\e[0;31m[ERROR] %s: %s\e[0m\n", TAG, msg);
 }
 
+void LOGE_S(const char* TAG, const char* msg1, const char* msg2){
+    fprintf(stderr,"\e[0;31m[ERROR] %s: %s%s\e[0m\n", TAG, msg1, msg2);
+}
+
+
 void LOGERRNO(const char* TAG, const char* msg){
     fprintf(stderr,"\e[0;31m[ERROR] %s: %s: %s\e[0m\n", TAG, msg, strerror(errno));
 }

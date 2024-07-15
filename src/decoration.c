@@ -1,49 +1,144 @@
 #include <decoration.h>
 
 static const char* TAG = "Decoration";
+static const char* filename = "../assets/models/maus.obj";
+
+static const GLfloat g_vertex_buffer_data[] = {
+		-1.0f,-1.0f,-1.0f,
+		-1.0f,-1.0f, 1.0f,
+		-1.0f, 1.0f, 1.0f,
+		 1.0f, 1.0f,-1.0f,
+		-1.0f,-1.0f,-1.0f,
+		-1.0f, 1.0f,-1.0f,
+		 1.0f,-1.0f, 1.0f,
+		-1.0f,-1.0f,-1.0f,
+		 1.0f,-1.0f,-1.0f,
+		 1.0f, 1.0f,-1.0f,
+		 1.0f,-1.0f,-1.0f,
+		-1.0f,-1.0f,-1.0f,
+		-1.0f,-1.0f,-1.0f,
+		-1.0f, 1.0f, 1.0f,
+		-1.0f, 1.0f,-1.0f,
+		 1.0f,-1.0f, 1.0f,
+		-1.0f,-1.0f, 1.0f,
+		-1.0f,-1.0f,-1.0f,
+		-1.0f, 1.0f, 1.0f,
+		-1.0f,-1.0f, 1.0f,
+		 1.0f,-1.0f, 1.0f,
+		 1.0f, 1.0f, 1.0f,
+		 1.0f,-1.0f,-1.0f,
+		 1.0f, 1.0f,-1.0f,
+		 1.0f,-1.0f,-1.0f,
+		 1.0f, 1.0f, 1.0f,
+		 1.0f,-1.0f, 1.0f,
+		 1.0f, 1.0f, 1.0f,
+		 1.0f, 1.0f,-1.0f,
+		-1.0f, 1.0f,-1.0f,
+		 1.0f, 1.0f, 1.0f,
+		-1.0f, 1.0f,-1.0f,
+		-1.0f, 1.0f, 1.0f,
+		 1.0f, 1.0f, 1.0f,
+		-1.0f, 1.0f, 1.0f,
+		 1.0f,-1.0f, 1.0f
+	};
+
+	// Two UV coordinatesfor each vertex. They were created with Blender.
+	static const GLfloat g_uv_buffer_data[] = {
+		0.000059f, 1.0f-0.000004f,
+		0.000103f, 1.0f-0.336048f,
+		0.335973f, 1.0f-0.335903f,
+		1.000023f, 1.0f-0.000013f,
+		0.667979f, 1.0f-0.335851f,
+		0.999958f, 1.0f-0.336064f,
+		0.667979f, 1.0f-0.335851f,
+		0.336024f, 1.0f-0.671877f,
+		0.667969f, 1.0f-0.671889f,
+		1.000023f, 1.0f-0.000013f,
+		0.668104f, 1.0f-0.000013f,
+		0.667979f, 1.0f-0.335851f,
+		0.000059f, 1.0f-0.000004f,
+		0.335973f, 1.0f-0.335903f,
+		0.336098f, 1.0f-0.000071f,
+		0.667979f, 1.0f-0.335851f,
+		0.335973f, 1.0f-0.335903f,
+		0.336024f, 1.0f-0.671877f,
+		1.000004f, 1.0f-0.671847f,
+		0.999958f, 1.0f-0.336064f,
+		0.667979f, 1.0f-0.335851f,
+		0.668104f, 1.0f-0.000013f,
+		0.335973f, 1.0f-0.335903f,
+		0.667979f, 1.0f-0.335851f,
+		0.335973f, 1.0f-0.335903f,
+		0.668104f, 1.0f-0.000013f,
+		0.336098f, 1.0f-0.000071f,
+		0.000103f, 1.0f-0.336048f,
+		0.000004f, 1.0f-0.671870f,
+		0.336024f, 1.0f-0.671877f,
+		0.000103f, 1.0f-0.336048f,
+		0.336024f, 1.0f-0.671877f,
+		0.335973f, 1.0f-0.335903f,
+		0.667969f, 1.0f-0.671889f,
+		1.000004f, 1.0f-0.671847f,
+		0.667979f, 1.0f-0.335851f
+	};
+
+static void get_file_data(void* ctx, const char* filename, const int is_mtl, const char* obj_filename, char** data, size_t* len) {
+  // NOTE: If you allocate the buffer with malloc(),
+  // You can define your own memory management struct and pass it through `ctx`
+  // to store the pointer and free memories at clean up stage(when you quit an
+  // app)
+  // This example uses mmap(), so no free() required.
+  (void)ctx;
+
+  if (!filename) {
+    LOGE(TAG, "get_file_data - Filename is NULL");
+    (*data) = NULL;
+    (*len) = 0;
+    return;
+  }
+
+  size_t data_len = 0;
+
+  //*data = mmap_file(&data_len, filename);
+  (*len) = data_len;
+}
 
 int decoration_create(Decoration* decoration){
-    fastObjMesh* mesh = fast_obj_read("../assets/models/maus.obj");
-    decoration->vertexCount = mesh->face_count;
-    printf("Texture count is %d\n", mesh->texture_count);
-    printf("Vertex count is %lu\tPoscount is %u\n", decoration->vertexCount, mesh->position_count);
+    decoration->vertexCount = 6*2;
 
-    for(uint8_t i = 0; i < mesh->texture_count; i++){
-        //if(!mesh->textures->name)
-            //continue;
+    tinyobj_attrib_t attrib;
+    tinyobj_shape_t* shapes = NULL;
+    size_t shapeCount;
+    tinyobj_material_t* materials = NULL;
+    size_t materialCount;
+    unsigned int flags = TINYOBJ_FLAG_TRIANGULATE;
 
-        printf("Texture name is %s\tpath is %s\n", mesh->textures->name, mesh->textures->path);
+    int retval = tinyobj_parse_obj(&attrib, &shapes, &shapeCount, &materials, &materialCount, filename, get_file_data, NULL, flags);
+    if (retval != TINYOBJ_SUCCESS) {
+        LOGE_S(TAG, "Failed to load ", filename);
+        return -1;
     }
-    for(uint8_t i = 0; i < mesh->material_count; i++){
-        printf("Material name is %s\tTexture is %d\n", mesh->materials->name, mesh->materials->map_Kd);
-    }
-    for(uint8_t i = 0; i < mesh->object_count; i++){
-        printf("Object name is %s\n", mesh->objects->name);
-    }
-    for(uint8_t i = 0; i < mesh->group_count; i++){
-        printf("Group name is %s\n", mesh->groups->name);
-    }
-    for(size_t i = 0; i < decoration->vertexCount * 3; i++){
+    /*for(size_t i = 0; i < decoration->vertexCount * 3; i++){
         printf("%.2f, ", mesh->positions[i]);
         if(i % 3 == 2)
             printf("\n");
         if(i % 9 == 2)
             printf("---VERTEX---\n");
-    }
+    }*/
 
-    if(0 > texture_create(&decoration->texture, "../assets/models/maus.albedo.png"))
+    //if(0 > texture_create(&decoration->texture, "../assets/models/maus.albedo.png"))
         texture_create(&decoration->texture, TEXTURE_UNKNOWN);
 
     glGenBuffers(1, &decoration->vertexbuffer);
     glBindBuffer(GL_ARRAY_BUFFER, decoration->vertexbuffer);
-    glBufferData(GL_ARRAY_BUFFER, decoration->vertexCount * 3, mesh->positions, GL_STATIC_DRAW);
-    //glBufferData(GL_ARRAY_BUFFER, sizeof(g_vertex_buffer_data), g_vertex_buffer_data, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(g_vertex_buffer_data), g_vertex_buffer_data, GL_STATIC_DRAW);
 
     glGenBuffers(1, &decoration->uvbuffer);
     glBindBuffer(GL_ARRAY_BUFFER, decoration->uvbuffer);
-    glBufferData(GL_ARRAY_BUFFER, mesh->texcoord_count, mesh->texcoords, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(g_uv_buffer_data), g_uv_buffer_data, GL_STATIC_DRAW);
 
-    fast_obj_destroy(mesh);
+    //tinyobj_shapes_free(shapes, shapeCount);
+    //tinyobj_materials_free(materials, materialCount);
     return 0;
 }
 

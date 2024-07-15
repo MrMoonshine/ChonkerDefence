@@ -16,7 +16,8 @@ file(GLOB SRC_FILES
     "*.c"
     "src/*.c"
     "src/ui/*.c"
-    "./lib/fast_obj/*.c"
+    "lib/tinyobjloader-c/tinyobj_loader_c.h"
+    #"src/tinyobj_loader_c.h"
 )
 
 add_compile_options(-Wall)
@@ -30,13 +31,13 @@ find_package(PNG REQUIRED)
 
 # CGLM: https://github.com/recp/cglm.git
 add_subdirectory("lib/cglm/")
-# Fast OBJ: https://github.com/thisistherk/fast_obj.git
-add_subdirectory("lib/fast_obj/")
+# Tiny OBJ: https://github.com/syoyo/tinyobjloader-c.git
+#add_subdirectory("lib/tinyobjloader-c/")
 
 set(INC_DIR
     "./inc"
     "./lib/cglm/include"
-    "./lib/fast_obj"
+    "./lib/tinyobjloader-c"
     ${PNG_INCLUDE_DIR}  # Lib PNG
 )
 include_directories(${INC_DIR})

@@ -12,7 +12,7 @@
 
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
-#include <fast_obj.h>
+#include <tinyobj_loader_c.h>
 
 typedef struct Decoration{
     GLuint vertexbuffer, uvbuffer, normalbuffer;

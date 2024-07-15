@@ -10,5 +10,7 @@ void LOGS(const char* TAG, const char* msg);
 void LOGW(const char* TAG, const char* msg);
 void LOGE(const char* TAG, const char* msg);
 
+void LOGE_S(const char* TAG, const char* msg1, const char* msg2);
+
 void LOGGLERR(const char* TAG);
 void LOGERRNO(const char* TAG, const char* msg);
