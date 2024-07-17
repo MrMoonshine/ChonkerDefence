@@ -289,16 +289,20 @@ int terrain_create(Terrain* terrain, uint8_t* buffer_i, size_t bufferSize){
     uint8_t* buffer = buffer_i + pos;
     size_t len = bufferSize -pos;
 
-    char* tilemapFile = (char*)malloc(strlen(LEVEL_TILEMAP_TERRAIN_FILE_PATTERN) + LEVEL_STYLE_LENGTH);
+    size_t tilemapFileLength = strlen(LEVEL_TILEMAP_TERRAIN_FILE_PATTERN) + LEVEL_STYLE_LENGTH;
+    char* tilemapFile = (char*)malloc(tilemapFileLength);
+    memset(tilemapFile, 0, tilemapFileLength);
     sprintf(tilemapFile, LEVEL_TILEMAP_TERRAIN_FILE_PATTERN, style);
     if(0 > tilemap_create(&terrain->tilemap, LEVEL_TILEMAP_TERRAIN_WIDTH, LEVEL_TILEMAP_TERRAIN_HEIGHT, tilemapFile)){
-        printf("\e[0;33m[WARNING] %s: Unable to open %s. Falling back to default style\n\e[0m", TAG, tilemapFile);
+        //printf("\e[0;33m[WARNING] %s: Unable to open %s. Falling back to default style\n\e[0m", TAG, tilemapFile);
+        LOGE_S(TAG, "Falling back to default tilemap. Original doesn't exist:  %s", tilemapFile);
         sprintf(tilemapFile, LEVEL_TILEMAP_TERRAIN_FILE_PATTERN, "default");
         if(0 > tilemap_create(&terrain->tilemap, LEVEL_TILEMAP_TERRAIN_WIDTH, LEVEL_TILEMAP_TERRAIN_HEIGHT, tilemapFile)){
             LOGE(TAG, "Unable to fallback on default tilemap");
         }
     }
     free(tilemapFile);
+    LOGS(TAG, "Created tilemap");
 
     /*for(size_t i = 0; i < len; i++){
         printf("%.2x", buffer[i]);
@@ -306,6 +310,7 @@ int terrain_create(Terrain* terrain, uint8_t* buffer_i, size_t bufferSize){
             printf("\n");
     }
     printf("-------------------------\n");*/
+#ifdef DEBUG_MAP
     printf("   ");
     for(uint8_t x = 0; x < terrain->width; x++)
         printf("%.1d", x/10);
@@ -313,13 +318,17 @@ int terrain_create(Terrain* terrain, uint8_t* buffer_i, size_t bufferSize){
     for(uint8_t x = 0; x < terrain->width; x++)
         printf("%.1d", x % 10);
     printf("\n");
+#endif /* DEBUG_MAP */
     /*
         Counting Dry Run
     */
     for(uint8_t y = 0; y < terrain->height; y++){
+#ifdef DEBUG_MAP
         printf("%.2d ", y);
+#endif /* DEBUG_MAP */
         for(uint8_t x = 0; x < terrain->width; x++){
             uint8_t nnibble = terrain_get_node_at(terrain, x, y, buffer, len);
+#ifdef DEBUG_MAP
             char node = ' ';
             switch(nnibble){
                 case 0b0000: node = 'P'; break;
@@ -333,7 +342,7 @@ int terrain_create(Terrain* terrain, uint8_t* buffer_i, size_t bufferSize){
                 default: break;
             }
             printf("%c", node);
-
+#endif /* DEBUG_MAP */
             if(LEVEL_IS_LAND(nnibble) || nnibble == LEVEL_BLOCK_PATH){
                 terrain->vertexCount += 2;
             }else if(LEVEL_IS_WATER(nnibble)){
@@ -351,7 +360,9 @@ int terrain_create(Terrain* terrain, uint8_t* buffer_i, size_t bufferSize){
                 }
             }
         }
+#ifdef DEBUG_MAP
         printf("\n");
+#endif /* DEBUG_MAP */
     }
     printf("[INFO] %s: Vertexcount terrain is %lu\n", TAG, terrain->vertexCount);
     float* terrainVertexBuffer = (float*)malloc(terrain->vertexCount * VERTEX_SIZE);
@@ -427,15 +438,6 @@ int terrain_create(Terrain* terrain, uint8_t* buffer_i, size_t bufferSize){
         }
     }
 
-    /*
-        Decorations
-    */
-    terrain->decorationCount = 1;
-    terrain->decorations = (Decoration*)malloc(terrain->decorationCount * sizeof(Decoration));
-    for(size_t i = 0; i < terrain->decorationCount; i++){
-        decoration_create(terrain->decorations + i);
-    }
-
     glGenBuffers(1, &terrain->vertexbuffer);
     glBindBuffer(GL_ARRAY_BUFFER, terrain->vertexbuffer);
     glBufferData(GL_ARRAY_BUFFER, posVertex*sizeof(float), terrainVertexBuffer, GL_STATIC_DRAW);
@@ -448,6 +450,17 @@ int terrain_create(Terrain* terrain, uint8_t* buffer_i, size_t bufferSize){
     // Buffer Cleanup
     free(terrainVertexBuffer);
     free(terrainUVBuffer);
+
+    /*
+        Decorations
+    */
+    terrain->decorationCount = 1;
+    terrain->decorations = (Decoration*)malloc(terrain->decorationCount * sizeof(Decoration));
+    for(size_t i = 0; i < terrain->decorationCount; i++){
+        printf("[INFO] %s: Creatin Decoration #%lu\n", TAG, i);
+        decoration_create(terrain->decorations + i);
+    }
+    LOGS(TAG, "Terrain Created successfully");
     return 0;
 }
 
@@ -486,7 +499,9 @@ void terrain_draw(Terrain* terrain){
     // unbind texture
     glBindTexture( GL_TEXTURE_2D, 0);
 
-    decoration_draw(terrain->decorations);
+    for(size_t i = 0; i < terrain->decorationCount; i++){
+        decoration_draw(terrain->decorations + i);
+    }
 }
 
 void terrain_destroy(Terrain* terrain){

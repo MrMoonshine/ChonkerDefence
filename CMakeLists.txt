@@ -10,19 +10,22 @@ add_definitions(
     -DASSET_PATH="/home/david/Programmieren/C/ChonkerDefence/assets/"
     -DCDNET_PORT=42069
     -DOpenGL_GL_PREFERENCE=GLVND
+    -DTINYOBJ_LOADER_C_IMPLEMENTATION=1     # Enable library. Otherwise: undefined ref
 )
 
 file(GLOB SRC_FILES
     "*.c"
     "src/*.c"
     "src/ui/*.c"
-    "lib/tinyobjloader-c/tinyobj_loader_c.h"
+    #"lib/tinyobjloader-c/tinyobj_loader_c.h"
     #"src/tinyobj_loader_c.h"
 )
 
 add_compile_options(-Wall)
 
 add_executable(${PROJECT_NAME} ${SRC_FILES})
+
+#target_sources(${PROJECT_NAME} PUBLIC "lib/tinyobjloader-c/tinyobj_loader_c.h")
 
 find_package(OpenGL REQUIRED)
 find_package(glfw3 3.3 REQUIRED)

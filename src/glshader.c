@@ -61,7 +61,7 @@ GLuint glshader_load(const char* vrtxshdrf, const char* frgmntshdrf){
     glShaderSource(vsid, 1, (const char**)&vtxcode, NULL);
     glCompileShader(vsid);
     dump_shader_status(vsid);
-    //printf("[%s] Vertex shader DONE!...\n",TAG);
+    LOGI(TAG, "Vertex shader DONE!...");
     /*---------------------------------*/
     /*       Fragmentshader            */
     /*---------------------------------*/
@@ -77,21 +77,35 @@ GLuint glshader_load(const char* vrtxshdrf, const char* frgmntshdrf){
     glShaderSource(fsid, 1, (const char**)&fgmtcode, NULL);
     glCompileShader(fsid);
     dump_shader_status(fsid);
-    //printf("[%s] Fragment shader DONE!...\n",TAG);
+    LOGI(TAG, "Fragment shader DONE!...");
     /*---------------------------------*/
     /*            Linking              */
     /*---------------------------------*/
     //printf("[%s] Linking shaders...\n",TAG);
+    LOGI(TAG, "Linking shaders!...");
     GLuint programID = glCreateProgram();
+    //LOGI(TAG, "Here 1");
     glAttachShader(programID, vsid);
+    //LOGI(TAG, "Here 2");
 	glAttachShader(programID, fsid);
+    //LOGI(TAG, "Here 3");
+    //LOGGLERR(TAG);
 	glLinkProgram(programID);
+    //LOGGLERR(TAG);
+    //LOGI(TAG, "Here 4");
     dump_shader_status(programID);
+    //LOGI(TAG, "Here 5");
     glDetachShader(programID, vsid);
+    //LOGI(TAG, "Here 6");
     glDetachShader(programID, fsid);
+    //LOGI(TAG, "Here 7");
     free(vtxcode);
+    //LOGI(TAG, "Here 8");
     free(fgmtcode);
+    //LOGI(TAG, "Here 9");
     glDeleteShader(vsid);
+    //LOGI(TAG, "Here 10");
     glDeleteShader(fsid);
+    LOGI(TAG, "Created Shader Program");
     return programID;
 }

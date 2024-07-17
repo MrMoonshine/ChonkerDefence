@@ -15,19 +15,16 @@
 #include <texture.h>
 #include <logging.h>
 #include <common.h>
-#include <vbo.h>
 
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
-//#include <tinyobj_loader_c.h>
 
-typedef struct Decoration{
-    VBO vbo;
-    GLuint vertexbuffer, uvbuffer, normalbuffer;
+typedef struct VBO{
+    GLuint vertices, uv, normals;
     size_t faceCount;
-    Texture texture;
-}Decoration;
+    //uint8_t initflags;
+}VBO;
 
-int decoration_create(Decoration* decoration);
-void decoration_draw(Decoration* decoration);
-void decoration_destroy(Decoration* decoration);
+int vbo_create(VBO *vbo, float* vertices, float* uv, float* normals, size_t faceCount);
+void vbo_draw(VBO* vbo, GLuint textureID);
+void vbo_destroy(VBO* vbo);

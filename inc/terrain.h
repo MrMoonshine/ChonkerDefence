@@ -22,6 +22,8 @@
 #include <GLFW/glfw3.h>
 #include <cglm/cglm.h>
 
+//#define DEBUG_MAP 1
+
 typedef struct Terrain{
     GLuint vertexbuffer, uvbuffer;
     size_t vertexCount;

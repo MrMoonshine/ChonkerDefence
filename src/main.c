@@ -96,6 +96,9 @@ int main(void){
         .port = 0
     };
     Client client;
+    // Main shader for the game
+    GLuint gameShader = glshader_load("../shaders/gamever.glsl", "../shaders/gamefra.glsl");
+    level.shader = gameShader;
 
     ui_create(&ui, window);
 
@@ -200,6 +203,7 @@ int main(void){
     // ui_mainmenu_destroy(&mainmenu);
     // levelmenu_destroy(&menu);
     ui_destroy(&ui);
+    glDeleteProgram(gameShader);
 
     printf("Here 1\n");
     glfwDestroyCursor(cursor_default);

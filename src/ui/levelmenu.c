@@ -44,7 +44,7 @@ int ui_levelmenu_create(LevelMenu *menu, UI* ui, Client* client){
     menu->buttonCount = 0;
 
     //Background
-    ui_image2d_create_from_png(&menu->background, ui, "../build/test3.png");
+    ui_image2d_create_from_png(&menu->background, ui, "../build/test8.png");
 
     ui_button_create(&menu->btnBack, menu->ui,  BUTTON_HEIGHT*5,  BUTTON_HEIGHT*1.5f, "Back");
 

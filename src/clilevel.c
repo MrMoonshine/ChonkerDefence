@@ -81,8 +81,9 @@ uint8_t clilevel_get_level(ClientLevel *level, Client *client, GLFWwindow* windo
 
     glGenVertexArrays(1, &level->vao);
     glBindVertexArray(level->vao);
-    level->shader = glshader_load("../shaders/gamever.glsl", "../shaders/gamefra.glsl");
-    LOGI(TAG, "Shaders Compiled");
+    // See main instead
+    //level->shader = glshader_load("../shaders/gamever.glsl", "../shaders/gamefra.glsl");
+    //LOGI(TAG, "Shaders Compiled");
 
     glm_ortho(0.0f, (float)APP_WIDTH, 0.0f, (float)APP_HEIGHT, -1000.0f, 1000.0f, projection);
 
@@ -96,7 +97,6 @@ uint8_t clilevel_get_level(ClientLevel *level, Client *client, GLFWwindow* windo
     level->model = glGetUniformLocation(level->shader, "model");
 
     terrain_create(&level->terrain, buffer, *len);
-    LOGI(TAG, "Terrain creation completed");
     free(buffer);
     return 0;
 }
