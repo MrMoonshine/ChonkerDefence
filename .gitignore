@@ -2,4 +2,5 @@ build/*
 levelbuilder/build/*
 .kdev4
 *.kdev4
+*.cache
 lib/*
