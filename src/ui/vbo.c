@@ -1,8 +1,11 @@
 #include <vbo.h>
 
-static const uint8_t FLAGS_VERTEX_BIT = 0;
-static const uint8_t FLAGS_UV_BIT = 1;
-static const uint8_t FLAGS_NORMALS_BIT = 2;
+void vbo_init(VBO *vbo, size_t faceCount){
+    vbo->vertices = 0;
+    vbo->uv = 0;
+    vbo->normals = 0;
+    vbo->faceCount = faceCount;
+}
 
 static void vbo_init_buffer(GLuint* id, float* buffer, size_t size){
     /*printf(" --- BUFFER ---\n");
@@ -17,22 +20,40 @@ static void vbo_init_buffer(GLuint* id, float* buffer, size_t size){
 }
 
 int vbo_create(VBO *vbo, float* vertices, float* uv, float* normals, size_t faceCount){
-    //vbo->initflags = 0;
-    vbo->vertices = 0;
-    vbo->uv = 0;
-    vbo->normals = 0;
-    vbo->faceCount = faceCount;
+    vbo_init(vbo, faceCount);
 
-    vbo_init_buffer(&vbo->vertices, vertices, vertices ? faceCount * VERTEX_SIZE : 0);
-    vbo_init_buffer(&vbo->uv, uv, uv ? faceCount * UV_SIZE : 0);
-    vbo_init_buffer(&vbo->normals, normals, normals ? faceCount * NORMALS_SIZE : 0);
+    // vbo_init_buffer(&vbo->vertices, vertices, vertices ? faceCount * VERTEX_SIZE : 0);
+    // vbo_init_buffer(&vbo->uv, uv, uv ? faceCount * UV_SIZE : 0);
+    // vbo_init_buffer(&vbo->normals, normals, normals ? faceCount * NORMALS_SIZE : 0);
+    vbo_create_vertices(vbo, vertices);
+    vbo_create_uv(vbo, uv);
+    vbo_create_normals(vbo, normals);
+    return 0;
+}
+
+int vbo_create_vertices(VBO *vbo, float* buffer){
+    vbo_init_buffer(&vbo->vertices, buffer, buffer ? vbo->faceCount * VERTEX_SIZE : 0);
+    return 0;
+}
+
+int vbo_create_uv(VBO *vbo, float* buffer){
+    vbo_init_buffer(&vbo->uv, buffer, buffer ? vbo->faceCount * UV_SIZE : 0);
+    return 0;
+}
+
+int vbo_create_normals(VBO *vbo, float* buffer){
+    vbo_init_buffer(&vbo->normals, buffer, buffer ? vbo->faceCount * NORMALS_SIZE : 0);
     return 0;
 }
 
 void vbo_draw(VBO* vbo, GLuint textureID){
+    glEnable(GL_DEPTH_TEST);
+    glDepthFunc(GL_LEQUAL);
+    glCullFace(GL_FRONT);       // Face culling has to be inverted for this voxel mode
+
     glBindTexture( GL_TEXTURE_2D, textureID);
     // VERTICES
-    glEnableVertexAttribArray(0);
+    glEnableVertexAttribArray(VBO_INDEX_VERTEX);
     glBindBuffer(GL_ARRAY_BUFFER, vbo->vertices);
     glVertexAttribPointer(
         0,                  // attribute 0. No particular reason for 0, but must match the layout in the shader.
@@ -45,7 +66,7 @@ void vbo_draw(VBO* vbo, GLuint textureID){
     // Draw the triangle !
     glDrawArrays(GL_TRIANGLES, 0, vbo->faceCount * 3);
     // UV
-    glEnableVertexAttribArray(1);
+    glEnableVertexAttribArray(VBO_INDEX_UV);
     glBindBuffer(GL_ARRAY_BUFFER, vbo->uv);
     glVertexAttribPointer(
         1,                                // attribute. No particular reason for 1, but must match the layout in the shader.
@@ -57,7 +78,7 @@ void vbo_draw(VBO* vbo, GLuint textureID){
     );
     glDrawArrays(GL_TRIANGLES, 0, vbo->faceCount * 3);
     // NORMALS
-    glEnableVertexAttribArray(2);
+    glEnableVertexAttribArray(VBO_INDEX_NORMAL);
     glBindBuffer(GL_ARRAY_BUFFER, vbo->normals);
     glVertexAttribPointer(
         2,                                // attribute. No particular reason for 2, but must match the layout in the shader.
@@ -69,12 +90,15 @@ void vbo_draw(VBO* vbo, GLuint textureID){
     );
     glDrawArrays(GL_TRIANGLES, 0, vbo->faceCount);
 
-    glDisableVertexAttribArray(0);
-    glDisableVertexAttribArray(1);
-    glDisableVertexAttribArray(2);
+    glDisableVertexAttribArray(VBO_INDEX_VERTEX);
+    glDisableVertexAttribArray(VBO_INDEX_UV);
+    glDisableVertexAttribArray(VBO_INDEX_NORMAL);
 
     // unbind texture
     glBindTexture( GL_TEXTURE_2D, 0);
+
+    glCullFace(GL_BACK);
+    glDisable(GL_DEPTH_TEST);
 }
 
 void vbo_destroy(VBO* vbo){

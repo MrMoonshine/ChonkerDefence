@@ -1,10 +1,10 @@
 #include <decoration.h>
-//#include "../lib/tinyobjloader-c/tinyobj_loader_c.h"
+#include "../lib/tinyobjloader-c/tinyobj_loader_c.h"
 
 static const char* TAG = "Decoration";
 //static const char* FILENAME = "/home/david/Dokumente/Minecraft/Mods/Railroading/2016/deploy/oebb2016.obj";
-//static const char* FILENAME = "../assets/models/maus.obj";
-static const char* FILENAME = "../assets/models/cube.obj";
+static const char* FILENAME = "../assets/models/maus.obj";
+//static const char* FILENAME = "../assets/models/cube.obj";
 
 static const GLfloat g_vertex_buffer_data[] = {
 		-1.0f,-1.0f,-1.0f,
@@ -85,7 +85,7 @@ static const GLfloat g_uv_buffer_data[] = {
 		0.667979f, 1.0f-0.335851f
 	};
 
-/*static void get_file_data(void* ctx, const char* filename, const int is_mtl, const char* obj_filename, char** data, size_t* len) {
+static void get_file_data(void* ctx, const char* filename, const int is_mtl, const char* obj_filename, char** data, size_t* len) {
   // NOTE: If you allocate the buffer with malloc(),
   // You can define your own memory management struct and pass it through `ctx`
   // to store the pointer and free memories at clean up stage(when you quit an
@@ -128,10 +128,10 @@ static const GLfloat g_uv_buffer_data[] = {
   }
 
   fclose(fp);
-}*/
+}
 
 int decoration_create(Decoration* decoration){
-    /*tinyobj_attrib_t attrib;
+    tinyobj_attrib_t attrib;
     tinyobj_shape_t* shapes = NULL;
     size_t shapeCount = 0;
     tinyobj_material_t* materials = NULL;
@@ -147,120 +147,151 @@ int decoration_create(Decoration* decoration){
         return -1;
     }
     if(*context){
-      LOGS(TAG, "Buffer freeed");
+      //LOGS(TAG, "Buffer freeed");
         free(*context);
         *context = NULL;
     }else{
-        LOGW(TAG, "Buffer was NULL all the time");
+        //LOGW(TAG, "Buffer was NULL all the time");
     }
 
+    // set face count
+    decoration->faceCount = attrib.num_face_num_verts;
+
     printf("[INFO] %s: # of Shapes: %lu | # of Materials: %lu\n", TAG, shapeCount, materialCount);
-    printf("[INFO] %s: # of Vertices: %u | # of Faces: %u\n", TAG, attrib.num_vertices, attrib.num_faces);*/
+    printf("[INFO] %s: # of Vertices: %u | # of Faces: %d | # of normals: %d\n", TAG, attrib.num_vertices, attrib.num_face_num_verts, attrib.num_normals);
     //printf("Context %p | Context[0] %p\n", context, *context);
     /*for (int i = 0; i < shapeCount; i++) {
         printf("shape[%d] name = %s\n", i, shapes[i].name);
     }*/
 
-    // size_t vertexBufferSize = attrib.num_faces * VERTEX_SIZE;
-    // size_t uvBufferSize = attrib.num_faces * UV_SIZE;
-    // size_t normalsBufferSize = attrib.num_faces * NORMALS_SIZE;
-    /*size_t vertexBufferSize = 12 * VERTEX_SIZE;
-    size_t uvBufferSize = 12 * UV_SIZE;
-    size_t normalsBufferSize = 12 * NORMALS_SIZE;
-    float *vertexBuffer, *uvBuffer, *normalsBuffer;
+    size_t vertexBufferSize = decoration->faceCount * VERTEX_SIZE;
+    size_t uvBufferSize = decoration->faceCount * UV_SIZE;
+    size_t normalsBufferSize = decoration->faceCount * NORMALS_SIZE;
 
     printf("[INFO] %s: Buffer sizes are (%lu|%lu|%lu)\n", TAG, vertexBufferSize, uvBufferSize, normalsBufferSize);
+    size_t sizes[3] = {vertexBufferSize, uvBufferSize, normalsBufferSize};
+    vbo_init(&decoration->vbo, decoration->faceCount);
+    for(size_t i = 0; i < 3; i++){
+        float* buffer = NULL;
+        buffer = (float*)malloc(sizes[i]);
+        if(!buffer){
+          LOGERRNO(TAG, "Malloc buffers decoration_create");
+          tinyobj_shapes_free(shapes, shapeCount);
+          tinyobj_materials_free(materials, materialCount);
+          tinyobj_attrib_free(&attrib);
+          return -1;
+        }
 
-    vertexBuffer = (float*)malloc(vertexBufferSize);
-    uvBuffer = (float*)malloc(uvBufferSize);
-    normalsBuffer = (float*)malloc(normalsBufferSize);
-    if(vertexBuffer == NULL || uvBuffer == NULL || normalsBuffer == NULL){
-      LOGERRNO(TAG, "Malloc buffers decoration_create");
-      //tinyobj_shapes_free(shapes, shapeCount);
-      //tinyobj_materials_free(materials, materialCount);
-      //tinyobj_attrib_free(&attrib);
-      return -1;
+        for(size_t j = 0; j < sizes[i]/sizeof(float); j++){
+          buffer[j] = 0.0f;
+        }
+
+        size_t pos = 0;
+        switch(i){
+          case VBO_INDEX_VERTEX: {
+            //memcpy(buffer, g_vertex_buffer_data, sizes[i]);
+            printf("Size is %lu\t# of floats = %lu\n", sizes[i], sizes[i] / sizeof(float));
+            //size_t faceOffset = 0;
+            for(size_t a = 0; a < attrib.num_face_num_verts * 3; a++){
+              //printf("Faces (v|vt|vn) (%d|%d|%d)\n", attrib.faces[a].v_idx, attrib.faces[a].vt_idx, attrib.faces[a].vn_idx);
+              for(uint8_t b = 0; b < 3; b++){
+                if(pos >= sizes[i] / sizeof(float))
+                  continue;
+                buffer[pos++] = attrib.vertices[attrib.faces[a].v_idx * 3 + b];
+              }
+              //printf("Oida %lu\n", (size_t)attrib.face_num_verts[a]);
+              /*for(size_t b = 0; b < (size_t)attrib.face_num_verts[a]; b++){
+                printf("\tOida %lu => %.2f\n", faceOffset + b, 0.0f);
+                size_t pos1 = 3 * faceOffset + b;
+                buffer[pos1 + 0] = 1.0f;
+                buffer[pos1 + 1] = 2.0f;
+                buffer[pos1 + 2] = 3.0f;
+              }
+              faceOffset += (size_t)attrib.face_num_verts[a];*/
+            }
+
+            /*size_t triangleCount = 1;
+            for(size_t a = 0; a < sizes[i] / (sizeof(float)); a++){
+              if(a % 9 == 0)
+                printf(" --- TRIANGLE %lu --- \n", triangleCount++);
+              printf("%.2f, ", buffer[a]);
+              if(a % 3 == 2)
+                printf("\n");
+            }
+            printf("\n");*/
+
+            /*for(size_t a = 0; a < attrib.num_vertices * 3; a++){
+              //printf("Vertices (v|vt|vn) (%d|%d|%d)\n", attrib.faces[a].v_idx, attrib.faces[a].vt_idx, attrib.faces[a].vn_idx);
+              printf("%.2f, ", attrib.vertices[a]);
+              if(a % 3 == 2)
+                printf("\n");
+            }*/
+            vbo_create_vertices(&decoration->vbo, buffer);
+          } break;
+          case VBO_INDEX_UV:{
+            //memcpy(buffer, g_uv_buffer_data, sizes[i]);
+            for(size_t a = 0; a < attrib.num_face_num_verts * 3; a++){
+              //printf("Faces (v|vt|vn) (%d|%d|%d)\n", attrib.faces[a].v_idx, attrib.faces[a].vt_idx, attrib.faces[a].vn_idx);
+              for(uint8_t b = 0; b < 2; b++){
+                if(pos >= sizes[i] / sizeof(float))
+                  continue;
+                buffer[pos++] = attrib.texcoords[attrib.faces[a].vt_idx * 2 + b];
+              }
+            }
+
+            /*size_t triangleCount = 1;
+            for(size_t a = 0; a < sizes[i] / (sizeof(float)); a++){
+              if(a % 6 == 0)
+                printf(" --- UV TRIANGLE %lu --- \n", triangleCount++);
+              printf("%.2f, ", buffer[a]);
+              if(a % 2 == 1)
+                printf("\n");
+            }
+            printf("\n");*/
+
+            vbo_create_uv(&decoration->vbo, buffer);
+          } break;
+          case VBO_INDEX_NORMAL: {
+            for(size_t a = 0; a < attrib.num_face_num_verts; a++){
+              //printf("Faces (v|vt|vn) (%d|%d|%d)\n", attrib.faces[a].v_idx, attrib.faces[a].vt_idx, attrib.faces[a].vn_idx);
+              for(uint8_t b = 0; b < 3; b++){
+                if(pos >= sizes[i] / sizeof(float))
+                  continue;
+                buffer[pos++] = attrib.texcoords[attrib.faces[a * 3].vn_idx + b];
+              }
+            }
+
+            /*size_t triangleCount = 1;
+            for(size_t a = 0; a < sizes[i] / (sizeof(float)); a++){
+              if(a % 3 == 0)
+                printf(" --- Normal TRIANGLE %lu --- \n", triangleCount++);
+              printf("%.2f, ", buffer[a]);
+              if(a % 3 == 2)
+                printf("\n");
+            }
+            printf("\n");*/
+            vbo_create_normals(&decoration->vbo, buffer);
+          } break;
+          default: break;
+        }
+
+        free(buffer);
     }
 
-   for(size_t i = 0; i < vertexBufferSize; i++)
-      vertexBuffer[i] = 0.0f;
-    for(size_t i = 0; i < uvBufferSize; i++)
-      uvBuffer[i] = 0.0f;
-    for(size_t i = 0; i < normalsBufferSize; i++)
-      normalsBuffer[i] = 0.0f;
-    */
-    /*unsigned int triangleCount = 0;
-    for(size_t i = 0; i < vertexBufferSize; i++){
-      if(i % 9 == 0)
-            printf("---Trianggle #%u---\n", ++triangleCount);
-        printf("%.2f, ", vertexBuffer[i]);
-        if(i % 3 == 2)
-            printf("\n");
-    }*/
-    //LOGS(TAG, "Here 1");
 
-    //if(0 > texture_create(&decoration->texture, "../assets/models/maus.albedo.png"))
-
-    //printf("Num faces is %u\n", attrib.num_faces);
-    //printf("Num vertices is %u\n", attrib.num_vertices);
-    /*glGenBuffers(1, &decoration->vertexbuffer);
-    glBindBuffer(GL_ARRAY_BUFFER, decoration->vertexbuffer);
-    //glBufferData(GL_ARRAY_BUFFER, vertexBufferSize, vertexBuffer, GL_STATIC_DRAW);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(g_vertex_buffer_data), g_vertex_buffer_data, GL_STATIC_DRAW);
-
-    glGenBuffers(1, &decoration->uvbuffer);
-    glBindBuffer(GL_ARRAY_BUFFER, decoration->uvbuffer);
-    //glBufferData(GL_ARRAY_BUFFER, uvBufferSize, uvBuffer, GL_STATIC_DRAW);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(g_uv_buffer_data), g_uv_buffer_data, GL_STATIC_DRAW);*/
-
-    // free(vertexBuffer);
-    // free(uvBuffer);
-    // free(normalsBuffer);
-
-    // tinyobj_shapes_free(shapes, shapeCount);
-    // tinyobj_materials_free(materials, materialCount);
-    // tinyobj_attrib_free(&attrib);
-    texture_create(&decoration->texture, TEXTURE_UNKNOWN);
-    vbo_create(&decoration->vbo, (float*)g_vertex_buffer_data, (float*)g_uv_buffer_data, NULL, 12);
+    //texture_create(&decoration->texture, TEXTURE_UNKNOWN);
+    texture_create(&decoration->texture, "../assets/models/maus.albedo.png");
+    //vbo_create(&decoration->vbo, (float*)g_vertex_buffer_data, (float*)g_uv_buffer_data, NULL, 12);
     printf("[INFO] %s: VBO Buffers are (%d|%d|%d)\n", TAG, decoration->vbo.vertices, decoration->vbo.uv, decoration->vbo.normals);
     return 0;
+
+    tinyobj_shapes_free(shapes, shapeCount);
+    tinyobj_materials_free(materials, materialCount);
+    tinyobj_attrib_free(&attrib);
 }
 
 void decoration_draw(Decoration* decoration){
   vbo_draw(&decoration->vbo, decoration->texture.bufferID);
-  /*glBindTexture( GL_TEXTURE_2D, decoration->texture.bufferID);
-
-    glEnableVertexAttribArray(0);
-    glBindBuffer(GL_ARRAY_BUFFER, decoration->vertexbuffer);
-    glVertexAttribPointer(
-        0,                  // attribute 0. No particular reason for 0, but must match the layout in the shader.
-        3,                  // size
-        GL_FLOAT,           // type
-        GL_FALSE,           // normalized?
-        0,                  // stride
-        (void*)0            // array buffer offset
-    );
-    // Draw the triangle !
-    glDrawArrays(GL_TRIANGLES, 0, decoration->faceCount * 3); // start at 0; 6 because 6 points for 2 vertices
-    //LOGGLERR(TAG);
-    glEnableVertexAttribArray(1);
-
-    glBindBuffer(GL_ARRAY_BUFFER, decoration->uvbuffer);
-    glVertexAttribPointer(
-        1,                                // attribute. No particular reason for 1, but must match the layout in the shader.
-        2,                                // size : U+V => 2
-        GL_FLOAT,                         // type
-        GL_FALSE,                         // normalized?
-        0,                                // stride
-        (void*)0                          // array buffer offset
-    );
-    // Draw the triangle !
-    glDrawArrays(GL_TRIANGLES, 0, decoration->faceCount * 3);
-
-    glDisableVertexAttribArray(0);
-    glDisableVertexAttribArray(1);
-    // unbind texture
-    glBindTexture( GL_TEXTURE_2D, 0);*/
 }
 
 void decoration_destroy(Decoration* decoration){

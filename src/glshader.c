@@ -82,7 +82,7 @@ GLuint glshader_load(const char* vrtxshdrf, const char* frgmntshdrf){
     /*            Linking              */
     /*---------------------------------*/
     //printf("[%s] Linking shaders...\n",TAG);
-    LOGI(TAG, "Linking shaders!...");
+    //LOGI(TAG, "Linking shaders!...");
     GLuint programID = glCreateProgram();
     //LOGI(TAG, "Here 1");
     glAttachShader(programID, vsid);
@@ -106,6 +106,6 @@ GLuint glshader_load(const char* vrtxshdrf, const char* frgmntshdrf){
     glDeleteShader(vsid);
     //LOGI(TAG, "Here 10");
     glDeleteShader(fsid);
-    LOGI(TAG, "Created Shader Program");
+    //LOGI(TAG, "Created Shader Program");
     return programID;
 }
