@@ -1,3 +1,4 @@
+
 #pragma once
 #include <stdio.h>
 #include <stdint.h>
@@ -15,15 +16,19 @@
 #include <texture.h>
 #include <logging.h>
 #include <common.h>
-#include <obj.h>
+#include <vbo.h>
 
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
+//#include <tinyobj_loader_c.h>
 
-typedef struct Decoration{
-    Obj object;
-}Decoration;
+typedef struct Obj{
+    VBO vbo;
+    GLuint vertexbuffer, uvbuffer, normalbuffer;
+    size_t faceCount;
+    Texture texture;
+}Obj;
 
-int decoration_create(Decoration* decoration);
-void decoration_draw(Decoration* decoration);
-void decoration_destroy(Decoration* decoration);
+int obj_create(Obj* obj, const char* filename);
+void obj_draw(Obj* obj);
+void obj_destroy(Obj* obj);
