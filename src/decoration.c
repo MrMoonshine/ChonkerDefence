@@ -2,11 +2,12 @@
 #include "../lib/tinyobjloader-c/tinyobj_loader_c.h"
 
 static const char* TAG = "Decoration";
-//static const char* FILENAME = "/home/david/Dokumente/Minecraft/Mods/Railroading/2016/deploy/oebb2016.obj";
-static const char* FILENAME = "../assets/models/maus.obj";
+static const char* FILENAME = "/home/david/Dokumente/Minecraft/Mods/Railroading/2016/deploy/oebb2016.obj";
+//static const char* FILENAME = "../build/oida1.obj";
+//static const char* FILENAME = "../assets/models/maus.obj";
 //static const char* FILENAME = "../assets/models/cube.obj";
 
-static const GLfloat g_vertex_buffer_data[] = {
+/*static const GLfloat g_vertex_buffer_data[] = {
 		-1.0f,-1.0f,-1.0f,
 		-1.0f,-1.0f, 1.0f,
 		-1.0f, 1.0f, 1.0f,
@@ -83,7 +84,7 @@ static const GLfloat g_uv_buffer_data[] = {
 		0.667969f, 1.0f-0.671889f,
 		1.000004f, 1.0f-0.671847f,
 		0.667979f, 1.0f-0.335851f
-	};
+	};*/
 
 static void get_file_data(void* ctx, const char* filename, const int is_mtl, const char* obj_filename, char** data, size_t* len) {
   // NOTE: If you allocate the buffer with malloc(),
@@ -159,6 +160,17 @@ int decoration_create(Decoration* decoration){
 
     printf("[INFO] %s: # of Shapes: %lu | # of Materials: %lu\n", TAG, shapeCount, materialCount);
     printf("[INFO] %s: # of Vertices: %u | # of Faces: %d | # of normals: %d\n", TAG, attrib.num_vertices, attrib.num_face_num_verts, attrib.num_normals);
+
+    for(size_t i = 0; i < shapeCount; i++){
+      printf("[INFO] %s: Shape %s:\n", TAG, shapes[i].name);
+      printf("\tface_offset %d\n",shapes[i].face_offset);
+      printf("\tlength %d\n",shapes[i].length);
+    }
+
+    for(size_t i = 0; i < materialCount; i++){
+      printf("[INFO] %s: Material %s:\n", TAG, materials[i].name);
+      printf("\tmap_Kd %s\n", materials[i].diffuse_texname);
+    }
     //printf("Context %p | Context[0] %p\n", context, *context);
     /*for (int i = 0; i < shapeCount; i++) {
         printf("shape[%d] name = %s\n", i, shapes[i].name);
