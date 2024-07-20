@@ -50,6 +50,10 @@ static void get_file_data(void* ctx, const char* filename, const int is_mtl, con
 }
 
 int obj_create(Obj* obj, const char* filename){
+    obj->faceCount = 0;
+    obj->shapeCount = 0;
+    obj->textureCount = 0;
+
     tinyobj_attrib_t attrib;
     tinyobj_shape_t* shapes = NULL;
     size_t shapeCount = 0;
@@ -78,17 +82,81 @@ int obj_create(Obj* obj, const char* filename){
 
     printf("[INFO] %s: # of Shapes: %lu | # of Materials: %lu\n", TAG, shapeCount, materialCount);
     printf("[INFO] %s: # of Vertices: %u | # of Faces: %d | # of normals: %d\n", TAG, attrib.num_vertices, attrib.num_face_num_verts, attrib.num_normals);
+    // Process shapes
+    // attrib.materials_id is for each face
 
     for(size_t i = 0; i < shapeCount; i++){
+#ifdef DEBUG_OBJ
       printf("[INFO] %s: Shape %s:\n", TAG, shapes[i].name);
       printf("\tface_offset %d\n",shapes[i].face_offset);
       printf("\tlength %d\n",shapes[i].length);
+      size_t matindex = attrib.material_ids[shapes[i].face_offset];
+      printf("\tMaterial %s %s\n", materials[matindex].name, materials[matindex].diffuse_texname);
+#endif /*DEBUG_OBJ*/
+      if(strlen(materials[matindex].diffuse_texname) > 0)
+        obj->textureCount++;
     }
 
-    for(size_t i = 0; i < materialCount; i++){
+    obj->shapeCount = shapeCount;
+    obj->shapes = (struct Shape*)malloc(sizeof(struct Shape) * obj->shapeCount);
+    if(!obj->shapes){
+      LOGERRNO(TAG, "Malloc Shapes");
+      return -1;
+    }
+
+    obj->textures = (Texture*)malloc(sizeof(Texture) * obj->textureCount);
+    if(!obj->textures){
+      LOGERRNO(TAG, "Malloc Textures");
+      return -1;
+    }
+    /*
+      Build shapes and textures
+    */
+    unsigned int textureCounter = 0;
+    for(size_t i = 0; i < shapeCount; i++){
+      obj->shapes[i].faceOffset = shapes[i].face_offset;
+      obj->shapes[i].length = shapes[i].length;
+
+      size_t matindex = attrib.material_ids[shapes[i].face_offset];
+      size_t textureFileLength = strlen(materials[matindex].diffuse_texname);
+      if(textureFileLength > 0){
+        int ret =0;
+        if(materials[matindex].diffuse_texname[0] == FILESYSTEM_SLASH){
+          ret = texture_create(obj->textures + textureCounter, materials[matindex].diffuse_texname);
+        }else{
+          unsigned int lastslashpos = 0;
+          for(unsigned int j = 0; j < strlen(filename); j++){
+            if(filename[j] == FILESYSTEM_SLASH)
+              lastslashpos = j;
+          }
+          printf("Last / pos is %u\n", lastslashpos);
+          char* texturefilename = (char*)malloc(lastslashpos + 1 + textureFileLength);
+          if(!texturefilename){
+            ret = texture_create(obj->textures + textureCounter, TEXTURE_UNKNOWN);
+          }else{
+            strcpy(texturefilename, "");
+            strncat(texturefilename, filename, lastslashpos + 1);
+            strcat(texturefilename, materials[matindex].diffuse_texname);
+            texture_create(obj->textures + textureCounter, texturefilename);
+            free(texturefilename);
+          }
+        }
+        if(ret < 0){
+          LOGE_S(TAG, "Failed to load ", materials[matindex].diffuse_texname);
+          texture_create(obj->textures + textureCounter, TEXTURE_UNKNOWN);
+        }
+        obj->shapes[i].textureIndex = textureCounter;
+        textureCounter++;
+      }else{
+        obj->shapes[i].textureIndex = UINT_MAX;
+      }
+    }
+
+    /*for(size_t i = 0; i < materialCount; i++){
       printf("[INFO] %s: Material %s:\n", TAG, materials[i].name);
       printf("\tmap_Kd %s\n", materials[i].diffuse_texname);
-    }
+    }*/
+
     //printf("Context %p | Context[0] %p\n", context, *context);
     /*for (int i = 0; i < shapeCount; i++) {
         printf("shape[%d] name = %s\n", i, shapes[i].name);
@@ -209,8 +277,6 @@ int obj_create(Obj* obj, const char* filename){
     }
 
 
-    //texture_create(&obj->texture, TEXTURE_UNKNOWN);
-    texture_create(&obj->texture, "../assets/models/maus.albedo.png");
     //vbo_create(&obj->vbo, (float*)g_vertex_buffer_data, (float*)g_uv_buffer_data, NULL, 12);
     printf("[INFO] %s: VBO Buffers are (%d|%d|%d)\n", TAG, obj->vbo.vertices, obj->vbo.uv, obj->vbo.normals);
     return 0;
@@ -221,12 +287,70 @@ int obj_create(Obj* obj, const char* filename){
 }
 
 void obj_draw(Obj* obj){
-  vbo_draw(&obj->vbo, obj->texture.bufferID);
+  //vbo_draw(&obj->vbo, obj->texture.bufferID);
+  glEnable(GL_DEPTH_TEST);
+  glDepthFunc(GL_LEQUAL);
+  glCullFace(GL_FRONT);       // Face culling has to be inverted for this voxel mode
+
+  for(unsigned int i = 0; i < obj->shapeCount; i++){
+    //LOGW(TAG, "Here 1");
+    if(obj->shapes[i].textureIndex < obj->textureCount)
+    glBindTexture( GL_TEXTURE_2D, obj->textures[obj->shapes[i].textureIndex].bufferID);
+    //LOGW(TAG, "Here VERTICES");
+    // VERTICES
+    glEnableVertexAttribArray(VBO_INDEX_VERTEX);
+    glBindBuffer(GL_ARRAY_BUFFER, obj->vbo.vertices);
+    glVertexAttribPointer(
+        0,                  // attribute 0. No particular reason for 0, but must match the layout in the shader.
+        3,                  // size
+        GL_FLOAT,           // type
+        GL_FALSE,           // normalized?
+        0,                  // stride
+        (void*)(obj->shapes[i].faceOffset * VERTEX_SIZE)            // array buffer offset
+    );
+    // Draw the triangle !
+    glDrawArrays(GL_TRIANGLES, 0, obj->shapes[i].length * 3);
+    //LOGW(TAG, "Here UV");
+    // UV
+    glEnableVertexAttribArray(VBO_INDEX_UV);
+    glBindBuffer(GL_ARRAY_BUFFER, obj->vbo.uv);
+    glVertexAttribPointer(
+        1,                                // attribute. No particular reason for 1, but must match the layout in the shader.
+        2,                                // size : U+V => 2
+        GL_FLOAT,                         // type
+        GL_FALSE,                         // normalized?
+        0,                                // stride
+        (void*)(obj->shapes[i].faceOffset * UV_SIZE)                          // array buffer offset
+    );
+    glDrawArrays(GL_TRIANGLES, 0, obj->shapes[i].length * 3);
+    //LOGW(TAG, "Here NORMALS");
+    // NORMALS
+    glEnableVertexAttribArray(VBO_INDEX_NORMAL);
+    glBindBuffer(GL_ARRAY_BUFFER, obj->vbo.normals);
+    glVertexAttribPointer(
+        2,                                // attribute. No particular reason for 2, but must match the layout in the shader.
+        3,                                // size : Normals => 3
+        GL_FLOAT,                         // type
+        GL_FALSE,                         // normalized?
+        0,                                // stride
+        (void*)(obj->shapes[i].faceOffset * NORMALS_SIZE)                          // array buffer offset
+    );
+    glDrawArrays(GL_TRIANGLES, 0, obj->shapes[i].length);
+
+    glDisableVertexAttribArray(VBO_INDEX_VERTEX);
+    glDisableVertexAttribArray(VBO_INDEX_UV);
+    glDisableVertexAttribArray(VBO_INDEX_NORMAL);
+
+    // unbind texture
+    glBindTexture( GL_TEXTURE_2D, 0);
+  }
+  glCullFace(GL_BACK);
+  glDisable(GL_DEPTH_TEST);
 }
 
 void obj_destroy(Obj* obj){
-    // glDeleteBuffers(1, &obj->uvbuffer);
-    // glDeleteBuffers(1, &obj->vertexbuffer);
     vbo_destroy(&obj->vbo);
-    texture_destroy(&obj->texture);
+    free(obj->shapes);
+    for(unsigned int i = 0; i < obj->textureCount; i++)
+      texture_destroy(obj->textures + i);
 }

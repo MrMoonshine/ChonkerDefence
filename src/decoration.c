@@ -1,7 +1,8 @@
 #include <decoration.h>
 
 static const char* TAG = "Decoration";
-static const char* FILENAME = "/home/david/Dokumente/Minecraft/Mods/Railroading/2016/deploy/oebb2016.obj";
+//static const char* FILENAME = "/home/david/Dokumente/Minecraft/Mods/Railroading/2016/deploy/oebb2016.obj";
+static const char* FILENAME = "/home/david/Dokumente/Minecraft/Mods/Railroading/1144/deploy/deploymc/oebb1144.obj";
 //static const char* FILENAME = "../build/oida1.obj";
 //static const char* FILENAME = "../assets/models/maus.obj";
 //static const char* FILENAME = "../assets/models/cube.obj";

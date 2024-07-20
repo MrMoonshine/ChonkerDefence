@@ -3,7 +3,7 @@
 static const char* TAG = "Level (Client-Side)";
 
 static const vec3 X_AXIS = {1, 0, 0};
-static const vec3 Y_AXIS = {0, 1, 0};
+//static const vec3 Y_AXIS = {0, 1, 0};
 static const vec3 Z_AXIS = {0, 0, 1};
 
 /*static const float ISOMETRIC_ROTATION_VERTICAL = 45.0f;

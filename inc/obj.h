@@ -22,11 +22,23 @@
 #include <GLFW/glfw3.h>
 //#include <tinyobj_loader_c.h>
 
+#define DEBUG_OBJ 1
+
+struct Shape{
+    unsigned int faceOffset;
+    unsigned int length;
+    unsigned int textureIndex;
+};
+
 typedef struct Obj{
     VBO vbo;
-    GLuint vertexbuffer, uvbuffer, normalbuffer;
     size_t faceCount;
-    Texture texture;
+    // Shapes
+    struct Shape* shapes;
+    unsigned int shapeCount;
+    // Textures
+    Texture* textures;
+    unsigned int textureCount;
 }Obj;
 
 int obj_create(Obj* obj, const char* filename);
