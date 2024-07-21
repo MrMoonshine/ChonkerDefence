@@ -83,6 +83,8 @@ void ui_enable_vao(UI *ui){
     glUniformMatrix4fv(ui->view, 1, GL_FALSE, *view);
     glUniformMatrix4fv(ui->model, 1, GL_FALSE, *model);
     ui_no_colorize(ui);
+
+    glDisable(GL_DEPTH_TEST);
 }
 
 

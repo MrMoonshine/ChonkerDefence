@@ -359,6 +359,10 @@ int terrain_create(Terrain* terrain, uint8_t* buffer_i, size_t bufferSize){
                     default: break;
                 }
             }
+            // Decoration
+            if(nnibble == LEVEL_BLOCK_DECORATION_LAND /*|| nnibble == LEVEL_BLOCK_DECORATION_WATER*/){
+                terrain->decorationCount++;
+            }
         }
 #ifdef DEBUG_MAP
         printf("\n");
@@ -369,6 +373,12 @@ int terrain_create(Terrain* terrain, uint8_t* buffer_i, size_t bufferSize){
     float* terrainUVBuffer = (float*)malloc(terrain->vertexCount * UV_SIZE);
     if(terrainUVBuffer == NULL || terrainVertexBuffer == NULL){
         LOGERRNO(TAG, "Malloc Terrain Buffer");
+        return -1;
+    }
+
+    terrain->decorations = (Decoration*)malloc(terrain->decorationCount * sizeof(Decoration));
+    if(terrain->decorations == NULL){
+        LOGERRNO(TAG, "Malloc Decorations");
         return -1;
     }
     // Zero all buffers
@@ -411,6 +421,7 @@ int terrain_create(Terrain* terrain, uint8_t* buffer_i, size_t bufferSize){
         }
     }
 
+    unsigned int decorationCounter = 0;
     for(uint8_t y = 0; y < terrain->height; y++){
         for(uint8_t x = 0; x < terrain->width; x++){
             uint8_t nnibble = terrain_get_node_at(terrain, x, y, buffer, len);
@@ -435,6 +446,14 @@ int terrain_create(Terrain* terrain, uint8_t* buffer_i, size_t bufferSize){
                 tilemap_get_block_UV_rotate(&terrain->tilemap, terrainUVBuffer + posUV, 2,  piece, LEVEL_TILEMAP_TERRAIN_PATH, rotation);
                 posUV += 2*UV_SIZE / sizeof(float);
             }
+
+            if(nnibble == LEVEL_BLOCK_DECORATION_LAND /*|| nnibble == LEVEL_BLOCK_DECORATION_WATER*/){
+                decoration_create(terrain->decorations + decorationCounter);
+                vec3 decopos = {x - terrain->width/2, y - terrain->height/2, 1};
+                float rotation = rand() % 360;
+                decoration_placement(terrain->decorations + decorationCounter, decopos, rotation, (float)(70 + (rand() % 30))/100.0f);
+                decorationCounter++;
+            }
         }
     }
 
@@ -454,17 +473,20 @@ int terrain_create(Terrain* terrain, uint8_t* buffer_i, size_t bufferSize){
     /*
         Decorations
     */
-    terrain->decorationCount = 1;
+    /*terrain->decorationCount = 3;
     terrain->decorations = (Decoration*)malloc(terrain->decorationCount * sizeof(Decoration));
     for(size_t i = 0; i < terrain->decorationCount; i++){
         printf("[INFO] %s: Creatin Decoration #%lu\n", TAG, i);
         decoration_create(terrain->decorations + i);
-    }
+    }*/
     LOGS(TAG, "Terrain Created successfully");
     return 0;
 }
 
-void terrain_draw(Terrain* terrain){
+void terrain_draw(Terrain* terrain, GLuint uniformModel, mat4 model){
+    glEnable(GL_DEPTH_TEST);
+    glDepthFunc(GL_LEQUAL);
+
     glBindTexture( GL_TEXTURE_2D, terrain->tilemap.texture.bufferID);
 
     glEnableVertexAttribArray(0);
@@ -500,7 +522,7 @@ void terrain_draw(Terrain* terrain){
     glBindTexture( GL_TEXTURE_2D, 0);
 
     for(size_t i = 0; i < terrain->decorationCount; i++){
-        decoration_draw(terrain->decorations + i);
+        decoration_draw(terrain->decorations + i, uniformModel, model);
     }
 }
 

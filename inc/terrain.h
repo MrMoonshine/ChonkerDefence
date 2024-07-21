@@ -31,7 +31,7 @@ typedef struct Terrain{
     uint8_t width, height;
 
     Decoration* decorations;
-    size_t decorationCount;
+    unsigned int decorationCount;
 }Terrain;
 
 /*
@@ -42,5 +42,5 @@ typedef struct Terrain{
     @returns 0 if ok
 */
 int terrain_create(Terrain* terrain, uint8_t* buffer, size_t bufferSize);
-void terrain_draw(Terrain* terrain);
+void terrain_draw(Terrain* terrain, GLuint uniformModel, mat4 model);
 void terrain_destroy(Terrain* terrain);

@@ -9,7 +9,7 @@ static const vec3 Z_AXIS = {0, 0, 1};
 /*static const float ISOMETRIC_ROTATION_VERTICAL = 45.0f;
 static const float ISOMETRIC_ROTATION_HORIZONTAL = 35.264f;*/
 
-static const float CLILEVEL_ORTHO_DEPTH = 1000.0f;
+static const float CLILEVEL_ORTHO_DEPTH = 1500.0f;
 //static vec3 eye = {sqrt(1 / 3.0), sqrt(1 / 3.0), sqrt(1 / 3.0)};
 static vec3 eye = {4, 3, 3};
 static vec3 center = {0, 0, 0};
@@ -159,6 +159,6 @@ int clilevel_draw(ClientLevel *level){
     glUniformMatrix4fv(level->view, 1, GL_FALSE, *view);
     glUniformMatrix4fv(level->model, 1, GL_FALSE, *model);
 
-    terrain_draw(&level->terrain);
+    terrain_draw(&level->terrain, level->model, model);
     return 0;
 }

@@ -22,7 +22,7 @@
 #include <GLFW/glfw3.h>
 //#include <tinyobj_loader_c.h>
 
-#define DEBUG_OBJ 1
+//#define DEBUG_OBJ 1
 
 struct Shape{
     unsigned int faceOffset;

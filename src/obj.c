@@ -3,6 +3,7 @@
 #include "../lib/tinyobjloader-c/tinyobj_loader_c.h"
 
 static const char* TAG = "Obj";
+static const uint8_t MTL_FILENAME_BUFFER_LENGTH = 128;
 
 static void get_file_data(void* ctx, const char* filename, const int is_mtl, const char* obj_filename, char** data, size_t* len) {
   // NOTE: If you allocate the buffer with malloc(),
@@ -11,7 +12,6 @@ static void get_file_data(void* ctx, const char* filename, const int is_mtl, con
   // app)
   // This example uses mmap(), so no free() required.
   //(void)ctx;
-
   if (!filename) {
     LOGE(TAG, "get_file_data - Filename is NULL");
     (*data) = NULL;
@@ -29,8 +29,9 @@ static void get_file_data(void* ctx, const char* filename, const int is_mtl, con
 
   fseek(fp, 0L, SEEK_END);
   (*len) = ftell(fp);
+#ifdef DEBUG_OBJ
   printf("[INFO] %s: File %s is %lu Bytes Long\n", TAG, filename, (*len));
-
+#endif /*DEBUG_OBJ*/
   *data = (char*)malloc(*len);
   if(!data){
     LOGERRNO(TAG, "Malloc get_file_data");
@@ -79,18 +80,19 @@ int obj_create(Obj* obj, const char* filename){
 
     // set face count
     obj->faceCount = attrib.num_face_num_verts;
-
+#ifdef DEBUG_OBJ
     printf("[INFO] %s: # of Shapes: %lu | # of Materials: %lu\n", TAG, shapeCount, materialCount);
     printf("[INFO] %s: # of Vertices: %u | # of Faces: %d | # of normals: %d\n", TAG, attrib.num_vertices, attrib.num_face_num_verts, attrib.num_normals);
+#endif /*DEBUG_OBJ*/
     // Process shapes
     // attrib.materials_id is for each face
 
     for(size_t i = 0; i < shapeCount; i++){
+      size_t matindex = attrib.material_ids[shapes[i].face_offset];
 #ifdef DEBUG_OBJ
       printf("[INFO] %s: Shape %s:\n", TAG, shapes[i].name);
       printf("\tface_offset %d\n",shapes[i].face_offset);
       printf("\tlength %d\n",shapes[i].length);
-      size_t matindex = attrib.material_ids[shapes[i].face_offset];
       printf("\tMaterial %s %s\n", materials[matindex].name, materials[matindex].diffuse_texname);
 #endif /*DEBUG_OBJ*/
       if(strlen(materials[matindex].diffuse_texname) > 0)
@@ -129,16 +131,16 @@ int obj_create(Obj* obj, const char* filename){
             if(filename[j] == FILESYSTEM_SLASH)
               lastslashpos = j;
           }
-          printf("Last / pos is %u\n", lastslashpos);
-          char* texturefilename = (char*)malloc(lastslashpos + 1 + textureFileLength);
-          if(!texturefilename){
+          //printf("Last / pos is %u\n", lastslashpos);
+          char texturefilename[MTL_FILENAME_BUFFER_LENGTH];
+          memset(texturefilename, '\0', MTL_FILENAME_BUFFER_LENGTH);
+          if(textureFileLength + lastslashpos > MTL_FILENAME_BUFFER_LENGTH){
             ret = texture_create(obj->textures + textureCounter, TEXTURE_UNKNOWN);
           }else{
             strcpy(texturefilename, "");
             strncat(texturefilename, filename, lastslashpos + 1);
             strcat(texturefilename, materials[matindex].diffuse_texname);
             texture_create(obj->textures + textureCounter, texturefilename);
-            free(texturefilename);
           }
         }
         if(ret < 0){
@@ -165,8 +167,9 @@ int obj_create(Obj* obj, const char* filename){
     size_t vertexBufferSize = obj->faceCount * VERTEX_SIZE;
     size_t uvBufferSize = obj->faceCount * UV_SIZE;
     size_t normalsBufferSize = obj->faceCount * NORMALS_SIZE;
-
+#ifdef DEBUG_OBJ
     printf("[INFO] %s: Buffer sizes are (%lu|%lu|%lu)\n", TAG, vertexBufferSize, uvBufferSize, normalsBufferSize);
+#endif
     size_t sizes[3] = {vertexBufferSize, uvBufferSize, normalsBufferSize};
     vbo_init(&obj->vbo, obj->faceCount);
     for(size_t i = 0; i < 3; i++){
@@ -187,9 +190,10 @@ int obj_create(Obj* obj, const char* filename){
         size_t pos = 0;
         switch(i){
           case VBO_INDEX_VERTEX: {
-            //memcpy(buffer, g_vertex_buffer_data, sizes[i]);
-            printf("Size is %lu\t# of floats = %lu\n", sizes[i], sizes[i] / sizeof(float));
-            //size_t faceOffset = 0;
+            #ifdef DEBUG_OBJ
+              LOGI(TAG, "Building Veritces");
+            #endif
+
             for(size_t a = 0; a < attrib.num_face_num_verts * 3; a++){
               //printf("Faces (v|vt|vn) (%d|%d|%d)\n", attrib.faces[a].v_idx, attrib.faces[a].vt_idx, attrib.faces[a].vn_idx);
               for(uint8_t b = 0; b < 3; b++){
@@ -227,6 +231,9 @@ int obj_create(Obj* obj, const char* filename){
             vbo_create_vertices(&obj->vbo, buffer);
           } break;
           case VBO_INDEX_UV:{
+            #ifdef DEBUG_OBJ
+              LOGI(TAG, "Building UVs");
+            #endif
             //memcpy(buffer, g_uv_buffer_data, sizes[i]);
             for(size_t a = 0; a < attrib.num_face_num_verts * 3; a++){
               //printf("Faces (v|vt|vn) (%d|%d|%d)\n", attrib.faces[a].v_idx, attrib.faces[a].vt_idx, attrib.faces[a].vn_idx);
@@ -250,12 +257,19 @@ int obj_create(Obj* obj, const char* filename){
             vbo_create_uv(&obj->vbo, buffer);
           } break;
           case VBO_INDEX_NORMAL: {
-            for(size_t a = 0; a < attrib.num_face_num_verts; a++){
+            #ifdef DEBUG_OBJ
+              LOGI(TAG, "Building Normals");
+            #endif
+            for(size_t a = 0; a < attrib.num_face_num_verts && attrib.num_normals > 0; a++){
               //printf("Faces (v|vt|vn) (%d|%d|%d)\n", attrib.faces[a].v_idx, attrib.faces[a].vt_idx, attrib.faces[a].vn_idx);
+              // printf("Normal %u | ", attrib.faces[a].vn_idx);
+              // size_t mypos = attrib.faces[a].vn_idx;
+              // printf("(%.2f|%.2f|%.2f)\n", attrib.normals[mypos * 3 + 1], attrib.normals[mypos * 3 + 1], attrib.normals[mypos * 3 + 2]);
               for(uint8_t b = 0; b < 3; b++){
                 if(pos >= sizes[i] / sizeof(float))
                   continue;
-                buffer[pos++] = attrib.texcoords[attrib.faces[a * 3].vn_idx + b];
+                //printf("Index %u of %u\n", attrib.faces[a].vn_idx, attrib.num_normals);
+                buffer[pos++] = attrib.normals[attrib.faces[a].vn_idx * 3 + b];
               }
             }
 
@@ -272,13 +286,14 @@ int obj_create(Obj* obj, const char* filename){
           } break;
           default: break;
         }
-
         free(buffer);
     }
 
 
     //vbo_create(&obj->vbo, (float*)g_vertex_buffer_data, (float*)g_uv_buffer_data, NULL, 12);
+#ifdef DEBUG_OBJ
     printf("[INFO] %s: VBO Buffers are (%d|%d|%d)\n", TAG, obj->vbo.vertices, obj->vbo.uv, obj->vbo.normals);
+#endif
     return 0;
 
     tinyobj_shapes_free(shapes, shapeCount);
@@ -287,7 +302,6 @@ int obj_create(Obj* obj, const char* filename){
 }
 
 void obj_draw(Obj* obj){
-  //vbo_draw(&obj->vbo, obj->texture.bufferID);
   glEnable(GL_DEPTH_TEST);
   glDepthFunc(GL_LEQUAL);
   glCullFace(GL_FRONT);       // Face culling has to be inverted for this voxel mode
