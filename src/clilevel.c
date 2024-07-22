@@ -149,7 +149,7 @@ int clilevel_draw(ClientLevel *level){
     glm_rotate(model, glm_rad(angle), (float*)Z_AXIS);
     vec3 mirror = {-1, 1, 1};
     glm_scale(model, mirror);
-    glm_scale_uni(model, 32.0f * level->windowScale);
+    glm_scale_uni(model, 48.0f * level->windowScale);
 
     vec3 transformation = {moveX, moveY, 0};
     glm_translate(model, transformation);

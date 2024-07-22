@@ -101,6 +101,5 @@ int ui_levelmenu_destroy(LevelMenu *menu){
         free(menu->buttons);
         menu->buttons = NULL;
     }
-    LOGS(TAG, "Here 5");
     return 0;
 }

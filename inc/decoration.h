@@ -21,12 +21,12 @@
 #include <GLFW/glfw3.h>
 
 typedef struct Decoration{
-    Obj object;
+    Obj* object;
     vec3 position;
     float rotation, scale;
 }Decoration;
 
-int decoration_create(Decoration* decoration);
+int decoration_create(Decoration* decoration, Obj* object);
 void decoration_placement(Decoration* decoration, vec3 position, float rotation, float scale);
 void decoration_draw(Decoration* decoration, GLuint uniformModel, mat4 model);
 void decoration_destroy(Decoration* decoration);

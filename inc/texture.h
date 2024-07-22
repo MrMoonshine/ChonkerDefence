@@ -10,7 +10,7 @@
 
 #include <png.h>
 
-#define TEXTURE_UNKNOWN "../build/test9.png"
+#define TEXTURE_UNKNOWN "../assets/textures/unknown.png"
 
 typedef struct Texture{
     GLuint bufferID;

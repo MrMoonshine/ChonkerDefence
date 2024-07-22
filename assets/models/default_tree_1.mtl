@@ -1,10 +1,12 @@
+# Blender 4.0.2 MTL File: 'None'
+# www.blender.org
+
 newmtl Mat0
-Ns 500
-Ka 0.2 0.2 0.2
-Kd 1.0 1.0 1.0
-Ks 0 0 0
-Tr 0
-d 1
-Ni 0
-illum 3
+Ns 499.999969
+Ka 0.200000 0.200000 0.200000
+Ks 0.000000 0.000000 0.000000
+Ke 0.000000 0.000000 0.000000
+Ni 0.000000
+d 1.000000
+illum 1
 map_Kd default_tree_1.albedo.png

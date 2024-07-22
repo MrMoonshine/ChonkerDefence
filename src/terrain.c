@@ -276,6 +276,12 @@ int terrain_create(Terrain* terrain, uint8_t* buffer_i, size_t bufferSize){
     terrain->decorations = NULL;
     char style[LEVEL_STYLE_LENGTH];
 
+    /*
+        Decorations Model Lib
+    */
+    modellib_create(&terrain->modellib, style);
+    LOGS(TAG, "Loaded ModelLibrary");
+
     LOGI(TAG, "Building terrain...");
 
     size_t pos = 0;
@@ -448,7 +454,11 @@ int terrain_create(Terrain* terrain, uint8_t* buffer_i, size_t bufferSize){
             }
 
             if(nnibble == LEVEL_BLOCK_DECORATION_LAND /*|| nnibble == LEVEL_BLOCK_DECORATION_WATER*/){
-                decoration_create(terrain->decorations + decorationCounter);
+                decoration_create(
+                    terrain->decorations + decorationCounter,
+                    modellib_get_tree(&terrain->modellib, rand() % 256)
+                    //terrain->modellib.models
+                );
                 vec3 decopos = {x - terrain->width/2, y - terrain->height/2, 1};
                 float rotation = rand() % 360;
                 decoration_placement(terrain->decorations + decorationCounter, decopos, rotation, (float)(70 + (rand() % 30))/100.0f);
@@ -470,15 +480,6 @@ int terrain_create(Terrain* terrain, uint8_t* buffer_i, size_t bufferSize){
     free(terrainVertexBuffer);
     free(terrainUVBuffer);
 
-    /*
-        Decorations
-    */
-    /*terrain->decorationCount = 3;
-    terrain->decorations = (Decoration*)malloc(terrain->decorationCount * sizeof(Decoration));
-    for(size_t i = 0; i < terrain->decorationCount; i++){
-        printf("[INFO] %s: Creatin Decoration #%lu\n", TAG, i);
-        decoration_create(terrain->decorations + i);
-    }*/
     LOGS(TAG, "Terrain Created successfully");
     return 0;
 }
@@ -530,6 +531,7 @@ void terrain_destroy(Terrain* terrain){
     glDeleteBuffers(1, &terrain->uvbuffer);
     glDeleteBuffers(1, &terrain->vertexbuffer);
     tilemap_destroy(&terrain->tilemap);
+    modellib_destroy(&terrain->modellib);
 
     for(size_t i = 0; i < terrain->decorationCount; i++){
         decoration_destroy(terrain->decorations + i);
