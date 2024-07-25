@@ -36,7 +36,7 @@ static uint8_t modellib_build_obj(Obj* obj, const char* pattern, uint8_t count, 
     }
     for(uint8_t i = 0; i < count; i++){
         memset(pathBuffer, '\0', pathlen);
-        sprintf(pathBuffer, pattern, MODELLIB_STYLE_SAFE(stlye), i);
+        sprintf(pathBuffer, pattern, MODELLIB_STYLE_SAFE(stlye), i + 1);
         if(0 == obj_create(obj + retval, pathBuffer))
             retval++;
     }
@@ -67,7 +67,7 @@ int modellib_create(ModelLib* lib, const char* style){
         LOGE(TAG, "Default set contains no trees!");
         return -1;
     }
-    printf("[INFO] %s: Found %d %s trees\n", TAG,  lib->treeCount, MODELLIB_STYLE_SAFE(style));
+    printf("[INFO] %s: Found %d %s trees\n", TAG,  lib->treeCount, treeStyleFallback ? "default" : MODELLIB_STYLE_SAFE(style));
     lib->models = (Obj*)malloc((lib->treeCount) * sizeof(Obj));
     if(lib->models == NULL){
         LOGERRNO(TAG, "Malloc models");

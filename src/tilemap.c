@@ -1,12 +1,12 @@
 #include <tilemap.h>
 
-static const char* TAG = "Tilemap";
+//static const char* TAG = "Tilemap";
 
 int tilemap_create(Tilemap *tilemap, uint8_t width, uint8_t height, const char* filepath){
     tilemap->width = width;
     tilemap->height = height;
     if(0 != texture_create(&tilemap->texture, filepath)){
-        LOGE(TAG, "Unable to create texture");
+        //LOGE(TAG, "Unable to create texture");
         return -1;
     }
 
@@ -20,29 +20,6 @@ void tilemap_destroy(Tilemap *tilemap){
 void tilemap_get_block_UV(Tilemap *tilemap, float* buffer, uint8_t vertexCount, uint8_t x, uint8_t y){
     return tilemap_get_block_UV_rotate(tilemap, buffer, vertexCount, x, y, 0);
 }
-
-
-/*static uint8_t tilemap_rotate_UV_helper_bithelper(uint8_t pattern, uint8_t pos){
-    return (pattern & (1 << pos)) >> pos;
-}
-// Helper function for rotated
-// returns 0 or 1
-static uint8_t tilemap_rotate_UV_helper(uint8_t vertex, uint8_t point, uint8_t xy, uint8_t rotation){
-    //                  0bxyxyxy
-    //uint8_t pattern = xy % 2 == 0 ? 0b010011 : 0b011001;
-    uint8_t pattern = xy % 2 == 0 ? 0b110010 : 0b100110;
-    for(uint8_t i = 0; i < rotation; i++){
-        uint8_t buff = pattern & 0b11;
-        pattern >>= 2;
-        pattern |= buff << 4;
-    }
-    uint8_t pos = vertex * 3 + point;
-
-    uint8_t retval = 0;
-    retval = tilemap_rotate_UV_helper_bithelper(pattern, pos);
-    printf("Pattern: %.2x\tPos: %d\tResult: %d\n", pattern, pos, retval);
-    return retval;
-}*/
 
 void tilemap_get_block_UV_rotate(Tilemap *tilemap, float* buffer, uint8_t vertexCount, uint8_t x, uint8_t y, uint8_t rotation){
     if(x >= tilemap->width || y >= tilemap->height){

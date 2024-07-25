@@ -276,10 +276,6 @@ int terrain_create(Terrain* terrain, uint8_t* buffer_i, size_t bufferSize){
     terrain->decorations = NULL;
     char style[LEVEL_STYLE_LENGTH];
 
-    /*
-        Decorations Model Lib
-    */
-    modellib_create(&terrain->modellib, style);
     LOGS(TAG, "Loaded ModelLibrary");
 
     LOGI(TAG, "Building terrain...");
@@ -294,6 +290,11 @@ int terrain_create(Terrain* terrain, uint8_t* buffer_i, size_t bufferSize){
     // Just deal wiht level data from here on
     uint8_t* buffer = buffer_i + pos;
     size_t len = bufferSize -pos;
+
+    /*
+        Decorations Model Lib
+    */
+    modellib_create(&terrain->modellib, style);
 
     size_t tilemapFileLength = strlen(LEVEL_TILEMAP_TERRAIN_FILE_PATTERN) + LEVEL_STYLE_LENGTH;
     char* tilemapFile = (char*)malloc(tilemapFileLength);
