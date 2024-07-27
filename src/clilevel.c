@@ -36,11 +36,14 @@ uint8_t clilevel_list_levels(Client *client, size_t* len){
     return 0;
 }
 
+
 uint8_t clilevel_get_level(ClientLevel *level, Client *client, GLFWwindow* window, size_t *len, uint8_t levelID){
     level->window = window;
     level->client = client;
     level->windowScale = 1;
-    level->modelScale = 1;
+    level->modelScale = 10.0f;
+    level->position[0] = 14.8f;
+    level->position[1] = 5.2f;
 
     client_flush(client);
     uint8_t cmd[] = {PROTO_SCOPE_LEVELS, PROTO_CMD_SHOW, levelID};
@@ -77,19 +80,18 @@ uint8_t clilevel_get_level(ClientLevel *level, Client *client, GLFWwindow* windo
     level->width = buffer[pos++];
     level->height = buffer[pos++];
     pos += LEVEL_RESERVED_LENGTH;
-    //clilevel_build(level, buffer + pos, (*len) - pos);
+
+    int windowWidth = APP_WIDTH, windowHeigth = APP_HEIGHT;
+    glfwGetWindowSize(level->window, &windowWidth, &windowHeigth);
+    clilevel_resize(level, windowWidth, windowHeigth);
+    printf("Window dimensions are (%d|%d)\n", windowWidth, windowHeigth);
 
     glGenVertexArrays(1, &level->vao);
     glBindVertexArray(level->vao);
-    // See main instead
-    //level->shader = glshader_load("../shaders/gamever.glsl", "../shaders/gamefra.glsl");
-    //LOGI(TAG, "Shaders Compiled");
 
-    glm_ortho(0.0f, (float)APP_WIDTH, 0.0f, (float)APP_HEIGHT, -1000.0f, 1000.0f, projection);
+    //glm_ortho(0.0f, (float)APP_WIDTH, 0.0f, (float)APP_HEIGHT, -1000.0f, 1000.0f, projection);
 
-    //glm_vec3_rotate(up, glm_rad(ISOMETRIC_ROTATION_HORIZONTAL), (float*)X_AXIS);
-    // glm_vec3_rotate(up, glm_rad(ISOMETRIC_ROTATION_VERTICAL), (float*)Z_AXIS);
-    eye[0] = 6.0f;
+    eye[0] = 16.0f;
     eye[1] = 0.0f;
     eye[2] = 0.0f;
     glm_vec3_rotate(eye, ISOMETRIC_ROTATION_VERTICAL, (float*)Z_AXIS);
@@ -99,7 +101,6 @@ uint8_t clilevel_get_level(ClientLevel *level, Client *client, GLFWwindow* windo
     isorotation[2] *= (-1);
     //printf("EyeNormal is (%.2f|%.2f|%.2f)\n", eyenormal[0],eyenormal[1],eyenormal[2]);
     glm_vec3_rotate(eye, ISOMETRIC_ROTATION_HORIZONTAL, (float*)isorotation);
-    //glm_vec3_rotate(eye, ISOMETRIC_ROTATION_HORIZONTAL, (float*)X_AXIS);
 
     glm_lookat(eye, center, up, view);
     glm_mat4_identity(model);
@@ -132,6 +133,14 @@ void clilevel_resize(ClientLevel *level, int width, int height){
     glBindVertexArray(level->vao);
     glm_ortho(0.0f, width, 0.0f, height, -CLILEVEL_ORTHO_DEPTH, CLILEVEL_ORTHO_DEPTH, projection);
     //glm_lookat(eye, center, up, view);
+    level->modelScale = 2*APP_WIDTH + sqrt(3);
+    level->modelScale /= 2*cos(glm_rad(30));
+    level->modelScale *= 1.3;   // Correct it a bit
+    level->modelScale /= level->width;
+    printf("Model scale is %.2f => Wpx = %.2f\n", level->modelScale, level->modelScale * level->width);
+
+    level->position[0] = (float)(level->width/2)/1.1;
+    level->position[1] = (float)(level->height/2)/2.2f;
 }
 
 void clilevel_enable_vao(ClientLevel* level){
@@ -143,15 +152,13 @@ void clilevel_enable_vao(ClientLevel* level){
     //glUniformMatrix4fv(level->model, 1, GL_FALSE, *model);
 }
 
-static float moveX = 17.0f;
-static float moveY = 0.0f;
 static float angle = 0.0f;
 //static float eyemod = 1.0f;
 int clilevel_draw(ClientLevel *level){
-    moveX += glfwGetKey(level->window, GLFW_KEY_DOWN ) == GLFW_PRESS ? 0.2f : 0.0f;
-    moveX += glfwGetKey(level->window, GLFW_KEY_UP ) == GLFW_PRESS ? -0.2f : 0.0f;
-    moveY += glfwGetKey(level->window, GLFW_KEY_RIGHT ) == GLFW_PRESS ? 0.2f : 0.0f;
-    moveY += glfwGetKey(level->window, GLFW_KEY_LEFT ) == GLFW_PRESS ? -0.2f : 0.0f;
+    level->position[0] += glfwGetKey(level->window, GLFW_KEY_DOWN ) == GLFW_PRESS ? 0.2f : 0.0f;
+    level->position[0] += glfwGetKey(level->window, GLFW_KEY_UP ) == GLFW_PRESS ? -0.2f : 0.0f;
+    level->position[1] += glfwGetKey(level->window, GLFW_KEY_RIGHT ) == GLFW_PRESS ? 0.2f : 0.0f;
+    level->position[1] += glfwGetKey(level->window, GLFW_KEY_LEFT ) == GLFW_PRESS ? -0.2f : 0.0f;
     angle += glfwGetKey(level->window, GLFW_KEY_SPACE ) == GLFW_PRESS ? -0.5f : 0.0f;
 
     //eyemod += glfwGetKey(level->window, GLFW_KEY_LEFT_SHIFT ) == GLFW_PRESS ? 0.1f : 0.0f;
@@ -164,11 +171,11 @@ int clilevel_draw(ClientLevel *level){
     glm_rotate(model, glm_rad(angle), (float*)Y_AXIS);
     vec3 mirror = {-1, 1, 1};
     glm_scale(model, mirror);
-    glm_scale_uni(model, 48.0f * level->windowScale);
+    glm_scale_uni(model, level->modelScale * level->windowScale);
 
-    vec3 transformation = {moveX, moveY, 0};
+    vec3 transformation = {level->position[0], level->position[1], 0};
     glm_translate(model, transformation);
-    //printf("AngleZ: %.2f\tMoveX: %.2f\tMoveY: %.2f\n", angle, moveX, moveY);
+    //printf("AngleZ: %.2f\tMoveX: %.2f\tMoveY: %.2f\n", angle, level->position[0], level->position[1]);
 
     glUniformMatrix4fv(level->projection, 1, GL_FALSE, *projection);
     glUniformMatrix4fv(level->view, 1, GL_FALSE, *view);

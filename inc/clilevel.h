@@ -5,6 +5,7 @@
 #include <string.h>
 #include <stdbool.h>
 #include <time.h>
+#include <math.h>
 
 #include <unistd.h>
 #include <sys/socket.h>
@@ -32,6 +33,7 @@ typedef struct ClientLevel{
 
     float windowScale;
     float modelScale;
+    vec2 position;
     GLuint vao, shader;
     // Projection Uniforms
     GLint model, view, projection;

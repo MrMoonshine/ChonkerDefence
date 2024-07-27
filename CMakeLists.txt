@@ -5,7 +5,7 @@ project(chonkerdefence3d LANGUAGES C)
 add_definitions(
     -DAPP_TITLE="Chonker Defence"
     -DAPP_ENGEINE="OpenGL"
-    -DAPP_WIDTH=1024
+    -DAPP_WIDTH=1280
     -DAPP_HEIGHT=720
     -DASSET_PATH="/home/david/Programmieren/C/ChonkerDefence/assets/"
     -DCDNET_PORT=42069
