@@ -108,6 +108,7 @@ uint8_t clilevel_get_level(ClientLevel *level, Client *client, GLFWwindow* windo
     level->projection = glGetUniformLocation(level->shader, "projection");
     level->view = glGetUniformLocation(level->shader, "view");
     level->model = glGetUniformLocation(level->shader, "model");
+    level->cameraPosition = glGetUniformLocation(level->shader, "viewPos");
 
     terrain_create(&level->terrain, buffer, *len);
     free(buffer);
@@ -180,6 +181,7 @@ int clilevel_draw(ClientLevel *level){
     glUniformMatrix4fv(level->projection, 1, GL_FALSE, *projection);
     glUniformMatrix4fv(level->view, 1, GL_FALSE, *view);
     glUniformMatrix4fv(level->model, 1, GL_FALSE, *model);
+    glUniform4fv(level->cameraPosition, 1, eye);
 
     terrain_draw(&level->terrain, level->model, model);
     return 0;
