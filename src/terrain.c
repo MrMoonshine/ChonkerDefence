@@ -461,7 +461,7 @@ int terrain_create(Terrain* terrain, uint8_t* buffer_i, size_t bufferSize){
                     //terrain->modellib.models
                 );
                 vec3 decopos = {x - terrain->width/2, y - terrain->height/2, 1};
-                float rotation = rand() % 360;
+                float rotation = 0;//(rand() % 4) * 90;//rand() % 360;
                 decoration_placement(terrain->decorations + decorationCounter, decopos, rotation, (float)(70 + (rand() % 30))/100.0f);
                 decorationCounter++;
             }

@@ -14,7 +14,7 @@ int decoration_create(Decoration* decoration, Obj* object){
 
 void decoration_placement(Decoration* decoration, vec3 position, float rotation, float scale){
   memcpy(decoration->position, position, sizeof(vec3));
-  decoration->rotation = rotation;
+  decoration->rotation = glm_rad(rotation);
   decoration->scale = scale;
 }
 
