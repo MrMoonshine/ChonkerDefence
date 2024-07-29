@@ -34,6 +34,6 @@ void main(){
 
 	color = vec4((ambient + diffuse), 1.0) * texture_color;
 	//color = vec4(normalize(normal), 1.0);
-
+	//color = vec4(1.0, 0.0, 0.0, 1.0);
 	//color = texture(myTextureSampler, texCoord).rgba;
 }

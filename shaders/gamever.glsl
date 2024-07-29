@@ -18,11 +18,11 @@ void main(){
     texCoord = vertexUV;
     //Pass normalvectors on to the Fragment shader
     fragPos = vec3(model * vec4(vertexPosition_modelspace, 1.0));
-    //normal = vertexNormals;
+    normal = vertexNormals;
     viewPos = cameraPos;
 
-    mat3 normalMatrix = mat3(projection * view * model);
+    /*mat3 normalMatrix = mat3(projection * view * model);
     normalMatrix = inverse(normalMatrix);
     normalMatrix = transpose(normalMatrix);
-    normal = normalize(vertexNormals * normalMatrix);
+    normal = normalize(vertexNormals * normalMatrix);*/
 }

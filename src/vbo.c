@@ -8,12 +8,6 @@ void vbo_init(VBO *vbo, size_t faceCount){
 }
 
 static void vbo_init_buffer(GLuint* id, float* buffer, size_t size){
-    /*printf(" --- BUFFER ---\n");
-    for(size_t i = 0; i < size/sizeof(float); i++){
-        printf("%.2f, ", buffer[i]);
-        if(i % 3 == 2)
-            printf("\n");
-    }*/
     glGenBuffers(1, id);
     glBindBuffer(GL_ARRAY_BUFFER, *id);
     glBufferData(GL_ARRAY_BUFFER, size, buffer, GL_STATIC_DRAW);
@@ -22,9 +16,6 @@ static void vbo_init_buffer(GLuint* id, float* buffer, size_t size){
 int vbo_create(VBO *vbo, float* vertices, float* uv, float* normals, size_t faceCount){
     vbo_init(vbo, faceCount);
 
-    // vbo_init_buffer(&vbo->vertices, vertices, vertices ? faceCount * VERTEX_SIZE : 0);
-    // vbo_init_buffer(&vbo->uv, uv, uv ? faceCount * UV_SIZE : 0);
-    // vbo_init_buffer(&vbo->normals, normals, normals ? faceCount * NORMALS_SIZE : 0);
     vbo_create_vertices(vbo, vertices);
     vbo_create_uv(vbo, uv);
     vbo_create_normals(vbo, normals);
@@ -88,7 +79,7 @@ void vbo_draw(VBO* vbo, GLuint textureID){
         0,                                // stride
         (void*)0                          // array buffer offset
     );
-    glDrawArrays(GL_TRIANGLES, 0, vbo->faceCount);
+    glDrawArrays(GL_TRIANGLES, 0, vbo->faceCount * 3);
 
     glDisableVertexAttribArray(VBO_INDEX_VERTEX);
     glDisableVertexAttribArray(VBO_INDEX_UV);

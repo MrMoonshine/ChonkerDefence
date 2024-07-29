@@ -23,16 +23,14 @@
 #include <GLFW/glfw3.h>
 #include <cglm/cglm.h>
 
-//#define DEBUG_MAP 1
+#define DEBUG_MAP 1
 
 typedef struct Terrain{
-    GLuint vertexbuffer, uvbuffer;
-    size_t vertexCount;
+    VBO vbo;
     Tilemap tilemap;
     uint8_t width, height;
 
     ModelLib modellib;
-
     Decoration* decorations;
     unsigned int decorationCount;
 }Terrain;

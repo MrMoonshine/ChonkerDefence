@@ -32,45 +32,37 @@ static void terrain_square_xy(Terrain* terrain, float* buffer, uint8_t x, uint8_
     short xOrigin = x - terrain->width/2;
     short yOrigin = y - terrain->height/2;
 
-    buffer[posVertex++] = xOrigin + 1;
-    buffer[posVertex++] = yOrigin + 1;
-    buffer[posVertex++] = 1.0f;
     // Vertex 1 Point 1
     buffer[posVertex++] = xOrigin + 0;
     buffer[posVertex++] = yOrigin + 0;
     buffer[posVertex++] = 1.0f;
     // Vertex 1 Point 2
-    buffer[posVertex++] = xOrigin + 0;
+    buffer[posVertex++] = xOrigin + 1;
     buffer[posVertex++] = yOrigin + 1;
     buffer[posVertex++] = 1.0f;
     // Vertex 1 Point 3
-
-    buffer[posVertex++] = xOrigin + 1;
+    buffer[posVertex++] = xOrigin + 0;
     buffer[posVertex++] = yOrigin + 1;
     buffer[posVertex++] = 1.0f;
 
-    buffer[posVertex++] = xOrigin + 1;
-    buffer[posVertex++] = yOrigin + 0;
-    buffer[posVertex++] = 1.0f;
     // Vertex 2 Point 1
     buffer[posVertex++] = xOrigin + 0;
     buffer[posVertex++] = yOrigin + 0;
     buffer[posVertex++] = 1.0f;
     // Vertex 2 Point 2
-
+    buffer[posVertex++] = xOrigin + 1;
+    buffer[posVertex++] = yOrigin + 0;
+    buffer[posVertex++] = 1.0f;
     // Vertex 2 Point 3
+    buffer[posVertex++] = xOrigin + 1;
+    buffer[posVertex++] = yOrigin + 1;
+    buffer[posVertex++] = 1.0f;
     return;
 }
 
 static size_t terrain_square_xy_skirt(Terrain* terrain, float* buffer, uint8_t x, uint8_t y, uint8_t neighbourPattern){
     size_t retval = 0;
     uint8_t neiCounter = terrain_count_neighbours_from_pattern(neighbourPattern);
-    /*uint8_t neiCounter = 0;
-    for(uint8_t i = 0; i < 4; i++){
-        if(neighbourPattern & (1 << i))
-            neiCounter++;
-    }*/
-
     if(neiCounter < 1){
         return 0;
     }
@@ -158,39 +150,40 @@ static size_t terrain_square_xy_skirt(Terrain* terrain, float* buffer, uint8_t x
         }
     }
     // Vertex 1 Point 1
-    buffer[posVertex++] = xOrigin + deltaX * 0;
-    buffer[posVertex++] = yOrigin + deltaY * 0;
-    buffer[posVertex++] = 0.0f;
-    // Vertex 1 Point 2
     buffer[posVertex++] = xOrigin + deltaX * 1;
     buffer[posVertex++] = yOrigin + deltaY * 1;
     buffer[posVertex++] = 1.0f;
+    // Vertex 1 Point 2
+    buffer[posVertex++] = xOrigin + deltaX * 0;
+    buffer[posVertex++] = yOrigin + deltaY * 0;
+    buffer[posVertex++] = 0.0f;
     // Vertex 1 Point 3
     buffer[posVertex++] = xOrigin + deltaX * 0;
     buffer[posVertex++] = yOrigin + deltaY * 0;
     buffer[posVertex++] = 1.0f;
+
     // Vertex 2 Point 1
-    buffer[posVertex++] = xOrigin + deltaX * 0;
-    buffer[posVertex++] = yOrigin + deltaY * 0;
-    buffer[posVertex++] = 0.0f;
+    buffer[posVertex++] = xOrigin + deltaX * 1;
+    buffer[posVertex++] = yOrigin + deltaY * 1;
+    buffer[posVertex++] = 1.0f;
     // Vertex 2 Point 2
     buffer[posVertex++] = xOrigin + deltaX * 1;
     buffer[posVertex++] = yOrigin + deltaY * 1;
     buffer[posVertex++] = 0.0f;
     // Vertex 2 Point 3
-    buffer[posVertex++] = xOrigin + deltaX * 1;
-    buffer[posVertex++] = yOrigin + deltaY * 1;
-    buffer[posVertex++] = 1.0f;
+    buffer[posVertex++] = xOrigin + deltaX * 0;
+    buffer[posVertex++] = yOrigin + deltaY * 0;
+    buffer[posVertex++] = 0.0f;
 
     if(neiCounter == 2){
         // Lid for inner corners
-        // Vertex 1 Point 1
-        buffer[posVertex++] = xOrigin + deltaX * 0;
-        buffer[posVertex++] = yOrigin + deltaY * 0;
-        buffer[posVertex++] = 1.0f;
         // Vertex 1 Point 2
         buffer[posVertex++] = xOrigin + deltaX * 1;
         buffer[posVertex++] = yOrigin + deltaY * 1;
+        buffer[posVertex++] = 1.0f;
+        // Vertex 1 Point 1
+        buffer[posVertex++] = xOrigin + deltaX * 0;
+        buffer[posVertex++] = yOrigin + deltaY * 0;
         buffer[posVertex++] = 1.0f;
         // Vertex 1 Point 3
         if(sonw){
@@ -271,7 +264,7 @@ static void terrain_path_piece(uint8_t pattern, uint8_t *piece, uint8_t *rotatio
 }
 
 int terrain_create(Terrain* terrain, uint8_t* buffer_i, size_t bufferSize){
-    terrain->vertexCount = 0;
+    size_t vertexCount = 0;
     terrain->decorationCount = 0;
     terrain->decorations = NULL;
     char style[LEVEL_STYLE_LENGTH];
@@ -351,7 +344,7 @@ int terrain_create(Terrain* terrain, uint8_t* buffer_i, size_t bufferSize){
             printf("%c", node);
 #endif /* DEBUG_MAP */
             if(LEVEL_IS_LAND(nnibble) || nnibble == LEVEL_BLOCK_PATH){
-                terrain->vertexCount += 2;
+                vertexCount += 2;
             }else if(LEVEL_IS_WATER(nnibble)){
                 uint8_t neiCounter = 0;
                 neiCounter += LEVEL_IS_SKIRT_REQURED(terrain_get_node_at(terrain, x + 1, y + 0, buffer, len)) ? 1 : 0;
@@ -360,9 +353,9 @@ int terrain_create(Terrain* terrain, uint8_t* buffer_i, size_t bufferSize){
                 neiCounter += LEVEL_IS_SKIRT_REQURED(terrain_get_node_at(terrain, x + 0, y - 1, buffer, len)) ? 1 : 0;
 
                 switch(neiCounter){
-                    case 1: terrain->vertexCount += 2; break;
-                    case 2: terrain->vertexCount += 3; break;
-                    case 3: terrain->vertexCount += 3*2; break;
+                    case 1: vertexCount += 2; break;
+                    case 2: vertexCount += 3; break;
+                    case 3: vertexCount += 3*2; break;
                     default: break;
                 }
             }
@@ -375,13 +368,17 @@ int terrain_create(Terrain* terrain, uint8_t* buffer_i, size_t bufferSize){
         printf("\n");
 #endif /* DEBUG_MAP */
     }
-    printf("[INFO] %s: Vertexcount terrain is %lu\n", TAG, terrain->vertexCount);
-    float* terrainVertexBuffer = (float*)malloc(terrain->vertexCount * VERTEX_SIZE);
-    float* terrainUVBuffer = (float*)malloc(terrain->vertexCount * UV_SIZE);
-    if(terrainUVBuffer == NULL || terrainVertexBuffer == NULL){
+    printf("[INFO] %s: Vertexcount terrain is %lu\n", TAG, vertexCount);
+    float* terrainVertexBuffer = (float*)malloc(vertexCount * VERTEX_SIZE);
+    float* terrainUVBuffer = (float*)malloc(vertexCount * UV_SIZE);
+    float* terrainNormalsBuffer = (float*)malloc(vertexCount * NORMALS_SIZE);
+    if(terrainUVBuffer == NULL || terrainVertexBuffer == NULL || terrainNormalsBuffer == NULL){
         LOGERRNO(TAG, "Malloc Terrain Buffer");
         return -1;
     }
+    memset(terrainVertexBuffer, 0.0f, vertexCount * VERTEX_SIZE);
+    memset(terrainUVBuffer, 0.0f, vertexCount * UV_SIZE);
+    memset(terrainNormalsBuffer, 0.0f, vertexCount * NORMALS_SIZE);
 
     terrain->decorations = (Decoration*)malloc(terrain->decorationCount * sizeof(Decoration));
     if(terrain->decorations == NULL){
@@ -389,9 +386,9 @@ int terrain_create(Terrain* terrain, uint8_t* buffer_i, size_t bufferSize){
         return -1;
     }
     // Zero all buffers
-    for(size_t a = 0; a < terrain->vertexCount*VERTEX_SIZE/sizeof(float); a++)
+    for(size_t a = 0; a < vertexCount*VERTEX_SIZE/sizeof(float); a++)
         terrainVertexBuffer[a] = 0.0f;
-    for(size_t a = 0; a < terrain->vertexCount*UV_SIZE/sizeof(float); a++)
+    for(size_t a = 0; a < vertexCount*UV_SIZE/sizeof(float); a++)
         terrainUVBuffer[a] = 0.0f;
 
     /*
@@ -467,19 +464,24 @@ int terrain_create(Terrain* terrain, uint8_t* buffer_i, size_t bufferSize){
             }
         }
     }
+    /*
+        Normals
+    */
+    size_t posNormal = 0;
+    posVertex = 0;
+    for(size_t i = 0; i < vertexCount; i++){
+        common_get_normal(terrainVertexBuffer + posVertex, terrainNormalsBuffer + posNormal);
+        memcpy(terrainNormalsBuffer + posNormal + 3, terrainNormalsBuffer + posNormal, sizeof(vec3));
+        memcpy(terrainNormalsBuffer + posNormal + 6, terrainNormalsBuffer + posNormal, sizeof(vec3));
+        posVertex += VERTEX_SIZE/sizeof(float);
+        posNormal += 3*sizeof(vec3)/sizeof(float);
+    }
 
-    glGenBuffers(1, &terrain->vertexbuffer);
-    glBindBuffer(GL_ARRAY_BUFFER, terrain->vertexbuffer);
-    glBufferData(GL_ARRAY_BUFFER, posVertex*sizeof(float), terrainVertexBuffer, GL_STATIC_DRAW);
-    //glBufferData(GL_ARRAY_BUFFER, sizeof(g_vertex_buffer_data), g_vertex_buffer_data, GL_STATIC_DRAW);
-
-    glGenBuffers(1, &terrain->uvbuffer);
-    glBindBuffer(GL_ARRAY_BUFFER, terrain->uvbuffer);
-    glBufferData(GL_ARRAY_BUFFER, posUV*sizeof(float), terrainUVBuffer, GL_STATIC_DRAW);
-    //glBufferData(GL_ARRAY_BUFFER, sizeof(g_uv_buffer_data), g_uv_buffer_data, GL_STATIC_DRAW);
+    vbo_create(&terrain->vbo, terrainVertexBuffer, terrainUVBuffer, terrainNormalsBuffer, vertexCount);
     // Buffer Cleanup
     free(terrainVertexBuffer);
     free(terrainUVBuffer);
+    free(terrainNormalsBuffer);
 
     LOGS(TAG, "Terrain Created successfully");
     return 0;
@@ -489,9 +491,10 @@ void terrain_draw(Terrain* terrain, GLuint uniformModel, mat4 model){
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LEQUAL);
 
-    glBindTexture( GL_TEXTURE_2D, terrain->tilemap.texture.bufferID);
+    //glBindTexture( GL_TEXTURE_2D, terrain->tilemap.texture.bufferID);
+    vbo_draw(&terrain->vbo, terrain->tilemap.texture.bufferID);
 
-    glEnableVertexAttribArray(0);
+    /*glEnableVertexAttribArray(0);
     glBindBuffer(GL_ARRAY_BUFFER, terrain->vertexbuffer);
     glVertexAttribPointer(
         0,                  // attribute 0. No particular reason for 0, but must match the layout in the shader.
@@ -502,7 +505,7 @@ void terrain_draw(Terrain* terrain, GLuint uniformModel, mat4 model){
         (void*)0            // array buffer offset
     );
     // Draw the triangle !
-    glDrawArrays(GL_TRIANGLES, 0, terrain->vertexCount * 3); // start at 0; 6 because 6 points for 2 vertices
+    glDrawArrays(GL_TRIANGLES, 0, vertexCount * 3); // start at 0; 6 because 6 points for 2 vertices
     //LOGGLERR(TAG);
     glEnableVertexAttribArray(1);
 
@@ -516,10 +519,10 @@ void terrain_draw(Terrain* terrain, GLuint uniformModel, mat4 model){
         (void*)0                          // array buffer offset
     );
     // Draw the triangle !
-    glDrawArrays(GL_TRIANGLES, 0, terrain->vertexCount * 3);
+    glDrawArrays(GL_TRIANGLES, 0, vertexCount * 3);
 
     glDisableVertexAttribArray(0);
-    glDisableVertexAttribArray(1);
+    glDisableVertexAttribArray(1);*/
     // unbind texture
     glBindTexture( GL_TEXTURE_2D, 0);
 
@@ -529,8 +532,7 @@ void terrain_draw(Terrain* terrain, GLuint uniformModel, mat4 model){
 }
 
 void terrain_destroy(Terrain* terrain){
-    glDeleteBuffers(1, &terrain->uvbuffer);
-    glDeleteBuffers(1, &terrain->vertexbuffer);
+    vbo_destroy(&terrain->vbo);
     tilemap_destroy(&terrain->tilemap);
     modellib_destroy(&terrain->modellib);
 
