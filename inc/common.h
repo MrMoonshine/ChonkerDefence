@@ -21,6 +21,7 @@
     @patam [out]normal normal vector
 */
 void common_get_normal(float* vertexdata, float* normal);
+void common_mat4_to_mat3(mat4 mi, mat3 dest);
 
 void common_print_vertices(float* buffer, size_t size);
 void common_print_uvs(float* buffer, size_t size);

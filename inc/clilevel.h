@@ -36,7 +36,7 @@ typedef struct ClientLevel{
     vec2 position;
     GLuint vao, shader;
     // Projection Uniforms
-    GLint model, view, projection, cameraPosition;
+    GLint model, view, projection, cameraPosition, normalMatrix;
     Terrain terrain;
     /*GLuint terrainVertexbuffer, terrainUVBuffer;
     size_t terrainVertexCount;*/

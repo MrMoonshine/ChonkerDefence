@@ -28,5 +28,5 @@ typedef struct Decoration{
 
 int decoration_create(Decoration* decoration, Obj* object);
 void decoration_placement(Decoration* decoration, vec3 position, float rotation, float scale);
-void decoration_draw(Decoration* decoration, GLuint uniformModel, mat4 model);
+void decoration_draw(Decoration* decoration, GLuint uniformModel, GLuint uniformNormalMatrix, mat4 model);
 void decoration_destroy(Decoration* decoration);

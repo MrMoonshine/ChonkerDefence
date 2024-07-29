@@ -10,7 +10,7 @@ out vec4 color;
 uniform sampler2D myTextureSampler;
 
 void main(){
-	vec3 lightPos = vec3(0.0, 5.0, 16.0);
+	vec3 lightPos = vec3(0.0, 12.0, 6.0);
 	vec3 lightColour = vec3(1,1,1);
 	vec4 texture_color = texture(myTextureSampler, texCoord).rgba;
 

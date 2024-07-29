@@ -23,7 +23,7 @@
 #include <GLFW/glfw3.h>
 #include <cglm/cglm.h>
 
-#define DEBUG_MAP 1
+//#define DEBUG_MAP 1
 
 typedef struct Terrain{
     VBO vbo;
@@ -43,5 +43,5 @@ typedef struct Terrain{
     @returns 0 if ok
 */
 int terrain_create(Terrain* terrain, uint8_t* buffer, size_t bufferSize);
-void terrain_draw(Terrain* terrain, GLuint uniformModel, mat4 model);
+void terrain_draw(Terrain* terrain, GLuint uniformModel, GLuint uniformNormalMatrix, mat4 model);
 void terrain_destroy(Terrain* terrain);

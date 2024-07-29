@@ -32,31 +32,32 @@ static void terrain_square_xy(Terrain* terrain, float* buffer, uint8_t x, uint8_
     short xOrigin = x - terrain->width/2;
     short yOrigin = y - terrain->height/2;
 
-    // Vertex 1 Point 1
-    buffer[posVertex++] = xOrigin + 0;
-    buffer[posVertex++] = yOrigin + 0;
-    buffer[posVertex++] = 1.0f;
     // Vertex 1 Point 2
     buffer[posVertex++] = xOrigin + 1;
-    buffer[posVertex++] = yOrigin + 1;
     buffer[posVertex++] = 1.0f;
+    buffer[posVertex++] = yOrigin + 1;
+    // Vertex 1 Point 1
+    buffer[posVertex++] = xOrigin + 0;
+    buffer[posVertex++] = 1.0f;
+    buffer[posVertex++] = yOrigin + 0;
     // Vertex 1 Point 3
     buffer[posVertex++] = xOrigin + 0;
+    buffer[posVertex++] = 1.0f;
     buffer[posVertex++] = yOrigin + 1;
-    buffer[posVertex++] = 1.0f;
 
-    // Vertex 2 Point 1
-    buffer[posVertex++] = xOrigin + 0;
-    buffer[posVertex++] = yOrigin + 0;
-    buffer[posVertex++] = 1.0f;
-    // Vertex 2 Point 2
-    buffer[posVertex++] = xOrigin + 1;
-    buffer[posVertex++] = yOrigin + 0;
-    buffer[posVertex++] = 1.0f;
+
     // Vertex 2 Point 3
     buffer[posVertex++] = xOrigin + 1;
-    buffer[posVertex++] = yOrigin + 1;
     buffer[posVertex++] = 1.0f;
+    buffer[posVertex++] = yOrigin + 1;
+    // Vertex 2 Point 2
+    buffer[posVertex++] = xOrigin + 1;
+    buffer[posVertex++] = 1.0f;
+    buffer[posVertex++] = yOrigin + 0;
+    // Vertex 2 Point 1
+    buffer[posVertex++] = xOrigin + 0;
+    buffer[posVertex++] = 1.0f;
+    buffer[posVertex++] = yOrigin + 0;
     return;
 }
 
@@ -149,52 +150,54 @@ static size_t terrain_square_xy_skirt(Terrain* terrain, float* buffer, uint8_t x
                 break;
         }
     }
-    // Vertex 1 Point 1
-    buffer[posVertex++] = xOrigin + deltaX * 1;
-    buffer[posVertex++] = yOrigin + deltaY * 1;
-    buffer[posVertex++] = 1.0f;
-    // Vertex 1 Point 2
-    buffer[posVertex++] = xOrigin + deltaX * 0;
-    buffer[posVertex++] = yOrigin + deltaY * 0;
-    buffer[posVertex++] = 0.0f;
+
     // Vertex 1 Point 3
     buffer[posVertex++] = xOrigin + deltaX * 0;
+    buffer[posVertex++] = 0.0f;
     buffer[posVertex++] = yOrigin + deltaY * 0;
+    // Vertex 1 Point 1
+    buffer[posVertex++] = xOrigin + deltaX * 1;
     buffer[posVertex++] = 1.0f;
+    buffer[posVertex++] = yOrigin + deltaY * 1;
+    // Vertex 1 Point 2
+    buffer[posVertex++] = xOrigin + deltaX * 0;
+    buffer[posVertex++] = 1.0f;
+    buffer[posVertex++] = yOrigin + deltaY * 0;
 
     // Vertex 2 Point 1
-    buffer[posVertex++] = xOrigin + deltaX * 1;
-    buffer[posVertex++] = yOrigin + deltaY * 1;
-    buffer[posVertex++] = 1.0f;
+    buffer[posVertex++] = xOrigin + deltaX * 0;
+    buffer[posVertex++] = 0.0f;
+    buffer[posVertex++] = yOrigin + deltaY * 0;
     // Vertex 2 Point 2
     buffer[posVertex++] = xOrigin + deltaX * 1;
+    buffer[posVertex++] = 0.0f;
     buffer[posVertex++] = yOrigin + deltaY * 1;
-    buffer[posVertex++] = 0.0f;
     // Vertex 2 Point 3
-    buffer[posVertex++] = xOrigin + deltaX * 0;
-    buffer[posVertex++] = yOrigin + deltaY * 0;
-    buffer[posVertex++] = 0.0f;
+    buffer[posVertex++] = xOrigin + deltaX * 1;
+    buffer[posVertex++] = 1.0f;
+    buffer[posVertex++] = yOrigin + deltaY * 1;
 
     if(neiCounter == 2){
         // Lid for inner corners
-        // Vertex 1 Point 2
-        buffer[posVertex++] = xOrigin + deltaX * 1;
-        buffer[posVertex++] = yOrigin + deltaY * 1;
-        buffer[posVertex++] = 1.0f;
         // Vertex 1 Point 1
         buffer[posVertex++] = xOrigin + deltaX * 0;
-        buffer[posVertex++] = yOrigin + deltaY * 0;
         buffer[posVertex++] = 1.0f;
+        buffer[posVertex++] = yOrigin + deltaY * 0;
+        // Vertex 1 Point 2
+        buffer[posVertex++] = xOrigin + deltaX * 1;
+        buffer[posVertex++] = 1.0f;
+        buffer[posVertex++] = yOrigin + deltaY * 1;
         // Vertex 1 Point 3
         if(sonw){
             buffer[posVertex++] = x - terrain->width/2 + (neighbourPattern == 0b0110 ? 1 : 0);
-            buffer[posVertex++] = y - terrain->height/2 + (neighbourPattern == 0b0110 ? 1 : 0);;
+            buffer[posVertex++] = 1.0f;
+            buffer[posVertex++] = y - terrain->height/2 + (neighbourPattern == 0b0110 ? 1 : 0);
 
         }else{
             buffer[posVertex++] = xOrigin + deltaX * 1;
+            buffer[posVertex++] = 1.0f;
             buffer[posVertex++] = yOrigin + deltaY * 0;
         }
-        buffer[posVertex++] = 1.0f;
     }
 
     return retval;
@@ -246,7 +249,6 @@ static void terrain_path_piece(uint8_t pattern, uint8_t *piece, uint8_t *rotatio
                 default:
                     *piece = 1;
                     *rotation = 0;
-                    printf("pattern is %x\n", pattern);
                     break;
             }
             break;
@@ -457,9 +459,18 @@ int terrain_create(Terrain* terrain, uint8_t* buffer_i, size_t bufferSize){
                     modellib_get_tree(&terrain->modellib, rand() % 256)
                     //terrain->modellib.models
                 );
-                vec3 decopos = {x - terrain->width/2, y - terrain->height/2, 1};
-                float rotation = 0;//(rand() % 4) * 90;//rand() % 360;
-                decoration_placement(terrain->decorations + decorationCounter, decopos, rotation, (float)(70 + (rand() % 30))/100.0f);
+                vec3 decopos = {
+                    x - terrain->width/2,
+                    1,
+                    y - terrain->height/2
+                };
+                float rotation = rand() % 360;
+                decoration_placement(
+                    terrain->decorations + decorationCounter,
+                    decopos,
+                    rotation,
+                    (float)(70 + (rand() % 30))/100.0f
+                );
                 decorationCounter++;
             }
         }
@@ -487,47 +498,21 @@ int terrain_create(Terrain* terrain, uint8_t* buffer_i, size_t bufferSize){
     return 0;
 }
 
-void terrain_draw(Terrain* terrain, GLuint uniformModel, mat4 model){
+void terrain_draw(Terrain* terrain, GLuint uniformModel, GLuint uniformNormalMatrix, mat4 model){
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LEQUAL);
 
-    //glBindTexture( GL_TEXTURE_2D, terrain->tilemap.texture.bufferID);
     vbo_draw(&terrain->vbo, terrain->tilemap.texture.bufferID);
-
-    /*glEnableVertexAttribArray(0);
-    glBindBuffer(GL_ARRAY_BUFFER, terrain->vertexbuffer);
-    glVertexAttribPointer(
-        0,                  // attribute 0. No particular reason for 0, but must match the layout in the shader.
-        3,                  // size
-        GL_FLOAT,           // type
-        GL_FALSE,           // normalized?
-        0,                  // stride
-        (void*)0            // array buffer offset
-    );
-    // Draw the triangle !
-    glDrawArrays(GL_TRIANGLES, 0, vertexCount * 3); // start at 0; 6 because 6 points for 2 vertices
-    //LOGGLERR(TAG);
-    glEnableVertexAttribArray(1);
-
-    glBindBuffer(GL_ARRAY_BUFFER, terrain->uvbuffer);
-    glVertexAttribPointer(
-        1,                                // attribute. No particular reason for 1, but must match the layout in the shader.
-        2,                                // size : U+V => 2
-        GL_FLOAT,                         // type
-        GL_FALSE,                         // normalized?
-        0,                                // stride
-        (void*)0                          // array buffer offset
-    );
-    // Draw the triangle !
-    glDrawArrays(GL_TRIANGLES, 0, vertexCount * 3);
-
-    glDisableVertexAttribArray(0);
-    glDisableVertexAttribArray(1);*/
     // unbind texture
     glBindTexture( GL_TEXTURE_2D, 0);
 
     for(size_t i = 0; i < terrain->decorationCount; i++){
-        decoration_draw(terrain->decorations + i, uniformModel, model);
+        decoration_draw(terrain->decorations + i, uniformModel, uniformNormalMatrix, model);
+        /*decoration_placement(
+            terrain->decorations + i, (terrain->decorations + i)->position,
+            (int)(glfwGetTime() * 64.0f) % 360,
+            (terrain->decorations + i)->scale
+        );*/
     }
 }
 

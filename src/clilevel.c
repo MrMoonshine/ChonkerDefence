@@ -3,13 +3,13 @@
 static const char* TAG = "Level (Client-Side)";
 
 static const vec3 X_AXIS = {1, 0, 0};
-static const vec3 Y_AXIS = {0, 0, 1};
-static const vec3 Z_AXIS = {0, 1, 0};
+static const vec3 Y_AXIS = {0, 1, 0};
+static const vec3 Z_AXIS = {0, 0, 1};
 
-#define ISOMETRIC_ROTATION_VERTICAL glm_rad(45.0f)
+#define ISOMETRIC_ROTATION_VERTICAL glm_rad(180 + 45.0f)
 #define ISOMETRIC_ROTATION_HORIZONTAL glm_rad(35.264f)
 
-static const float CLILEVEL_ORTHO_DEPTH = 1500.0f;
+static const float CLILEVEL_ORTHO_DEPTH = 2000.0f;
 //static vec3 eye = {sqrt(1 / 3.0), sqrt(1 / 3.0), sqrt(1 / 3.0)};
 static vec3 eye = {4, 3, 3};
 static vec3 center = {0, 0, 0};
@@ -94,7 +94,7 @@ uint8_t clilevel_get_level(ClientLevel *level, Client *client, GLFWwindow* windo
     eye[0] = 16.0f;
     eye[1] = 0.0f;
     eye[2] = 0.0f;
-    glm_vec3_rotate(eye, ISOMETRIC_ROTATION_VERTICAL, (float*)Z_AXIS);
+    glm_vec3_rotate(eye, ISOMETRIC_ROTATION_VERTICAL, (float*)Y_AXIS);
     printf("Eye is (%.2f|%.2f|%.2f)\n", eye[0],eye[1],eye[2]);
     vec3 isorotation;
     glm_vec3_copy(eye, isorotation);
@@ -109,6 +109,7 @@ uint8_t clilevel_get_level(ClientLevel *level, Client *client, GLFWwindow* windo
     level->view = glGetUniformLocation(level->shader, "view");
     level->model = glGetUniformLocation(level->shader, "model");
     level->cameraPosition = glGetUniformLocation(level->shader, "viewPos");
+    level->normalMatrix = glGetUniformLocation(level->shader, "normalMatrix");
 
     terrain_create(&level->terrain, buffer, *len);
     free(buffer);
@@ -140,8 +141,8 @@ void clilevel_resize(ClientLevel *level, int width, int height){
     level->modelScale /= level->width;
     printf("Model scale is %.2f => Wpx = %.2f\n", level->modelScale, level->modelScale * level->width);
 
-    level->position[0] = (float)(level->width/2)/1.1;
-    level->position[1] = (float)(level->height/2)/2.2f;
+    level->position[0] = -15.0f;
+    level->position[1] = -1.5f;
 }
 
 void clilevel_enable_vao(ClientLevel* level){
@@ -160,7 +161,7 @@ int clilevel_draw(ClientLevel *level){
     level->position[0] += glfwGetKey(level->window, GLFW_KEY_UP ) == GLFW_PRESS ? -0.2f : 0.0f;
     level->position[1] += glfwGetKey(level->window, GLFW_KEY_RIGHT ) == GLFW_PRESS ? 0.2f : 0.0f;
     level->position[1] += glfwGetKey(level->window, GLFW_KEY_LEFT ) == GLFW_PRESS ? -0.2f : 0.0f;
-    angle += glfwGetKey(level->window, GLFW_KEY_SPACE ) == GLFW_PRESS ? -0.5f : 0.0f;
+    angle += glfwGetKey(level->window, GLFW_KEY_SPACE ) == GLFW_PRESS ? -1.0f : 0.0f;
 
     //eyemod += glfwGetKey(level->window, GLFW_KEY_LEFT_SHIFT ) == GLFW_PRESS ? 0.1f : 0.0f;
     //eye[1] = eyemod;
@@ -168,21 +169,27 @@ int clilevel_draw(ClientLevel *level){
     glm_mat4_identity(model);
     //angle -= 0.4;
     //glm_scale(model, mirrorX);
-    glm_rotate(model, glm_rad(-90), (float*)X_AXIS);
+    //glm_rotate(model, glm_rad(-90), (float*)X_AXIS);
     glm_rotate(model, glm_rad(angle), (float*)Y_AXIS);
     vec3 mirror = {-1, 1, 1};
     glm_scale(model, mirror);
     glm_scale_uni(model, level->modelScale * level->windowScale);
 
-    vec3 transformation = {level->position[0], level->position[1], 0};
+    vec3 transformation = {level->position[0], 0, level->position[1]};
     glm_translate(model, transformation);
     //printf("AngleZ: %.2f\tMoveX: %.2f\tMoveY: %.2f\n", angle, level->position[0], level->position[1]);
+    // Normals
+    mat3 normalMatrix;
+    common_mat4_to_mat3(model, normalMatrix);
+    glm_mat3_inv(normalMatrix, normalMatrix);
+    glm_mat3_transpose(normalMatrix);
 
     glUniformMatrix4fv(level->projection, 1, GL_FALSE, *projection);
     glUniformMatrix4fv(level->view, 1, GL_FALSE, *view);
     glUniformMatrix4fv(level->model, 1, GL_FALSE, *model);
     glUniform4fv(level->cameraPosition, 1, eye);
+    glUniformMatrix3fv(level->normalMatrix, 1, GL_FALSE, *normalMatrix);
 
-    terrain_draw(&level->terrain, level->model, model);
+    terrain_draw(&level->terrain, level->model, level->normalMatrix, model);
     return 0;
 }

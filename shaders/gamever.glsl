@@ -7,6 +7,7 @@ uniform mat4 projection;
 uniform mat4 view;
 uniform mat4 model;
 uniform vec3 cameraPos;
+uniform mat3 normalMatrix;
 
 out vec2 texCoord;
 out vec3 fragPos;
@@ -21,8 +22,7 @@ void main(){
     normal = vertexNormals;
     viewPos = cameraPos;
 
-    /*mat3 normalMatrix = mat3(projection * view * model);
-    normalMatrix = inverse(normalMatrix);
-    normalMatrix = transpose(normalMatrix);
-    normal = normalize(vertexNormals * normalMatrix);*/
+    //mat3 mymat = mat3(projection * view) * normalMatrix;
+    //normal = normalize(vertexNormals * mymat);
+    normal = normalize(vertexNormals * normalMatrix);
 }

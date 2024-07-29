@@ -260,8 +260,8 @@ int obj_create(Obj* obj, const char* filename){
             #ifdef DEBUG_OBJ
               LOGI(TAG, "Building Normals");
             #endif
-            for(size_t a = 0; a < attrib.num_face_num_verts && attrib.num_normals > 0; a++){
-              //printf("Faces (v|vt|vn) (%d|%d|%d)\n", attrib.faces[a].v_idx, attrib.faces[a].vt_idx, attrib.faces[a].vn_idx);
+            for(size_t a = 0; a < attrib.num_face_num_verts * 3 && attrib.num_normals > 0; a++){
+              // printf("Faces (v|vt|vn) (%d|%d|%d)\n", attrib.faces[a].v_idx, attrib.faces[a].vt_idx, attrib.faces[a].vn_idx);
               // printf("Normal %u | ", attrib.faces[a].vn_idx);
               // size_t mypos = attrib.faces[a].vn_idx;
               // printf("(%.2f|%.2f|%.2f)\n", attrib.normals[mypos * 3 + 1], attrib.normals[mypos * 3 + 1], attrib.normals[mypos * 3 + 2]);
@@ -272,16 +272,7 @@ int obj_create(Obj* obj, const char* filename){
                 buffer[pos++] = attrib.normals[attrib.faces[a].vn_idx * 3 + b];
               }
             }
-
-            /*size_t triangleCount = 1;
-            for(size_t a = 0; a < sizes[i] / (sizeof(float)); a++){
-              if(a % 3 == 0)
-                printf(" --- Normal TRIANGLE %lu --- \n", triangleCount++);
-              printf("%.2f, ", buffer[a]);
-              if(a % 3 == 2)
-                printf("\n");
-            }
-            printf("\n");*/
+            //common_print_normals(buffer, attrib.num_face_num_verts * NORMALS_SIZE);
             vbo_create_normals(&obj->vbo, buffer);
           } break;
           default: break;
@@ -349,7 +340,7 @@ void obj_draw(Obj* obj){
         0,                                // stride
         (void*)(obj->shapes[i].faceOffset * NORMALS_SIZE)                          // array buffer offset
     );
-    glDrawArrays(GL_TRIANGLES, 0, obj->shapes[i].length);
+    glDrawArrays(GL_TRIANGLES, 0, obj->shapes[i].length * 3);
 
     glDisableVertexAttribArray(VBO_INDEX_VERTEX);
     glDisableVertexAttribArray(VBO_INDEX_UV);

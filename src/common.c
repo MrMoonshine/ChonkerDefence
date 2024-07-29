@@ -20,6 +20,14 @@ void common_get_normal(float* vertexdata, float* normal){
         normal[i] = vOut[i];
 }
 
+void common_mat4_to_mat3(mat4 mi, mat3 dest){
+    for(uint8_t i = 0; i < 3; i++){
+        for(uint8_t j = 0; j < 3; j++){
+            dest[i][j] = mi[i][j];
+        }
+    }
+}
+
 void common_print_vertices(float* buffer, size_t size){
     printf(" --- Vertex BUFFER ---\n");
     for(size_t i = 0; i < size/sizeof(float); i++){
