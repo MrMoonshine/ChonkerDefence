@@ -8,6 +8,10 @@ static const uint8_t NEIGHBOUR_BIT_E  = 1;
 static const uint8_t NEIGHBOUR_BIT_S  = 2;
 static const uint8_t NEIGHBOUR_BIT_W  = 3;
 
+static const uint16_t NEIGHBOUR_MASK_NORMAL  = 0x00f;
+static const uint16_t NEIGHBOUR_MASK_DIGONAL = 0x0f0;
+static const uint16_t NEIGHBOUR_MASK_STEEP   = 0xf00;
+
 static const uint8_t terrain_get_node_at(Terrain* terrain, uint8_t x, uint8_t y, uint8_t *buffer, size_t len){
     size_t pos = (y * terrain->width) + x;
 
@@ -17,45 +21,99 @@ static const uint8_t terrain_get_node_at(Terrain* terrain, uint8_t x, uint8_t y,
     return buffer[pos];
 }
 
-static uint8_t terrain_count_neighbours_from_pattern(uint8_t pattern){
+static const uint16_t terrain_get_elevation_neighbors(Terrain* terrain, uint8_t x, uint8_t y, uint8_t *buffer, size_t len){
+    //uint8_t matchpattern = 0b0111;
+    uint8_t matchelevation = (0b01110000 & terrain_get_node_at(terrain, x, y, buffer, len)) >> 4;
+    matchelevation++;
+    matchelevation &= 0b0111;
+    //matchpattern |= matchelevation << 4;
+
+    uint16_t neipattern = 0;
+    uint8_t node = 0;
+    for(uint8_t i = 0; i < 12; i++){
+        // Use last 4 bit to store info about steep neighbours. (only diagonal diff 2 blocks)
+        bool steep = i > 7;
+        uint8_t myi = steep ? i - 4: i;
+        uint8_t nx = x, ny = y;
+        switch(myi){
+            // Normal neighbours
+            case 0:
+                ny++;
+                break;
+            case 1:
+                nx++;
+                break;
+            case 2:
+                ny--;
+                break;
+            case 3:
+                nx--;
+                break;
+            // Diagonal leighbours
+            case 4:
+                nx--;
+                ny++;
+                break;
+            case 5:
+                nx++;
+                ny++;
+                break;
+            case 6:
+                nx++;
+                ny--;
+                break;
+            case 7:
+                nx--;
+                ny--;
+                break;
+            default:
+                break;
+        }
+        node = terrain_get_node_at(terrain, nx, ny, buffer, len);
+        neipattern |= ((0b0111 & (node >> 4)) == (steep ? matchelevation + 1: matchelevation) && LEVEL_IS_SKIRT_REQURED((node & 0b0111)) ? 1 : 0) << i;
+    }
+    return neipattern;
+}
+
+static uint8_t terrain_count_neighbours_from_pattern(uint16_t pattern){
     uint8_t neiCounter = 0;
-    for(uint8_t i = 0; i < 4; i++){
+    for(uint8_t i = 0; i < 16; i++){
         if(pattern & (1 << i))
             neiCounter++;
     }
     return neiCounter;
 }
 
-static void terrain_square_xy(Terrain* terrain, float* buffer, uint8_t x, uint8_t y){
+static void terrain_square_xy(Terrain* terrain, float* buffer, uint8_t x, uint8_t y, uint8_t height){
     size_t posVertex = 0;
     short xOrigin = x - terrain->width/2;
     short yOrigin = y - terrain->height/2;
 
     // Vertex 1 Point 2
     buffer[posVertex++] = xOrigin + 1;
-    buffer[posVertex++] = 1.0f;
+    buffer[posVertex++] = (float)height;
     buffer[posVertex++] = yOrigin + 1;
     // Vertex 1 Point 1
     buffer[posVertex++] = xOrigin + 0;
-    buffer[posVertex++] = 1.0f;
+    buffer[posVertex++] = (float)height;
     buffer[posVertex++] = yOrigin + 0;
     // Vertex 1 Point 3
     buffer[posVertex++] = xOrigin + 0;
-    buffer[posVertex++] = 1.0f;
+    buffer[posVertex++] = (float)height;
     buffer[posVertex++] = yOrigin + 1;
 
 
     // Vertex 2 Point 3
     buffer[posVertex++] = xOrigin + 1;
-    buffer[posVertex++] = 1.0f;
+    buffer[posVertex++] = (float)height;
     buffer[posVertex++] = yOrigin + 1;
     // Vertex 2 Point 2
     buffer[posVertex++] = xOrigin + 1;
-    buffer[posVertex++] = 1.0f;
+    buffer[posVertex++] = (float)height;
     buffer[posVertex++] = yOrigin + 0;
     // Vertex 2 Point 1
     buffer[posVertex++] = xOrigin + 0;
-    buffer[posVertex++] = 1.0f;
+    buffer[posVertex++] = (float)height;
     buffer[posVertex++] = yOrigin + 0;
     return;
 }
@@ -198,6 +256,318 @@ static size_t terrain_square_xy_skirt(Terrain* terrain, float* buffer, uint8_t x
             buffer[posVertex++] = yOrigin + deltaY * 0;
         }
     }
+
+    return retval;
+}
+
+static size_t terrain_square_xy_elevation_skirt(Terrain* terrain, float* buffer, uint8_t x, uint8_t y, uint8_t elevation, uint16_t neighbourPattern){
+    size_t retval = 0;
+    uint8_t neiCounterNorm = terrain_count_neighbours_from_pattern(neighbourPattern & NEIGHBOUR_MASK_NORMAL);
+    uint8_t neiCounterDiag = terrain_count_neighbours_from_pattern(neighbourPattern & NEIGHBOUR_MASK_DIGONAL);
+    uint8_t neiCounterSteep = terrain_count_neighbours_from_pattern(neighbourPattern & NEIGHBOUR_MASK_STEEP);
+
+    uint8_t neiPatternNorm = neighbourPattern & NEIGHBOUR_MASK_NORMAL;
+    uint8_t neiPatternDiag = 0x0f & ((neighbourPattern & NEIGHBOUR_MASK_DIGONAL) >> 4);
+    uint8_t neiPatternSteep = 0x0f & ((neighbourPattern & NEIGHBOUR_MASK_STEEP) >> 8);
+
+    short xOrigin = x - terrain->width/2;
+    short yOrigin = y - terrain->height/2;
+    short zOrigin = elevation;
+    int8_t deltaX = 1;
+    int8_t deltaY = 1;
+    int8_t deltaZ = 1;
+    bool sonw = false;
+
+    vec3 rotationaxis = {0, 1, 0};
+    float angle = 0;
+
+    size_t posVertex = 0;
+
+    vec3 points[6] = {
+        // Vertex 1
+        {0, 0, 0},
+        {0, 0, 0},
+        {0, 0, 0},
+        // Vertex 2
+        {0, 0, 0},
+        {0, 0, 0},
+        {0, 0, 0}
+    };
+
+    if(neiCounterNorm == 1){
+        /*
+            USUAL SLOPE
+        */
+        retval = 2;
+        // Triangle 1 Point 1
+        points[0][0] = 0;
+        points[0][1] = 0;
+        points[0][2] = 0;
+        // Triangle 1 Point 2
+        points[1][0] = 1;
+        points[1][1] = 1;
+        points[1][2] = 1;
+        // Triangle 1 Point 3
+        points[2][0] = 1;
+        points[2][1] = 1;
+        points[2][2] = 0;
+        // Triangle 1 Point 1
+        points[3][0] = 0;
+        points[3][1] = 0;
+        points[3][2] = 0;
+        // Triangle 1 Point 2
+        points[4][0] = 0;
+        points[4][1] = 0;
+        points[4][2] = 1;
+        // Triangle 1 Point 3
+        points[5][0] = 1;
+        points[5][1] = 1;
+        points[5][2] = 1;
+
+        switch(neighbourPattern & NEIGHBOUR_MASK_NORMAL){
+            case 0b0001:
+                // North
+                angle = 270;
+                xOrigin += 1;
+                break;
+            case 0b0010:
+                // East
+                angle = 0;
+                break;
+            case 0b0100:
+                // South
+                angle = 90;
+                yOrigin += 1;
+                break;
+            case 0b1000:
+                // West
+                angle = 180;
+                xOrigin += 1;
+                yOrigin += 1;
+                break;
+            default:
+                break;
+        }
+    }else if(neiCounterSteep == 1 && neiCounterNorm == 2){
+        /*
+            STEEP OUTER SLOPE
+        */
+        retval = 2;
+        // Triangle 1 Point 1
+        points[0][0] = 0;
+        points[0][1] = 1;
+        points[0][2] = 1;
+        // Triangle 1 Point 2
+        points[1][0] = 1;
+        points[1][1] = 1;
+        points[1][2] = 0;
+        // Triangle 1 Point 3
+        points[2][0] = 0;
+        points[2][1] = 2;
+        points[2][2] = 0;
+        // Triangle 1 Point 1
+        points[3][0] = 0;
+        points[3][1] = 1;
+        points[3][2] = 1;
+        // Triangle 1 Point 2
+        points[4][0] = 1;
+        points[4][1] = 0;
+        points[4][2] = 1;
+        // Triangle 1 Point 3
+        points[5][0] = 1;
+        points[5][1] = 1;
+        points[5][2] = 0;
+
+        switch(neiPatternSteep){
+            case 0b0001:
+                // North-West
+                angle = 90;
+                yOrigin += 1;
+                break;
+            case 0b0010:
+                // North-East
+                angle = 180;
+                xOrigin += 1;
+                yOrigin += 1;
+                break;
+            case 0b0100:
+                // South-East
+                angle = 270;
+                xOrigin += 1;
+                break;
+            case 0b1000:
+                // South-West
+                break;
+            default:
+                break;
+        }
+    }else if(neiCounterDiag == 1 && neiCounterNorm == 0){
+        /*
+            OUTER DIAGONAL SLOPE
+        */
+        retval = 2;
+        // Triangle 1 Point 1
+        points[0][0] = 0;
+        points[0][1] = 0;
+        points[0][2] = 1;
+        // Triangle 1 Point 2
+        points[1][0] = 1;
+        points[1][1] = 0;
+        points[1][2] = 0;
+        // Triangle 1 Point 3
+        points[2][0] = 0;
+        points[2][1] = 0;
+        points[2][2] = 0;
+        // Triangle 1 Point 1
+        points[3][0] = 0;
+        points[3][1] = 0;
+        points[3][2] = 1;
+        // Triangle 1 Point 2
+        points[4][0] = 1;
+        points[4][1] = 1;
+        points[4][2] = 1;
+        // Triangle 1 Point 3
+        points[5][0] = 1;
+        points[5][1] = 0;
+        points[5][2] = 0;
+
+        switch(neiPatternDiag){
+            case 0b0001:
+                // North-West
+                angle = 270;
+                xOrigin += 1;
+                break;
+            case 0b0010:
+                // North-East
+                break;
+            case 0b0100:
+                // South-East
+                angle = 90;
+                yOrigin += 1;
+                break;
+            case 0b1000:
+                // South-West
+                angle = 180;
+                xOrigin += 1;
+                yOrigin += 1;
+                break;
+            default:
+                break;
+        }
+    }else if(neiCounterDiag > 0 && neiCounterNorm == 2){
+        /*
+            INNER DIAGONAL SLOPE
+        */
+        retval = 2;
+        // Triangle 1 Point 1
+        points[0][0] = 0;
+        points[0][1] = 1;
+        points[0][2] = 1;
+        // Triangle 1 Point 2
+        points[1][0] = 1;
+        points[1][1] = 1;
+        points[1][2] = 0;
+        // Triangle 1 Point 3
+        points[2][0] = 0;
+        points[2][1] = 1;
+        points[2][2] = 0;
+        // Triangle 1 Point 1
+        points[3][0] = 0;
+        points[3][1] = 1;
+        points[3][2] = 1;
+        // Triangle 1 Point 2
+        points[4][0] = 1;
+        points[4][1] = 0;
+        points[4][2] = 1;
+        // Triangle 1 Point 3
+        points[5][0] = 1;
+        points[5][1] = 1;
+        points[5][2] = 0;
+
+        switch(neiPatternNorm){
+            case 0b0011:
+                // North-East
+                angle = 180;
+                yOrigin += 1;
+                xOrigin += 1;
+                break;
+            case 0b0110:
+                // South-East
+                angle = 270;
+                xOrigin += 1;
+                break;
+            case 0b1100:
+                // South-West
+                break;
+            case 0b1001:
+                // North-West
+                angle = 90;
+                yOrigin += 1;
+                break;
+            default:
+                break;
+        }
+
+        /*switch(neiPatternDiag){
+            case 0b0001:
+                // North-West
+                angle = 90;
+                yOrigin += 1;
+                break;
+            case 0b0010:
+                // North-East
+                angle = 180;
+                yOrigin += 1;
+                xOrigin += 1;
+                break;
+            case 0b0100:
+                // South-East
+                angle = 270;
+                xOrigin += 1;
+                break;
+            case 0b1000:
+                // South-West
+                break;
+            default:
+                break;
+        }*/
+    }
+
+    for(uint8_t i = 0; i < 6; i++){
+        glm_vec3_rotate(points[i], glm_rad(angle), rotationaxis);
+        points[i][0] += xOrigin;
+        points[i][1] += zOrigin;
+        points[i][2] += yOrigin;
+        // Round results
+        for(uint8_t j = 0; j < 3; j++)
+            points[i][j] = round(points[i][j]);
+
+        memcpy(buffer + posVertex, points[i], sizeof(vec3));
+        posVertex += 3;
+    }
+/*
+    if(neiCounter == 2){
+        // Lid for inner corners
+        // Vertex 1 Point 1
+        buffer[posVertex++] = xOrigin + deltaX * 0;
+        buffer[posVertex++] = 1.0f;
+        buffer[posVertex++] = yOrigin + deltaY * 0;
+        // Vertex 1 Point 2
+        buffer[posVertex++] = xOrigin + deltaX * 1;
+        buffer[posVertex++] = 1.0f;
+        buffer[posVertex++] = yOrigin + deltaY * 1;
+        // Vertex 1 Point 3
+        if(sonw){
+            buffer[posVertex++] = x - terrain->width/2 + (neighbourPattern == 0b0110 ? 1 : 0);
+            buffer[posVertex++] = 1.0f;
+            buffer[posVertex++] = y - terrain->height/2 + (neighbourPattern == 0b0110 ? 1 : 0);
+
+        }else{
+            buffer[posVertex++] = xOrigin + deltaX * 1;
+            buffer[posVertex++] = 1.0f;
+            buffer[posVertex++] = yOrigin + deltaY * 0;
+        }
+    }*/
 
     return retval;
 }
@@ -346,13 +716,19 @@ int terrain_create(Terrain* terrain, uint8_t* buffer_i, size_t bufferSize){
             printf("%c", node);
 #endif /* DEBUG_MAP */
             if(LEVEL_IS_LAND(nnibble) || nnibble == LEVEL_BLOCK_PATH){
+                //uint8_t elevationNei = terrain_get_elevation_neighbors(terrain, x, y, buffer, len);
+                //uint8_t elevationNeiCounterNorm = terrain_count_neighbours_from_pattern(elevationNei & NEIGHBOUR_MASK_NORMAL);
+                //uint8_t elevationNeiCounterDiag = terrain_count_neighbours_from_pattern(elevationNei & NEIGHBOUR_MASK_DIGONAL);
                 vertexCount += 2;
+                //if(elevationNei > 0)
+                    //printf("(%d|%d) => Neighbours %.2x\n", x,y,elevationNei);
+
             }else if(LEVEL_IS_WATER(nnibble)){
                 uint8_t neiCounter = 0;
-                neiCounter += LEVEL_IS_SKIRT_REQURED((0x0111 & terrain_get_node_at(terrain, x + 1, y + 0, buffer, len))) ? 1 : 0;
-                neiCounter += LEVEL_IS_SKIRT_REQURED((0x0111 & terrain_get_node_at(terrain, x + 0, y + 1, buffer, len))) ? 1 : 0;
-                neiCounter += LEVEL_IS_SKIRT_REQURED((0x0111 & terrain_get_node_at(terrain, x - 1, y + 0, buffer, len))) ? 1 : 0;
-                neiCounter += LEVEL_IS_SKIRT_REQURED((0x0111 & terrain_get_node_at(terrain, x + 0, y - 1, buffer, len))) ? 1 : 0;
+                neiCounter += LEVEL_IS_SKIRT_REQURED((0b0111 & terrain_get_node_at(terrain, x + 1, y + 0, buffer, len))) ? 1 : 0;
+                neiCounter += LEVEL_IS_SKIRT_REQURED((0b0111 & terrain_get_node_at(terrain, x + 0, y + 1, buffer, len))) ? 1 : 0;
+                neiCounter += LEVEL_IS_SKIRT_REQURED((0b0111 & terrain_get_node_at(terrain, x - 1, y + 0, buffer, len))) ? 1 : 0;
+                neiCounter += LEVEL_IS_SKIRT_REQURED((0b0111 & terrain_get_node_at(terrain, x + 0, y - 1, buffer, len))) ? 1 : 0;
 
                 switch(neiCounter){
                     case 1: vertexCount += 2; break;
@@ -432,12 +808,24 @@ int terrain_create(Terrain* terrain, uint8_t* buffer_i, size_t bufferSize){
     for(uint8_t y = 0; y < terrain->height; y++){
         for(uint8_t x = 0; x < terrain->width; x++){
             uint8_t nodedata = terrain_get_node_at(terrain, x, y, buffer, len);
+            uint8_t elevation = 1 + ((nodedata >> 4) & 0b0111);
             uint8_t nnibble = nodedata & 0b0111;
+            uint16_t elevationNei = terrain_get_elevation_neighbors(terrain, x, y, buffer, len);
             if(LEVEL_IS_LAND(nnibble)){
-                terrain_square_xy(terrain, terrainVertexBuffer + posVertex, x, y);
-                posVertex += 2*VERTEX_SIZE/sizeof(float);
-                tilemap_get_block_UV(&terrain->tilemap, terrainUVBuffer + posUV, 2,  rand() % LEVEL_TILEMAP_TERRAIN_WIDTH, LEVEL_TILEMAP_TERRAIN_GRASS);
-                posUV += 2*UV_SIZE / sizeof(float);
+                //uint8_t elevationNeiCounterNorm = terrain_count_neighbours_from_pattern(elevationNei & NEIGHBOUR_MASK_NORMAL);
+                //uint8_t elevationNeiCounterDiag = terrain_count_neighbours_from_pattern(elevationNei & NEIGHBOUR_MASK_DIGONAL);
+                //printf("NodeData is %.2x\tElevation is %d\teNei Patten %.2x\n",nodedata, elevation, elevationNei);
+                if(elevationNei == 0){
+                    terrain_square_xy(terrain, terrainVertexBuffer + posVertex, x, y, elevation);
+                    posVertex += 2*VERTEX_SIZE/sizeof(float);
+                    tilemap_get_block_UV(&terrain->tilemap, terrainUVBuffer + posUV, 2,  rand() % LEVEL_TILEMAP_TERRAIN_WIDTH, LEVEL_TILEMAP_TERRAIN_GRASS);
+                    posUV += 2*UV_SIZE / sizeof(float);
+                }else{
+                    terrain_square_xy_elevation_skirt(terrain, terrainVertexBuffer + posVertex, x, y, elevation, elevationNei);
+                    posVertex += 2*VERTEX_SIZE/sizeof(float);
+                    tilemap_get_block_UV(&terrain->tilemap, terrainUVBuffer + posUV, 2,  rand() % LEVEL_TILEMAP_TERRAIN_WIDTH, LEVEL_TILEMAP_TERRAIN_GRASS);
+                    posUV += 2*UV_SIZE / sizeof(float);
+                }
             }else if(nnibble == LEVEL_BLOCK_PATH){
                 uint8_t neiPattern = 0;
                 neiPattern |= LEVEL_IS_PATH((0b0111 & terrain_get_node_at(terrain, x + 0, y - 1, buffer, len))) ? 1 << NEIGHBOUR_BIT_N : 0;
@@ -447,12 +835,20 @@ int terrain_create(Terrain* terrain, uint8_t* buffer_i, size_t bufferSize){
 
                 uint8_t piece = 0, rotation = 0;
                 terrain_path_piece(neiPattern, &piece, &rotation);
-                // Build vertices
-                terrain_square_xy(terrain, terrainVertexBuffer + posVertex, x, y);
-                posVertex += 2*VERTEX_SIZE/sizeof(float);
-                // Get UV Coordinates
-                tilemap_get_block_UV_rotate(&terrain->tilemap, terrainUVBuffer + posUV, 2,  piece, LEVEL_TILEMAP_TERRAIN_PATH, rotation);
-                posUV += 2*UV_SIZE / sizeof(float);
+
+                if(elevationNei == 0){
+                    terrain_square_xy(terrain, terrainVertexBuffer + posVertex, x, y, elevation);
+                    posVertex += 2*VERTEX_SIZE/sizeof(float);
+                    tilemap_get_block_UV_rotate(&terrain->tilemap, terrainUVBuffer + posUV, 2,  piece, LEVEL_TILEMAP_TERRAIN_PATH, rotation);
+                    posUV += 2*UV_SIZE / sizeof(float);
+                }else{
+                    // Build vertices
+                    terrain_square_xy_elevation_skirt(terrain, terrainVertexBuffer + posVertex, x, y, elevation, elevationNei);
+                    posVertex += 2*VERTEX_SIZE/sizeof(float);
+                    // Get UV Coordinates
+                    tilemap_get_block_UV_rotate(&terrain->tilemap, terrainUVBuffer + posUV, 2,  piece, LEVEL_TILEMAP_TERRAIN_PATH, 1);
+                    posUV += 2*UV_SIZE / sizeof(float);
+                }
             }
 
             if(nnibble == LEVEL_BLOCK_DECORATION_LAND /*|| nnibble == LEVEL_BLOCK_DECORATION_WATER*/){
@@ -463,7 +859,7 @@ int terrain_create(Terrain* terrain, uint8_t* buffer_i, size_t bufferSize){
                 );
                 vec3 decopos = {
                     x - terrain->width/2,
-                    1,
+                    elevation,
                     y - terrain->height/2
                 };
                 float rotation = rand() % 360;
