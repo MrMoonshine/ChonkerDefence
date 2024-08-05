@@ -58,6 +58,7 @@ static int srvlevel_show_list(unsigned char* data, size_t* len, uint8_t* filecou
 }
 
 int srvlevel_show(struct pollfd* clientFDs, uint8_t fdCount, uint8_t* levelID){
+    int retval = 0;
     if(levelID == NULL){
         size_t dataSize = 0;
         uint8_t filecount = 0;
@@ -82,6 +83,7 @@ int srvlevel_show(struct pollfd* clientFDs, uint8_t fdCount, uint8_t* levelID){
             LOGERRNO(TAG, "level show: Malloc");
         }
     }else{
+        retval = 0;
         //printf("Load Level %d\n", *levelID);
         DIR* dp1;
         struct dirent* ep;
@@ -100,17 +102,25 @@ int srvlevel_show(struct pollfd* clientFDs, uint8_t fdCount, uint8_t* levelID){
                 continue;
 
             //printf("Loading level %s -> %lu\n", ep->d_name, strlen(ep->d_name));
-            char* filepath = (char*)malloc(strlen(LEVEL_DIR) + strlen(ep->d_name));
+            size_t filepathLen = strlen(LEVEL_DIR) + strlen(ep->d_name) + 1;
+            char* filepath = (char*)malloc(filepathLen);
             if(!filepath){
                 LOGERRNO(TAG, "Malloc");
                 return -1;
             }
+            memset(filepath, '\0', filepathLen);
             strcpy(filepath, LEVEL_DIR);
             strcat(filepath, ep->d_name);
             FILE *fp;
             fp = fopen(filepath, "rb");
             if(fp == NULL){
-                fprintf(stderr,"\e[0;31m[ERROR] Failed to open file %s: %s\e[0m\n", TAG, filepath);
+                //fprintf(stderr,"\e[0;31m[ERROR] Failed to open file %s: %s\e[0m\n", TAG, filepath);
+                /*for(size_t i = 0; i < filepathLen; i++){
+                    printf("%lu\t%c\t%.2x\n", i, filepath[i], (unsigned char)filepath[i]);
+                }
+                printf("d_name is %s\n", ep->d_name);*/
+                LOGE_S(TAG, "Failed to open file ", filepath);
+                retval = -1;
                 free(filepath);
                 break;
             }
@@ -137,10 +147,17 @@ int srvlevel_show(struct pollfd* clientFDs, uint8_t fdCount, uint8_t* levelID){
             }
 
             free(buffer);
+            retval = 0;
             break;
         };
 
         closedir(dp1);
     }
-    return 0;
+    if(retval != 0){
+        uint8_t status = CD_NET_CODE_FAIL;
+        for(uint8_t i = 0; i < fdCount; i++){
+            send(clientFDs[i].fd, &status, 1, 0);
+        }
+    }
+    return retval;
 }

@@ -120,7 +120,7 @@ void *server_main(void *portNumPtr)
                         fdCount--;
                     }else{
                         //Got some Data!
-                        LOGI(TAG, "Got some Data");
+                        //LOGI(TAG, "Got some Data");
                         switch((uint8_t)buffer[0]){
                             case PROTO_SCOPE_LEVELS:{
                                 if(byteCount > 1){

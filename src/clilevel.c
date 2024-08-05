@@ -52,7 +52,7 @@ uint8_t clilevel_get_level(ClientLevel *level, Client *client, GLFWwindow* windo
     uint8_t status = 0;
     recv(client->socket, &status, 1, 0);
     if(status != CD_NET_CODE_OK){
-        fprintf(stderr,"\e[0;31m[ERROR] %s: Error in Reply: %x\e[0m\n", TAG, status);
+        fprintf(stderr,"\e[0;31m[ERROR] %s: Error in Reply: 0x%.2x\e[0m\n", TAG, status);
         return status;
     }
 
@@ -111,6 +111,7 @@ uint8_t clilevel_get_level(ClientLevel *level, Client *client, GLFWwindow* windo
     level->cameraPosition = glGetUniformLocation(level->shader, "viewPos");
     level->normalMatrix = glGetUniformLocation(level->shader, "normalMatrix");
 
+    //printf("[INFO] %s: Buffer len is %lu\n", TAG, *len);
     terrain_create(&level->terrain, buffer, *len);
     free(buffer);
     return 0;

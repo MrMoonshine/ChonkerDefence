@@ -9,13 +9,12 @@ static const uint8_t NEIGHBOUR_BIT_S  = 2;
 static const uint8_t NEIGHBOUR_BIT_W  = 3;
 
 static const uint8_t terrain_get_node_at(Terrain* terrain, uint8_t x, uint8_t y, uint8_t *buffer, size_t len){
-    size_t totalPos = (y * terrain->width) + x;
-    size_t pos = totalPos / 2;
+    size_t pos = (y * terrain->width) + x;
 
     if(pos >= len || x > terrain->width - 1 || y > terrain->height - 1)
-        return 0xFF;
+        return 0xF0 | LEVEL_BLOCK_WATER;
 
-    return totalPos % 2 ? (buffer[pos] & 0x0f) : ((buffer[pos] & 0xf0) >> 4);
+    return buffer[pos];
 }
 
 static uint8_t terrain_count_neighbours_from_pattern(uint8_t pattern){
@@ -308,7 +307,7 @@ int terrain_create(Terrain* terrain, uint8_t* buffer_i, size_t bufferSize){
 
     /*for(size_t i = 0; i < len; i++){
         printf("%.2x", buffer[i]);
-        if(i%(terrain->width/2) == (terrain->width/2) - 1)
+        if(i%(terrain->width) == (terrain->width) - 1)
             printf("\n");
     }
     printf("-------------------------\n");*/
@@ -329,7 +328,8 @@ int terrain_create(Terrain* terrain, uint8_t* buffer_i, size_t bufferSize){
         printf("%.2d ", y);
 #endif /* DEBUG_MAP */
         for(uint8_t x = 0; x < terrain->width; x++){
-            uint8_t nnibble = terrain_get_node_at(terrain, x, y, buffer, len);
+            uint8_t nodedata = terrain_get_node_at(terrain, x, y, buffer, len);
+            uint8_t nnibble = nodedata & 0b0111;
 #ifdef DEBUG_MAP
             char node = ' ';
             switch(nnibble){
@@ -349,10 +349,10 @@ int terrain_create(Terrain* terrain, uint8_t* buffer_i, size_t bufferSize){
                 vertexCount += 2;
             }else if(LEVEL_IS_WATER(nnibble)){
                 uint8_t neiCounter = 0;
-                neiCounter += LEVEL_IS_SKIRT_REQURED(terrain_get_node_at(terrain, x + 1, y + 0, buffer, len)) ? 1 : 0;
-                neiCounter += LEVEL_IS_SKIRT_REQURED(terrain_get_node_at(terrain, x + 0, y + 1, buffer, len)) ? 1 : 0;
-                neiCounter += LEVEL_IS_SKIRT_REQURED(terrain_get_node_at(terrain, x - 1, y + 0, buffer, len)) ? 1 : 0;
-                neiCounter += LEVEL_IS_SKIRT_REQURED(terrain_get_node_at(terrain, x + 0, y - 1, buffer, len)) ? 1 : 0;
+                neiCounter += LEVEL_IS_SKIRT_REQURED((0x0111 & terrain_get_node_at(terrain, x + 1, y + 0, buffer, len))) ? 1 : 0;
+                neiCounter += LEVEL_IS_SKIRT_REQURED((0x0111 & terrain_get_node_at(terrain, x + 0, y + 1, buffer, len))) ? 1 : 0;
+                neiCounter += LEVEL_IS_SKIRT_REQURED((0x0111 & terrain_get_node_at(terrain, x - 1, y + 0, buffer, len))) ? 1 : 0;
+                neiCounter += LEVEL_IS_SKIRT_REQURED((0x0111 & terrain_get_node_at(terrain, x + 0, y - 1, buffer, len))) ? 1 : 0;
 
                 switch(neiCounter){
                     case 1: vertexCount += 2; break;
@@ -400,13 +400,14 @@ int terrain_create(Terrain* terrain, uint8_t* buffer_i, size_t bufferSize){
     size_t posUV = 0;
     for(uint8_t y = 0; y < terrain->height; y++){
         for(uint8_t x = 0; x < terrain->width; x++){
-            uint8_t nnibble = terrain_get_node_at(terrain, x, y, buffer, len);
+            uint8_t nodedata = terrain_get_node_at(terrain, x, y, buffer, len);
+            uint8_t nnibble = nodedata & 0b0111;
             if(LEVEL_IS_WATER(nnibble)){
                 uint8_t neiPattern = 0;
-                neiPattern |= LEVEL_IS_SKIRT_REQURED(terrain_get_node_at(terrain, x + 0, y - 1, buffer, len)) ? 1 << NEIGHBOUR_BIT_N : 0;
-                neiPattern |= LEVEL_IS_SKIRT_REQURED(terrain_get_node_at(terrain, x + 1, y + 0, buffer, len)) ? 1 << NEIGHBOUR_BIT_E : 0;
-                neiPattern |= LEVEL_IS_SKIRT_REQURED(terrain_get_node_at(terrain, x + 0, y + 1, buffer, len)) ? 1 << NEIGHBOUR_BIT_S : 0;
-                neiPattern |= LEVEL_IS_SKIRT_REQURED(terrain_get_node_at(terrain, x - 1, y + 0, buffer, len)) ? 1 << NEIGHBOUR_BIT_W : 0;
+                neiPattern |= LEVEL_IS_SKIRT_REQURED((0b0111 & terrain_get_node_at(terrain, x + 0, y - 1, buffer, len))) ? 1 << NEIGHBOUR_BIT_N : 0;
+                neiPattern |= LEVEL_IS_SKIRT_REQURED((0b0111 & terrain_get_node_at(terrain, x + 1, y + 0, buffer, len))) ? 1 << NEIGHBOUR_BIT_E : 0;
+                neiPattern |= LEVEL_IS_SKIRT_REQURED((0b0111 & terrain_get_node_at(terrain, x + 0, y + 1, buffer, len))) ? 1 << NEIGHBOUR_BIT_S : 0;
+                neiPattern |= LEVEL_IS_SKIRT_REQURED((0b0111 & terrain_get_node_at(terrain, x - 1, y + 0, buffer, len))) ? 1 << NEIGHBOUR_BIT_W : 0;
 
                 size_t terrainSkirtVertexCount = terrain_square_xy_skirt(terrain, terrainVertexBuffer + posVertex, x, y, neiPattern);
                 posVertex += terrainSkirtVertexCount * VERTEX_SIZE/sizeof(float);
@@ -430,7 +431,8 @@ int terrain_create(Terrain* terrain, uint8_t* buffer_i, size_t bufferSize){
     unsigned int decorationCounter = 0;
     for(uint8_t y = 0; y < terrain->height; y++){
         for(uint8_t x = 0; x < terrain->width; x++){
-            uint8_t nnibble = terrain_get_node_at(terrain, x, y, buffer, len);
+            uint8_t nodedata = terrain_get_node_at(terrain, x, y, buffer, len);
+            uint8_t nnibble = nodedata & 0b0111;
             if(LEVEL_IS_LAND(nnibble)){
                 terrain_square_xy(terrain, terrainVertexBuffer + posVertex, x, y);
                 posVertex += 2*VERTEX_SIZE/sizeof(float);
@@ -438,10 +440,10 @@ int terrain_create(Terrain* terrain, uint8_t* buffer_i, size_t bufferSize){
                 posUV += 2*UV_SIZE / sizeof(float);
             }else if(nnibble == LEVEL_BLOCK_PATH){
                 uint8_t neiPattern = 0;
-                neiPattern |= LEVEL_IS_PATH(terrain_get_node_at(terrain, x + 0, y - 1, buffer, len)) ? 1 << NEIGHBOUR_BIT_N : 0;
-                neiPattern |= LEVEL_IS_PATH(terrain_get_node_at(terrain, x + 1, y + 0, buffer, len)) ? 1 << NEIGHBOUR_BIT_E : 0;
-                neiPattern |= LEVEL_IS_PATH(terrain_get_node_at(terrain, x + 0, y + 1, buffer, len)) ? 1 << NEIGHBOUR_BIT_S : 0;
-                neiPattern |= LEVEL_IS_PATH(terrain_get_node_at(terrain, x - 1, y + 0, buffer, len)) ? 1 << NEIGHBOUR_BIT_W : 0;
+                neiPattern |= LEVEL_IS_PATH((0b0111 & terrain_get_node_at(terrain, x + 0, y - 1, buffer, len))) ? 1 << NEIGHBOUR_BIT_N : 0;
+                neiPattern |= LEVEL_IS_PATH((0b0111 & terrain_get_node_at(terrain, x + 1, y + 0, buffer, len))) ? 1 << NEIGHBOUR_BIT_E : 0;
+                neiPattern |= LEVEL_IS_PATH((0b0111 & terrain_get_node_at(terrain, x + 0, y + 1, buffer, len))) ? 1 << NEIGHBOUR_BIT_S : 0;
+                neiPattern |= LEVEL_IS_PATH((0b0111 & terrain_get_node_at(terrain, x - 1, y + 0, buffer, len))) ? 1 << NEIGHBOUR_BIT_W : 0;
 
                 uint8_t piece = 0, rotation = 0;
                 terrain_path_piece(neiPattern, &piece, &rotation);

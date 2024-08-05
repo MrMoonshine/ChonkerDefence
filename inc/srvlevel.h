@@ -17,7 +17,7 @@
 #include <protocol.h>
 #include <logging.h>
 
-#define SERVER_LEVEL_DIR ASSET_PATH "levels/"
+#define SERVER_LEVEL_DIR (ASSET_PATH "levels/")
 
 /*
     @brief Get a list of all available levels for the server

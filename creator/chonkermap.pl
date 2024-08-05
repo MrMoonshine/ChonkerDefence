@@ -4,31 +4,75 @@ use strict;
 use Data::Dumper;
 # sudo apt install libgd-perl
 use GD;
+use Getopt::Long;
 
 sub help{
 print <<HELP;
-Chonkermap is a CLI Tool, which converts a PNG-Image in a Chonker-Defense level.
+Chonkermap is a CLI Tool, which converts PNG-Images in a Chonker-Defence level.
 
-Usage: chonkermap <imagefile> <level>
+Usage: chonkermap.pl [OPTIONS]
+
+Options:
+ -l, --layout           Layout .png file
+ -t, --terrain          Terrain .png file
+ -o, --output           Output .chonkmap Level file
+ -h, --help             Show this
 HELP
 }
 
-if(scalar(@ARGV) != 2){
+my $needhelp = 0;
+my $layoutfile = '';
+my $terrainfile = '';
+my $outputfile = '';
+
+GetOptions( 
+    'layout=s' => \$layoutfile,
+    'terrain=s' => \$terrainfile,
+    'output=s' => \$outputfile,
+    'help' => \$needhelp
+);
+
+if(length($layoutfile) < 1){
+    print STDERR "\e[0;31mNo Layout file specified! (option --layout)\e[0m\n";
+    $needhelp += 1;
+}
+
+if(length($outputfile) < 1){
+    print STDERR "\e[0;31mNo Output file specified! (option --output)\e[0m\n";
+    $needhelp += 1;
+}
+
+if($needhelp > 0){
     help();
-    exit -1;
+    exit 0;
 }
 
-foreach $a (@ARGV){
-    if($a eq "-h" || $a eq "-?" || $a eq "--help"){
-        help();
-        exit 0;
-    }
-}
-
-my $ image = new GD::Image($ARGV[0]) or die("Couldn't open " . $ARGV[0]);
+my $ image = new GD::Image($layoutfile) or die("Couldn't open " . $layoutfile);
 if($image->width > 255 || $image->height > 255){
     print STDERR "Image is too big! (max. 255x255)\n";
     exit -1;
+}
+my $terrainimgok = length($terrainfile);
+my $terrainimage;#new GD::Image($terrainfile) or die();
+if($terrainimgok > 0){
+    eval {$terrainimage = new GD::Image($terrainfile)};
+    if ($@) {
+        print STDERR "Unable to open Terrain file ".$terrainfile.":\t[$@]\n";
+        $terrainimgok = 0;
+    }
+}
+
+if($terrainimgok > 0){
+    if($terrainimage->width != $image->width || $terrainimage->height != $image->height){
+        print STDERR "Terrain image is not same size as layout image\n";
+        $terrainimgok = 0;
+    }
+}
+
+#print("Image dimensions are (".$image->width."|".$image->height.")\n");
+$image->flipHorizontal();
+if($terrainimgok > 0){
+    $terrainimage->flipHorizontal();
 }
 
 my %meta = (
@@ -37,7 +81,7 @@ my %meta = (
     prio => 255,
     b => 32,
     h => 18,
-    katzen => 0
+    cats => 0
 );
 
 my $promt = 1;
@@ -77,11 +121,10 @@ while($promt){
     }
 }
 
-my $file = $ARGV[1];
-unless(open FILE, '>'.$file) {
+unless(open FILE, '>'.$outputfile) {
     # Die with error message 
     # if we can't open it.
-    die "\n$file couldn't be created!\n";
+    die "\n$outputfile couldn't be created!\n";
 }
 
 binmode FILE or die "binmode failed: $!";;
@@ -112,33 +155,58 @@ for (0..16-1){
     print FILE pack("c", 64);
 }
 
-my @tmparr;
-my $counter = 0;
+my @tmparr = ();
 
 for (my $y=0; $y<$image->height; $y++) {
     for (my $x=0; $x<$image->width; $x++) {
         my $index = $image->getPixel($x, $y);
         my ($r,$g,$b) = $image->rgb($index);
+        my $alpha = $image->alpha($index);
+        #if($alpha != 0){
+        #    print("xy(".$x."|".$y.") = rgba(".$r."|".$g."|".$b."|".$alpha.")\n");
+        #}
 
-        my $resultnibble = 0;
+        my $layoutnibble = 0;
         # Shape the Data correctly
         if($b > 127){
-            $resultnibble |= 1 << 0;
+            $layoutnibble |= 1 << 0;
         }
         if($g > 127){
-            $resultnibble |= 1 << 1;
+            $layoutnibble |= 1 << 1;
         }
         if($r > 127){
-            $resultnibble |= 1 << 2;
+            $layoutnibble |= 1 << 2;
+        }
+        if($alpha <= 64){
+            $layoutnibble |= 1 << 3;
         }
 
-        if($counter % 2){
-            $tmparr[(scalar @tmparr) - 1] |= $resultnibble;
-            #print "Reslutbyte: ".$tmparr[(scalar @tmparr) - 1]."\n";
-        }else{
-            push(@tmparr, $resultnibble << 4);
+        my $terrainnibble = 0;
+        if($terrainimgok >0){
+            my $index = $terrainimage->getPixel($x, $y);
+            my ($r,$g,$b) = $terrainimage->rgb($index);
+            my $alpha = $terrainimage->alpha($index);
+
+            if($b > 127){
+                $terrainnibble |= 1 << 0;
+            }
+            if($g > 127){
+                $terrainnibble |= 1 << 1;
+            }
+            if($r > 127){
+                $terrainnibble |= 1 << 2;
+            }
+            if($alpha <= 64){
+                $terrainnibble |= 1 << 3;
+            }
         }
-        $counter++;
+
+        #$tmparr[(scalar @tmparr) - 1] |= $layoutnibble;
+        #$tmparr[(scalar @tmparr) - 1] |= $terrainnibble << 4;
+        my $databyte = 0;
+        $databyte |= $layoutnibble;
+        $databyte |= $terrainnibble << 4;
+        push(@tmparr, $databyte);
     }
 }
 

@@ -23,7 +23,7 @@
 #include <GLFW/glfw3.h>
 #include <cglm/cglm.h>
 
-//#define DEBUG_MAP 1
+#define DEBUG_MAP 1
 
 typedef struct Terrain{
     VBO vbo;
