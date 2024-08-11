@@ -8,10 +8,27 @@ static const uint8_t NEIGHBOUR_BIT_E  = 1;
 static const uint8_t NEIGHBOUR_BIT_S  = 2;
 static const uint8_t NEIGHBOUR_BIT_W  = 3;
 
+#define NEIGHBOUR_POS_N 0
+#define NEIGHBOUR_POS_E 1
+#define NEIGHBOUR_POS_S 2
+#define NEIGHBOUR_POS_W 3
+#define NEIGHBOUR_POS_NW 4
+#define NEIGHBOUR_POS_NE 5
+#define NEIGHBOUR_POS_SE 6
+#define NEIGHBOUR_POS_SW 7
+
 static const uint16_t NEIGHBOUR_MASK_NORMAL  = 0x00f;
 static const uint16_t NEIGHBOUR_MASK_DIGONAL = 0x0f0;
 static const uint16_t NEIGHBOUR_MASK_STEEP   = 0xf00;
 
+/*
+    @brief Get the node data at (x|y)
+    @param terrain[in] terrain object
+    @param x[in] x of map
+    @param y[in] y of map
+    @param buffer[in] buffer of map data
+    @param len[in] buffer length
+*/
 static const uint8_t terrain_get_node_at(Terrain* terrain, uint8_t x, uint8_t y, uint8_t *buffer, size_t len){
     size_t pos = (y * terrain->width) + x;
 
@@ -21,7 +38,15 @@ static const uint8_t terrain_get_node_at(Terrain* terrain, uint8_t x, uint8_t y,
     return buffer[pos];
 }
 
-static const uint16_t terrain_get_elevation_neighbors(Terrain* terrain, uint8_t x, uint8_t y, uint8_t *buffer, size_t len){
+/*
+    @brief Get a neighbour pattern for single steps
+    @param terrain[in] terrain object
+    @param x[in] x of map
+    @param y[in] y of map
+    @param buffer[in] buffer of map data
+    @param len[in] buffer length
+*/
+static uint16_t terrain_get_elevation_neighbors(Terrain* terrain, uint8_t x, uint8_t y, uint8_t *buffer, size_t len){
     //uint8_t matchpattern = 0b0111;
     uint8_t matchelevation = (0b01110000 & terrain_get_node_at(terrain, x, y, buffer, len)) >> 4;
     matchelevation++;
@@ -73,6 +98,87 @@ static const uint16_t terrain_get_elevation_neighbors(Terrain* terrain, uint8_t 
         neipattern |= ((0b0111 & (node >> 4)) == (steep ? matchelevation + 1: matchelevation) && LEVEL_IS_SKIRT_REQURED((node & 0b0111)) ? 1 : 0) << i;
     }
     return neipattern;
+}
+
+/*
+    @brief Get an array of height differences on each node
+    @param terrain[in] terrain object
+    @param x[in] x of map
+    @param y[in] y of map
+    @param buffer[in] buffer of map data
+    @param len[in] buffer length
+    @param output[out] 8byte array of height differences
+*/
+static void terrain_get_wall_neighbors(Terrain* terrain, uint8_t x, uint8_t y, uint8_t *buffer, size_t len, uint8_t *output){
+    uint8_t nx = x, ny = y;
+    uint8_t node = 0;
+
+    uint8_t elevation = (0b01110000 & terrain_get_node_at(terrain, x, y, buffer, len)) >> 4;
+    elevation &= 0b0111;
+
+    for(uint8_t i = 0; i < 8; i++){
+        output[i] = 0;
+        nx = x;
+        ny = y;
+        switch(i){
+            // Normal neighbours
+            case NEIGHBOUR_POS_N:
+                ny++;
+                break;
+            case NEIGHBOUR_POS_E:
+                nx++;
+                break;
+            case NEIGHBOUR_POS_S:
+                ny--;
+                break;
+            case NEIGHBOUR_POS_W:
+                nx--;
+                break;
+            case NEIGHBOUR_POS_NW:
+                nx--;
+                ny++;
+                break;
+            case NEIGHBOUR_POS_NE:
+                nx++;
+                ny++;
+                break;
+            case NEIGHBOUR_POS_SE:
+                nx++;
+                ny--;
+                break;
+            case NEIGHBOUR_POS_SW:
+                nx--;
+                ny--;
+                break;
+            default:
+                break;
+        }
+
+        if(nx >= terrain->width || ny >= terrain->height)
+            continue;
+
+        node = terrain_get_node_at(terrain, nx, ny, buffer, len);
+        int8_t elevationDiff = (0b0111 & (node >> 4)) - (elevation);
+        if(elevationDiff < 0){
+            elevationDiff = 0;
+        }
+
+        if(elevationDiff >= 1 && LEVEL_IS_SKIRT_REQURED((node & 0b0111)) ? 1 : 0)
+            output[i] = elevationDiff;
+    }
+}
+
+static size_t terrain_wall_count_vertices(uint8_t *wallheights){
+    size_t retval = 0;
+    for(uint8_t i = 0; i < 4; i++){
+        retval += 2*wallheights[i];
+        // Add one in case of difference on neighbours, to cover side of slopes
+        uint8_t dindex1 = 4 + (i % 4);
+        uint8_t dindex2 = 4 + ((i+1) % 4);
+        retval += (wallheights[dindex1] - wallheights[i]) == 1 ? 1 : 0;
+        retval += (wallheights[dindex2] - wallheights[i]) == 1 ? 1 : 0;
+    }
+    return retval;
 }
 
 static uint8_t terrain_count_neighbours_from_pattern(uint16_t pattern){
@@ -273,10 +379,6 @@ static size_t terrain_square_xy_elevation_skirt(Terrain* terrain, float* buffer,
     short xOrigin = x - terrain->width/2;
     short yOrigin = y - terrain->height/2;
     short zOrigin = elevation;
-    int8_t deltaX = 1;
-    int8_t deltaY = 1;
-    int8_t deltaZ = 1;
-    bool sonw = false;
 
     vec3 rotationaxis = {0, 1, 0};
     float angle = 0;
@@ -507,30 +609,6 @@ static size_t terrain_square_xy_elevation_skirt(Terrain* terrain, float* buffer,
             default:
                 break;
         }
-
-        /*switch(neiPatternDiag){
-            case 0b0001:
-                // North-West
-                angle = 90;
-                yOrigin += 1;
-                break;
-            case 0b0010:
-                // North-East
-                angle = 180;
-                yOrigin += 1;
-                xOrigin += 1;
-                break;
-            case 0b0100:
-                // South-East
-                angle = 270;
-                xOrigin += 1;
-                break;
-            case 0b1000:
-                // South-West
-                break;
-            default:
-                break;
-        }*/
     }
 
     for(uint8_t i = 0; i < 6; i++){
@@ -545,31 +623,143 @@ static size_t terrain_square_xy_elevation_skirt(Terrain* terrain, float* buffer,
         memcpy(buffer + posVertex, points[i], sizeof(vec3));
         posVertex += 3;
     }
-/*
-    if(neiCounter == 2){
-        // Lid for inner corners
-        // Vertex 1 Point 1
-        buffer[posVertex++] = xOrigin + deltaX * 0;
-        buffer[posVertex++] = 1.0f;
-        buffer[posVertex++] = yOrigin + deltaY * 0;
-        // Vertex 1 Point 2
-        buffer[posVertex++] = xOrigin + deltaX * 1;
-        buffer[posVertex++] = 1.0f;
-        buffer[posVertex++] = yOrigin + deltaY * 1;
-        // Vertex 1 Point 3
-        if(sonw){
-            buffer[posVertex++] = x - terrain->width/2 + (neighbourPattern == 0b0110 ? 1 : 0);
-            buffer[posVertex++] = 1.0f;
-            buffer[posVertex++] = y - terrain->height/2 + (neighbourPattern == 0b0110 ? 1 : 0);
-
-        }else{
-            buffer[posVertex++] = xOrigin + deltaX * 1;
-            buffer[posVertex++] = 1.0f;
-            buffer[posVertex++] = yOrigin + deltaY * 0;
-        }
-    }*/
-
     return retval;
+}
+/*
+    @brief generates verices for Walls
+    @param terrain[in] terrain object
+    @param buffer[in] buffer of map data
+    @param x[in] x of map
+    @param y[in] y of map
+    @param elevation[in] node elevation
+    @param wallheights[in] 8byte array of height differences
+    @return # of triangles
+*/
+static size_t terrain_wall_skirt(Terrain* terrain, float* buffer, uint8_t x, uint8_t y, uint8_t elevation, uint8_t *wallheights){
+    size_t wallVertexCount = terrain_wall_count_vertices(wallheights);
+    if(wallVertexCount < 1)
+        return 0;
+
+    short xOrigin = x - terrain->width/2;
+    short yOrigin = y - terrain->height/2;
+    short zOrigin = elevation;
+    size_t posVertex = 0;
+
+    vec3 rotationaxis = {0, 1, 0};
+    float angle = 0;
+
+    //printf("\nWallheights:\n");
+    for(uint8_t i = 0; i < 4; i++){
+        // Rotation & Placement
+        switch(i){
+            case NEIGHBOUR_POS_N:
+                xOrigin += 1;
+                yOrigin += 1;
+                angle = 180;
+                break;
+            case NEIGHBOUR_POS_E:
+                xOrigin += 0;
+                yOrigin += -1;
+                angle = 270;
+                break;
+            case NEIGHBOUR_POS_S:
+                xOrigin += -1;
+                yOrigin += 0;
+                angle = 0;
+                break;
+            case NEIGHBOUR_POS_W:
+                xOrigin += 0;
+                yOrigin += 1;
+                angle = 90;
+                break;
+            default:
+                break;
+        }
+        //printf("%d, ", wallheights[i]);
+        /*
+            Squares
+        */
+        // Avoid having unnecesary vertices behind slopes
+        for(uint8_t j = 0; j < wallheights[i] && wallheights[i] > 1; j++){
+            size_t posVertexStart = posVertex;
+            // Triangle 2 Point 1
+            buffer[posVertex++] = 0;
+            buffer[posVertex++] = j;
+            buffer[posVertex++] = 0;
+            // Triangle 2 Point 2
+            buffer[posVertex++] = 1;
+            buffer[posVertex++] = j + 1;
+            buffer[posVertex++] = 0;
+            // Triangle 2 Point 3
+            buffer[posVertex++] = 0;
+            buffer[posVertex++] = j + 1;
+            buffer[posVertex++] = 0;
+
+            // Triangle 1 Point 1
+            buffer[posVertex++] = 0;
+            buffer[posVertex++] = j;
+            buffer[posVertex++] = 0;
+            // Triangle 1 Point 2
+            buffer[posVertex++] = 1;
+            buffer[posVertex++] = j;
+            buffer[posVertex++] = 0;
+            // Triangle 1 Point 3
+            buffer[posVertex++] = 1;
+            buffer[posVertex++] = j + 1;
+            buffer[posVertex++] = 0;
+            // Transformations
+            for(uint8_t k = 0; k < 6; k++){
+                glm_vec3_rotate(buffer + posVertexStart + 3*k, glm_rad(angle), rotationaxis);
+                buffer[posVertexStart + 3*k + 0] += xOrigin;
+                buffer[posVertexStart + 3*k + 1] += zOrigin;
+                buffer[posVertexStart + 3*k + 2] += yOrigin;
+                for(uint8_t l = 0; l < 3; l++)
+                    buffer[posVertexStart + l] = round(buffer[posVertexStart + l]);
+            }
+        }
+        /*
+            Slope covers
+        */
+        uint8_t dindex1 = 4 + (i % 4);
+        uint8_t dindex2 = 4 + ((i+1) % 4);
+
+        bool diff1ok = (wallheights[dindex1] - wallheights[i]) == 1;
+        bool diff2ok = (wallheights[dindex2] - wallheights[i]) == 1;
+        //printf("Diffs at (%d|%d) is %d, %d\n", x, y, diff1, diff2);
+        // difference XOR
+        if(diff1ok ^ diff2ok &&  wallheights[i] > 0){
+            //printf("New slope cover for neighbour of (%d|%d) | Wallheight[i] is %d\n", x, y, wallheights[i]);
+            //printf("Building slope cover at (%d|%d)\n", x, y);
+            size_t posVertexStart = posVertex;
+            // Triangle 2 Point 1
+            buffer[posVertex++] = 0;
+            buffer[posVertex++] = wallheights[i];
+            buffer[posVertex++] = 0;
+            // Triangle 2 Point 2
+            buffer[posVertex++] = 1;
+            buffer[posVertex++] = wallheights[i];
+            buffer[posVertex++] = 0;
+            // Triangle 2 Point 3
+            buffer[posVertex++] = diff1ok ? 1 : 0;
+            buffer[posVertex++] = wallheights[i] + 1;
+            buffer[posVertex++] = 0;
+            // Transformations
+            for(uint8_t k = 0; k < 3; k++){
+                glm_vec3_rotate(buffer + posVertexStart + 3*k, glm_rad(angle), rotationaxis);
+                buffer[posVertexStart + 3*k + 0] += xOrigin;
+                buffer[posVertexStart + 3*k + 1] += zOrigin;
+                buffer[posVertexStart + 3*k + 2] += yOrigin;
+                for(uint8_t l = 0; l < 3; l++)
+                    buffer[posVertexStart + l] = round(buffer[posVertexStart + l]);
+            }
+        }
+
+        //retval += abs(wallheights[dindex1] - wallheights[i]) == 1 ? 1 : 0;
+        //retval += abs(wallheights[dindex2] - wallheights[i]) == 1 ? 1 : 0;
+    }
+
+    //common_print_vertices(buffer, wallVertexCount * VERTEX_SIZE);
+    return posVertex;
 }
 
 static void terrain_path_piece(uint8_t pattern, uint8_t *piece, uint8_t *rotation){
@@ -716,13 +906,13 @@ int terrain_create(Terrain* terrain, uint8_t* buffer_i, size_t bufferSize){
             printf("%c", node);
 #endif /* DEBUG_MAP */
             if(LEVEL_IS_LAND(nnibble) || nnibble == LEVEL_BLOCK_PATH){
-                //uint8_t elevationNei = terrain_get_elevation_neighbors(terrain, x, y, buffer, len);
-                //uint8_t elevationNeiCounterNorm = terrain_count_neighbours_from_pattern(elevationNei & NEIGHBOUR_MASK_NORMAL);
-                //uint8_t elevationNeiCounterDiag = terrain_count_neighbours_from_pattern(elevationNei & NEIGHBOUR_MASK_DIGONAL);
+                uint8_t walls[8];
+                terrain_get_wall_neighbors(terrain, x, y, buffer, len, walls);
+                /*size_t wfc = terrain_wall_count_vertices(walls);
+                if(wfc > 0)
+                    printf("Vertices count adding %lu\n", wfc);*/
+                vertexCount += terrain_wall_count_vertices(walls);
                 vertexCount += 2;
-                //if(elevationNei > 0)
-                    //printf("(%d|%d) => Neighbours %.2x\n", x,y,elevationNei);
-
             }else if(LEVEL_IS_WATER(nnibble)){
                 uint8_t neiCounter = 0;
                 neiCounter += LEVEL_IS_SKIRT_REQURED((0b0111 & terrain_get_node_at(terrain, x + 1, y + 0, buffer, len))) ? 1 : 0;
@@ -795,7 +985,7 @@ int terrain_create(Terrain* terrain, uint8_t* buffer_i, size_t bufferSize){
                     case 3:
                         tilemap_get_block_UV(&terrain->tilemap, terrainUVBuffer + posUV, 2, rand() % LEVEL_TILEMAP_TERRAIN_WIDTH, LEVEL_TILEMAP_TERRAIN_SKIRT);
                         posUV += 2*UV_SIZE / sizeof(float);
-                        tilemap_get_block_UV(&terrain->tilemap, terrainUVBuffer + posUV, 1, rand() % LEVEL_TILEMAP_TERRAIN_WIDTH, LEVEL_TILEMAP_TERRAIN_GRASS);
+                        tilemap_get_block_UV(&terrain->tilemap, terrainUVBuffer + posUV, 1, rand() % LEVEL_TILEMAP_TERRAIN_GRASS_WIDTH, LEVEL_TILEMAP_TERRAIN_GRASS);
                         posUV += 1*UV_SIZE / sizeof(float);
                         break;
                     default: break;
@@ -817,15 +1007,16 @@ int terrain_create(Terrain* terrain, uint8_t* buffer_i, size_t bufferSize){
                 //printf("NodeData is %.2x\tElevation is %d\teNei Patten %.2x\n",nodedata, elevation, elevationNei);
                 if(elevationNei == 0){
                     terrain_square_xy(terrain, terrainVertexBuffer + posVertex, x, y, elevation);
-                    posVertex += 2*VERTEX_SIZE/sizeof(float);
-                    tilemap_get_block_UV(&terrain->tilemap, terrainUVBuffer + posUV, 2,  rand() % LEVEL_TILEMAP_TERRAIN_WIDTH, LEVEL_TILEMAP_TERRAIN_GRASS);
-                    posUV += 2*UV_SIZE / sizeof(float);
                 }else{
-                    terrain_square_xy_elevation_skirt(terrain, terrainVertexBuffer + posVertex, x, y, elevation, elevationNei);
-                    posVertex += 2*VERTEX_SIZE/sizeof(float);
-                    tilemap_get_block_UV(&terrain->tilemap, terrainUVBuffer + posUV, 2,  rand() % LEVEL_TILEMAP_TERRAIN_WIDTH, LEVEL_TILEMAP_TERRAIN_GRASS);
-                    posUV += 2*UV_SIZE / sizeof(float);
+                    // Try to do elevation skirt
+                    if(1 > terrain_square_xy_elevation_skirt(terrain, terrainVertexBuffer + posVertex, x, y, elevation, elevationNei)){
+                        //In case of failure, use flat surface
+                        terrain_square_xy(terrain, terrainVertexBuffer + posVertex, x, y, elevation);
+                    }
                 }
+                posVertex += 2*VERTEX_SIZE/sizeof(float);
+                tilemap_get_block_UV(&terrain->tilemap, terrainUVBuffer + posUV, 2,  rand() % LEVEL_TILEMAP_TERRAIN_GRASS_WIDTH, LEVEL_TILEMAP_TERRAIN_GRASS);
+                posUV += 2*UV_SIZE / sizeof(float);
             }else if(nnibble == LEVEL_BLOCK_PATH){
                 uint8_t neiPattern = 0;
                 neiPattern |= LEVEL_IS_PATH((0b0111 & terrain_get_node_at(terrain, x + 0, y - 1, buffer, len))) ? 1 << NEIGHBOUR_BIT_N : 0;
@@ -849,6 +1040,44 @@ int terrain_create(Terrain* terrain, uint8_t* buffer_i, size_t bufferSize){
                     tilemap_get_block_UV_rotate(&terrain->tilemap, terrainUVBuffer + posUV, 2,  piece, LEVEL_TILEMAP_TERRAIN_PATH, 1);
                     posUV += 2*UV_SIZE / sizeof(float);
                 }
+            }
+            /*
+                Walls
+            */
+            if(LEVEL_IS_LAND(nnibble) || nnibble == LEVEL_BLOCK_PATH){
+                uint8_t walls[8];
+                terrain_get_wall_neighbors(terrain, x, y, buffer, len, walls);
+                size_t skirtVertexPosDelta = terrain_wall_skirt(terrain, terrainVertexBuffer + posVertex, x, y, elevation, walls);
+                unsigned int vertexDelta = (sizeof(float) * skirtVertexPosDelta)/VERTEX_SIZE;
+
+                // if(vertexDelta > 0)
+                //     printf("Vertexdelta is %d\n", vertexDelta);
+                // Assign Textures
+                for(unsigned int i = 0; i < vertexDelta; i++){
+                    if(i % 2 == 1){
+                        //printf("\t- square UV\n");
+                        bool isTop = vertexDelta -i < 3;
+                        // Assign Texture
+                        tilemap_get_block_UV(
+                            &terrain->tilemap,
+                            terrainUVBuffer + posUV,
+                            2,
+                            isTop ? rand() % LEVEL_TILEMAP_TERRAIN_WIDTH : LEVEL_TILEMAP_TERRAIN_DIRT_POS,
+                            isTop ? LEVEL_TILEMAP_TERRAIN_SKIRT : LEVEL_TILEMAP_TERRAIN_DIRT
+                        );
+                        posUV += 2*UV_SIZE / sizeof(float);
+                    }else if(i == vertexDelta - 1){
+                        //printf("\t- triangle UV\n");
+                        tilemap_get_block_UV(
+                            &terrain->tilemap,
+                            terrainUVBuffer + posUV, 1,
+                            rand() % LEVEL_TILEMAP_TERRAIN_GRASS_WIDTH,
+                            LEVEL_TILEMAP_TERRAIN_GRASS
+                        );
+                        posUV += 1*UV_SIZE / sizeof(float);
+                    }
+                }
+                posVertex += skirtVertexPosDelta;
             }
 
             if(nnibble == LEVEL_BLOCK_DECORATION_LAND /*|| nnibble == LEVEL_BLOCK_DECORATION_WATER*/){
