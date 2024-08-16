@@ -22,6 +22,16 @@
 */
 void common_get_normal(float* vertexdata, float* normal);
 void common_mat4_to_mat3(mat4 mi, mat3 dest);
+/*
+    @brief Get the node data at (x|y)
+    @param buffer[in] buffer of map data
+    @param len[in] buffer length
+    @param x[in] x of map
+    @param y[in] y of map
+    @param width[in] width of map
+    @param height[in] height of map
+*/
+uint8_t common_map_get_node_at(uint8_t *buffer, size_t len, uint8_t x, uint8_t y, uint8_t width, uint8_t height);
 
 void common_print_vertices(float* buffer, size_t size);
 void common_print_uvs(float* buffer, size_t size);

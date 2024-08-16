@@ -325,7 +325,7 @@ void obj_draw(Obj* obj){
         GL_FLOAT,                         // type
         GL_FALSE,                         // normalized?
         0,                                // stride
-        (void*)(obj->shapes[i].faceOffset * UV_SIZE)                          // array buffer offset
+        (void*)(obj->shapes[i].faceOffset * UV_SIZE)  // array buffer offset
     );
     glDrawArrays(GL_TRIANGLES, 0, obj->shapes[i].length * 3);
     //LOGW(TAG, "Here NORMALS");

@@ -30,12 +30,13 @@ static const uint16_t NEIGHBOUR_MASK_STEEP   = 0xf00;
     @param len[in] buffer length
 */
 static const uint8_t terrain_get_node_at(Terrain* terrain, uint8_t x, uint8_t y, uint8_t *buffer, size_t len){
-    size_t pos = (y * terrain->width) + x;
+    /*size_t pos = (y * terrain->width) + x;
 
     if(pos >= len || x > terrain->width - 1 || y > terrain->height - 1)
         return 0xF0 | LEVEL_BLOCK_WATER;
 
-    return buffer[pos];
+    return buffer[pos];*/
+    return common_map_get_node_at(buffer, len, x, y, terrain->width, terrain->height);
 }
 
 /*
@@ -916,7 +917,6 @@ int terrain_create(Terrain* terrain, uint8_t* buffer_i, size_t bufferSize){
                 neiCounter += LEVEL_IS_SKIRT_REQURED((0b0111 & terrain_get_node_at(terrain, x + 0, y + 1, buffer, len))) ? 1 : 0;
                 neiCounter += LEVEL_IS_SKIRT_REQURED((0b0111 & terrain_get_node_at(terrain, x - 1, y + 0, buffer, len))) ? 1 : 0;
                 neiCounter += LEVEL_IS_SKIRT_REQURED((0b0111 & terrain_get_node_at(terrain, x + 0, y - 1, buffer, len))) ? 1 : 0;
-
                 // Neighbour vertices
                 switch(neiCounter){
                     case 1: vertexCount += 2; break;
@@ -991,6 +991,11 @@ int terrain_create(Terrain* terrain, uint8_t* buffer_i, size_t bufferSize){
             }
         }
     }
+
+    /*
+        Water
+    */
+    terrainwater_create(&terrain->water, buffer, len, terrain->width, terrain->height);
 
     unsigned int decorationCounter = 0;
     for(uint8_t y = 0; y < terrain->height; y++){
@@ -1128,6 +1133,7 @@ void terrain_draw(Terrain* terrain, GLuint uniformModel, GLuint uniformNormalMat
     glDepthFunc(GL_LEQUAL);
 
     vbo_draw(&terrain->vbo, terrain->tilemap.texture.bufferID);
+    terrainwater_draw(&terrain->water, uniformModel, uniformNormalMatrix, model);
     // unbind texture
     glBindTexture( GL_TEXTURE_2D, 0);
 
@@ -1144,6 +1150,7 @@ void terrain_draw(Terrain* terrain, GLuint uniformModel, GLuint uniformNormalMat
 void terrain_destroy(Terrain* terrain){
     vbo_destroy(&terrain->vbo);
     tilemap_destroy(&terrain->tilemap);
+    terrainwater_destroy(&terrain->water);
     modellib_destroy(&terrain->modellib);
 
     for(size_t i = 0; i < terrain->decorationCount; i++){

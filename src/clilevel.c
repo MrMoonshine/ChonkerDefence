@@ -143,7 +143,7 @@ void clilevel_resize(ClientLevel *level, int width, int height){
     printf("Model scale is %.2f => Wpx = %.2f\n", level->modelScale, level->modelScale * level->width);
 
     level->position[0] = -15.0f;
-    level->position[1] = -1.5f;
+    level->position[1] = 4.5f;
 }
 
 void clilevel_enable_vao(ClientLevel* level){

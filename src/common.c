@@ -28,6 +28,15 @@ void common_mat4_to_mat3(mat4 mi, mat3 dest){
     }
 }
 
+uint8_t common_map_get_node_at(uint8_t *buffer, size_t len, uint8_t x, uint8_t y, uint8_t width, uint8_t height){
+    size_t pos = (y * width) + x;
+
+    if(pos >= len || x > width - 1 || y > height - 1)
+        return 0xF0 | 0b0001;//LEVEL_BLOCK_WATER;
+
+    return buffer[pos];
+}
+
 void common_print_vertices(float* buffer, size_t size){
     printf(" --- Vertex BUFFER ---\n");
     for(size_t i = 0; i < size/sizeof(float); i++){
@@ -69,6 +78,7 @@ void common_print_uvs(float* buffer, size_t size){
         if(i % 18 == 17)
             printf("\n");
     }
+    printf("\n");
 }
 
 void common_print_normals(float* buffer, size_t size){

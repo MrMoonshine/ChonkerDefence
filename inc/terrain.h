@@ -18,17 +18,19 @@
 #include <common.h>
 #include <decoration.h>
 #include <modellib.h>
+#include <terrainwater.h>
 
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #include <cglm/cglm.h>
 
-#define DEBUG_MAP 1
+//#define DEBUG_MAP 1
 
 typedef struct Terrain{
     VBO vbo;
     Tilemap tilemap;
     uint8_t width, height;
+    TerrainWater water;
 
     ModelLib modellib;
     Decoration* decorations;
