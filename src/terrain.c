@@ -753,9 +753,6 @@ static size_t terrain_wall_skirt(Terrain* terrain, float* buffer, uint8_t x, uin
                     buffer[posVertexStart + l] = round(buffer[posVertexStart + l]);
             }
         }
-
-        //retval += abs(wallheights[dindex1] - wallheights[i]) == 1 ? 1 : 0;
-        //retval += abs(wallheights[dindex2] - wallheights[i]) == 1 ? 1 : 0;
     }
 
     //common_print_vertices(buffer, wallVertexCount * VERTEX_SIZE);
@@ -920,6 +917,7 @@ int terrain_create(Terrain* terrain, uint8_t* buffer_i, size_t bufferSize){
                 neiCounter += LEVEL_IS_SKIRT_REQURED((0b0111 & terrain_get_node_at(terrain, x - 1, y + 0, buffer, len))) ? 1 : 0;
                 neiCounter += LEVEL_IS_SKIRT_REQURED((0b0111 & terrain_get_node_at(terrain, x + 0, y - 1, buffer, len))) ? 1 : 0;
 
+                // Neighbour vertices
                 switch(neiCounter){
                     case 1: vertexCount += 2; break;
                     case 2: vertexCount += 3; break;
